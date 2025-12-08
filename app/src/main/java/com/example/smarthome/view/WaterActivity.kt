@@ -20,37 +20,64 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.smarthome.R   // <-- FIXED R IMPORT
+import com.example.smarthome.R
+import com.example.smarthome.view.ui.theme.SmartHomeTheme
 
-class ClimateControlActivity : ComponentActivity() {
+class WaterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ClimateControlScreen()
+            SmartHomeTheme {
+                WaterBody()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WaterBody() {
+    // Create a mutable state to pass to the card
+    var isPumpOn = remember { mutableStateOf(false) }
+    LaunchedEffect(isPumpOn.value) {
+        println("Pump state changed to: ${isPumpOn.value}")
+    }
+
+
+
+    Scaffold { pad ->
+        Column(
+            modifier = Modifier
+                .padding(pad)
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF0B132B), // dark blue
+                                Color(0xFF1C1C2E)  // darker shade
+                            )
+                    )
+                )
+        ) {
+            PumpStatusCard(isPumpOn)
         }
     }
 }
 
 @Composable
-fun ClimateControlScreen() {
-
-    var fan by remember { mutableFloatStateOf(0f) }
-    var powerOn by remember { mutableStateOf(true) }
+fun PumpStatusCard(isPumpOn: MutableState<Boolean>) {
     var autoMode by remember { mutableStateOf(false) }
-
-    val bg = Brush.verticalGradient(listOf(Color(0xFF05060A), Color(0xFF051225)))
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(bg)
             .padding(20.dp)
     ) {
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                painter = painterResource(id = R.drawable.outline_arrow_back_24),
+                painter = painterResource(id = R.drawable.baseline_arrow_back_24),
                 contentDescription = null,
                 tint = Color(0xFF9DB9D0),
                 modifier = Modifier
@@ -63,7 +90,12 @@ fun ClimateControlScreen() {
 
         Spacer(Modifier.height(16.dp))
 
-        Text("Climate Control", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+        Text(
+            "Climate Control",
+            color = Color.White,
+            fontSize = 30.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
         Text("Adjust temperature and fan settings", color = Color(0xFF9AB3C8), fontSize = 14.sp)
 
         Spacer(Modifier.height(20.dp))
@@ -71,7 +103,8 @@ fun ClimateControlScreen() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(250.dp)
+                .padding(0.dp)
                 .clip(RoundedCornerShape(22.dp))
                 .background(
                     Brush.linearGradient(
@@ -80,107 +113,54 @@ fun ClimateControlScreen() {
                 )
                 .padding(18.dp)
         ) {
-
-            Column(modifier = Modifier.fillMaxSize()) {
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Fan Speed", color = Color(0xFFBFD9E6), fontSize = 16.sp)
+            Column(modifier = Modifier.padding(0.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("Pump Status", color = Color.White.copy(alpha = 0.7f))
                         Text(
-                            text = when (fan.toInt()) {
-                                0 -> "Low"
-                                1 -> "Medium"
-                                2 -> "High"
-                                else -> "Turbo"
-                            },
+                            if (isPumpOn.value) "On" else "Off",
                             color = Color.White,
-                            fontSize = 34.sp,
+                            fontSize = 26.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text("Current", color = Color(0xFF9AB3C8), fontSize = 12.sp)
-                        Spacer(Modifier.height(4.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_thermostat_24),
-                                contentDescription = null,
-                                tint = Color(0xFFFF9800),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text("28°C", color = Color(0xFFFF9800), fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_water_drop_24),
+                        contentDescription = null,
+                        tint = Color.Cyan,
+                        modifier = Modifier.size(40.dp)
+                    )
                 }
 
-                Spacer(Modifier.height(12.dp))
-
-                Slider(
-                    value = fan,
-                    onValueChange = { fan = it },
-                    valueRange = 0f..3f,
-                    steps = 2,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color.White.copy(alpha = 0.95f),
-                        inactiveTrackColor = Color.White.copy(alpha = 0.12f)
-                    )
-                )
-
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(16.dp))
 
                 Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    StyledChip("Low", fan == 0f) { fan = 0f }
-                    StyledChip("Medium", fan == 1f) { fan = 1f }
-                    StyledChip("High", fan == 2f) { fan = 2f }
-                    StyledChip("Turbo", fan == 3f) { fan = 3f }
+                    PumpInfoBox("Today's Usage", "0 L/min")
+                    PumpInfoBox("Flow Rate", "0 L/min")
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                Button(
+                    onClick = { isPumpOn.value = !isPumpOn.value },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2295F3)
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text(if (isPumpOn.value) "Turn Off" else "Turn On")
                 }
             }
         }
-
-        Spacer(Modifier.height(16.dp))
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(84.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0E2433))
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_air_24),
-                    contentDescription = null,
-                    tint = Color(0xFF00C1FF),
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text("Power", color = Color.White, fontSize = 16.sp)
-                    Text(
-                        if (powerOn) "System on" else "System off",
-                        color = Color(0xFF9AB3C8),
-                        fontSize = 12.sp
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                Switch(checked = powerOn, onCheckedChange = { powerOn = it })
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         Card(
             modifier = Modifier
@@ -214,8 +194,7 @@ fun ClimateControlScreen() {
                 Switch(checked = autoMode, onCheckedChange = { autoMode = it })
             }
         }
-
-        Spacer(Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(50.dp))
 
         Card(
             modifier = Modifier
@@ -265,31 +244,26 @@ fun ClimateControlScreen() {
             }
         }
 
-        Spacer(Modifier.height(6.dp))
+
     }
 }
 
 @Composable
-fun StyledChip(text: String, active: Boolean, onClick: () -> Unit) {
-    val bg = if (active) {
-        Brush.linearGradient(listOf(Color(0xFF1FB7FF), Color(0xFF00C7D9)))
-    } else {
-        Brush.linearGradient(listOf(Color(0xFF0F2A3D), Color(0xFF0E2636)))
-    }
-
-    Box(
+fun PumpInfoBox(title: String, value: String) {
+    Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(bg)
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .width(140.dp)
+            .background(Color(0xFF0D1B2A), RoundedCornerShape(16.dp))
+            .padding(12.dp)
     ) {
-        Text(text, color = if (active) Color.White else Color(0xFF8AA2B5))
+        Text(title, color = Color.Gray, fontSize = 12.sp)
+        Text(value, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview
 @Composable
-fun ClimatePreview() {
-    ClimateControlScreen()
-}
+fun WaterBodyPreview() {
+        WaterBody()
+    }
+
