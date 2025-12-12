@@ -435,3 +435,4 @@ fun TipItem(text: String) {
 fun PreviewEnergyAnalytics() {
     EnergyAnalyticsScreen(onBack = {})
 }
+//whatsupp suchit broo
