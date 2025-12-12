@@ -5,6 +5,7 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+
       <SelectionState runConfigName="WaterActivity">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
@@ -17,7 +18,7 @@
       <SelectionState runConfigName="WaterActivity (3)">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="EnergyAnalyticsActivity">
+      <SelectionState runConfigName="EnergyAnalyticsActivity">    
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
