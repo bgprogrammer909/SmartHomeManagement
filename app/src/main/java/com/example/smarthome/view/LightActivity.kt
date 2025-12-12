@@ -26,15 +26,16 @@ import com.example.smarthome.R
 import com.example.smarthome.repo.LightRepoImpl
 import com.example.smarthome.viewmodel.LightsViewModel
 
+// Main Activity for controlling lights
 class LightActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge() // Fullscreen layout
 
         setContent {
-            val vm = LightsViewModel(LightRepoImpl())
-            val state by vm.lights.collectAsState()
-            val ctx = LocalContext.current
+            val vm = LightsViewModel(LightRepoImpl())       // ViewModel
+            val state by vm.lights.collectAsState()         // Observe state
+            val ctx = LocalContext.current                  // Context for Toasts
 
             // Background gradient
             val bgGradient = Brush.verticalGradient(
@@ -46,16 +47,14 @@ class LightActivity : ComponentActivity() {
             ) { paddingValues ->
                 Box(
                     modifier = Modifier
-                        .fillMaxSize() // Fill full screen
+                        .fillMaxSize()
                         .background(bgGradient)
                         .padding(paddingValues)
                         .padding(16.dp)
                 ) {
                     Column {
 
-                        // -----------------------------
-                        // Top Navigation
-                        // -----------------------------
+                        // Top navigation row
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
@@ -68,9 +67,7 @@ class LightActivity : ComponentActivity() {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // -----------------------------
-                        // Title
-                        // -----------------------------
+                        // Title and subtitle
                         Text(
                             "Lights Control",
                             color = Color.White,
@@ -80,9 +77,7 @@ class LightActivity : ComponentActivity() {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // -----------------------------
-                        // Top Status Card
-                        // -----------------------------
+                        // Top status card (total lights + master switch)
                         TopStatusCard(
                             activeCount = listOf(state.light1On, state.light2On).count { it },
                             masterSwitch = state.light1On && state.light2On,
@@ -99,9 +94,7 @@ class LightActivity : ComponentActivity() {
 
                         Spacer(modifier = Modifier.height(25.dp))
 
-                        // -----------------------------
-                        // Light 1
-                        // -----------------------------
+                        // Light 1 control
                         LightControlCard(
                             label = "Light 1",
                             lightStatus = state.light1On,
@@ -112,9 +105,7 @@ class LightActivity : ComponentActivity() {
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // -----------------------------
-                        // Light 2
-                        // -----------------------------
+                        // Light 2 control
                         LightControlCard(
                             label = "Light 2",
                             lightStatus = state.light2On,
@@ -130,7 +121,7 @@ class LightActivity : ComponentActivity() {
 }
 
 // -----------------------------
-// Top Status Card
+// Top Status Card Composable
 // -----------------------------
 @Composable
 fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Unit) {
@@ -140,6 +131,7 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
+            // Row: Total lights + icon
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Text("Total Lights", color = Color.White.copy(alpha = 0.6f))
@@ -169,6 +161,7 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
 
             Spacer(modifier = Modifier.height(18.dp))
 
+            // Master switch button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -189,7 +182,7 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
 }
 
 // -----------------------------
-// Individual Light Control Card
+// Individual Light Control Card Composable
 // -----------------------------
 @Composable
 fun LightControlCard(
@@ -205,6 +198,8 @@ fun LightControlCard(
         shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
+
+            // Row: Light icon + label + switch
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -234,6 +229,7 @@ fun LightControlCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
+            // Row: Brightness slider + icon + text
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(id = R.drawable.outline_brightness_5_24),
