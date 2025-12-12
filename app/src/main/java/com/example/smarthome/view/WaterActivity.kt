@@ -77,7 +77,7 @@ fun PumpStatusCard(isPumpOn: MutableState<Boolean>) {
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                painter = painterResource(id = R.drawable.baseline_arrow_back_24),
+                painter = painterResource(id = R.drawable.outline_arrow_back_24),
                 contentDescription = null,
                 tint = Color(0xFF9DB9D0),
                 modifier = Modifier

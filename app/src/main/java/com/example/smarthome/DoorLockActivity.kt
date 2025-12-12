@@ -86,7 +86,7 @@ fun DoorBody() {
 
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.baseline_arrow_back_24),
+                    painter = painterResource(R.drawable.outline_arrow_back_24),
                     contentDescription = null,
                     tint = androidx.compose.ui.graphics.Color.Gray.copy(0.8f),
                     modifier = Modifier.size(25.dp)
