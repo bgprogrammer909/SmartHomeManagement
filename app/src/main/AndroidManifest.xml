@@ -12,6 +12,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartHome">
         <activity
+            android:name=".view.EnergyAnalyticsActivity"
+            android:exported="true"
+            android:label="@string/title_activity_energy_analytics"
+            android:theme="@style/Theme.SmartHome">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".DoorlockActivity"
             android:exported="true"
             android:label="DoorLockActivity"
@@ -46,7 +57,11 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity> <!-- ⭐ ADDED WATER ACTIVITY -->
+        <activity
+            android:name=".view.WaterActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SmartHome" />
     </application>
 
 </manifest>
