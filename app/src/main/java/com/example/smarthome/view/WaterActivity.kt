@@ -38,36 +38,53 @@ class WaterActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WaterBody() {
-    // Create a mutable state to pass to the card
+
     var isPumpOn = remember { mutableStateOf(false) }
-    LaunchedEffect(isPumpOn.value) {
-        println("Pump state changed to: ${isPumpOn.value}")
-    }
 
+    // ⭐ Snackbar state
+    val snackbarHostState = remember { SnackbarHostState() }
 
-
-    Scaffold { pad ->
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { pad ->
         Column(
             modifier = Modifier
                 .padding(pad)
                 .fillMaxSize()
                 .background(
-                    brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF0B132B), // dark blue
-                                Color(0xFF1C1C2E)  // darker shade
-                            )
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0xFF0B132B),
+                            Color(0xFF1C1C2E)
+                        )
                     )
                 )
         ) {
-            PumpStatusCard(isPumpOn)
+            PumpStatusCard(
+                isPumpOn = isPumpOn,
+                snackbarHostState = snackbarHostState
+            )
         }
     }
 }
 
 @Composable
-fun PumpStatusCard(isPumpOn: MutableState<Boolean>) {
+fun PumpStatusCard(
+    isPumpOn: MutableState<Boolean>,
+    snackbarHostState: SnackbarHostState
+) {
     var autoMode by remember { mutableStateOf(false) }
+
+    // ⭐ ADDED — controls alert triggering
+    var triggerAlert by remember { mutableStateOf(false) }
+
+    // ⭐ ADDED — SAFE snackbar trigger
+    LaunchedEffect(triggerAlert) {
+        if (triggerAlert) {
+            snackbarHostState.showSnackbar("⚠ Water did not reach expected level!")
+            triggerAlert = false
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -91,12 +108,12 @@ fun PumpStatusCard(isPumpOn: MutableState<Boolean>) {
         Spacer(Modifier.height(16.dp))
 
         Text(
-            "Climate Control",
+            "Water Pump",
             color = Color.White,
             fontSize = 30.sp,
             fontWeight = FontWeight.ExtraBold
         )
-        Text("Adjust temperature and fan settings", color = Color(0xFF9AB3C8), fontSize = 14.sp)
+        Text("Control and Schedule your water pump", color = Color(0xFF9AB3C8), fontSize = 14.sp)
 
         Spacer(Modifier.height(20.dp))
 
@@ -104,7 +121,6 @@ fun PumpStatusCard(isPumpOn: MutableState<Boolean>) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(250.dp)
-                .padding(0.dp)
                 .clip(RoundedCornerShape(22.dp))
                 .background(
                     Brush.linearGradient(
@@ -113,7 +129,8 @@ fun PumpStatusCard(isPumpOn: MutableState<Boolean>) {
                 )
                 .padding(18.dp)
         ) {
-            Column(modifier = Modifier.padding(0.dp)) {
+            Column {
+
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -160,8 +177,10 @@ fun PumpStatusCard(isPumpOn: MutableState<Boolean>) {
                 }
             }
         }
+
         Spacer(modifier = Modifier.height(30.dp))
 
+        // AUTO MODE CARD
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -185,15 +204,35 @@ fun PumpStatusCard(isPumpOn: MutableState<Boolean>) {
                 Column {
                     Text("Auto Mode", color = Color.White, fontSize = 16.sp)
                     Text(
-                        "Adjust temp automatically",
+                        "Schedule-based operation",
                         color = Color(0xFF9AB3C8),
                         fontSize = 12.sp
                     )
                 }
                 Spacer(Modifier.weight(1f))
-                Switch(checked = autoMode, onCheckedChange = { autoMode = it })
+
+                // ⭐ FIXED SWITCH HANDLER — NO COMPOSABLES INSIDE
+                Switch(
+                    checked = autoMode,
+                    onCheckedChange = {
+                        autoMode = it
+                        if (autoMode) {
+                            triggerAlert = true // triggers snackbar
+                        }
+                    }
+                )
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            "Receive alert if water fails to reach the expected level",
+            color = Color(0xFFCED4DA),
+            fontSize = 13.sp,
+            modifier = Modifier.padding(start = 6.dp)
+        )
+
         Spacer(modifier = Modifier.height(50.dp))
 
         Card(
@@ -243,8 +282,6 @@ fun PumpStatusCard(isPumpOn: MutableState<Boolean>) {
                 }
             }
         }
-
-
     }
 }
 
@@ -261,9 +298,10 @@ fun PumpInfoBox(title: String, value: String) {
     }
 }
 
-@Preview
+@Preview(showSystemUi = true, showBackground = true)
 @Composable
 fun WaterBodyPreview() {
+    SmartHomeTheme {
         WaterBody()
     }
-
+}
