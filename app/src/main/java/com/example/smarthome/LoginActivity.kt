@@ -194,7 +194,7 @@ fun LoginBody() {
                                     .show()
                             }
                             else{
-                                Toast.makeText(context,"Please enter both email and password",
+                                Toast.makeText(context,"Please enter both fields",
                                     Toast.LENGTH_SHORT).show()
                             }
                         },
