@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "660805393194",
+    "firebase_url": "https://smarthome-b2e40-default-rtdb.firebaseio.com/",
+    "project_id": "smarthome-b2e40",
+    "storage_bucket": "smarthome-b2e40.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:660805393194:android:de132670a356cc5e5c9c53",
+        "android_client_info": {
+          "package_name": "com.example.smarthome"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOT3gOayyz65DAZ9hL7hLbNeXVd5vVng0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
