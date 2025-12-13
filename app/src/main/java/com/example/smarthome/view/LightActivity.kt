@@ -8,15 +8,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,138 +21,118 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.smarthome.R
-import kotlin.ranges.rangeTo
+import com.example.smarthome.repo.LightRepoImpl
+import com.example.smarthome.viewmodel.LightsViewModel
 
-// ===========================================================
-// Main Activity
-// ===========================================================
+// Main Activity for controlling lights
 class LightActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge() // Enable full-screen layout
+        enableEdgeToEdge() // Fullscreen layout
+
         setContent {
-            LightsScreen() // Set main composable
+            val vm = LightsViewModel(LightRepoImpl())       // ViewModel
+            val state by vm.lights.collectAsState()         // Observe state
+            val ctx = LocalContext.current                  // Context for Toasts
+
+            // Background gradient
+            val bgGradient = Brush.verticalGradient(
+                colors = listOf(Color(0xFF0D1B2A), Color(0xFF0A1320))
+            )
+
+            Scaffold(
+                modifier = Modifier.fillMaxSize()
+            ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(bgGradient)
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                ) {
+                    Column {
+
+                        // Top navigation row
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Back", color = Color.White)
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // Title and subtitle
+                        Text(
+                            "Lights Control",
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text("Manage all your smart lights", color = Color.White.copy(alpha = 0.7f))
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // Top status card (total lights + master switch)
+                        TopStatusCard(
+                            activeCount = listOf(state.light1On, state.light2On).count { it },
+                            masterSwitch = state.light1On && state.light2On,
+                            onToggleAll = {
+                                if (state.light1On && state.light2On) {
+                                    vm.turnOffAll()
+                                    Toast.makeText(ctx, "Turned All Off", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    vm.turnOnAll()
+                                    Toast.makeText(ctx, "Turned All On", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(25.dp))
+
+                        // Light 1 control
+                        LightControlCard(
+                            label = "Light 1",
+                            lightStatus = state.light1On,
+                            brightness = state.light1Brightness,
+                            onSwitchToggle = { vm.toggleLight(1, it) },
+                            onBrightnessChange = { vm.changeBrightness(1, it) }
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Light 2 control
+                        LightControlCard(
+                            label = "Light 2",
+                            lightStatus = state.light2On,
+                            brightness = state.light2Brightness,
+                            onSwitchToggle = { vm.toggleLight(2, it) },
+                            onBrightnessChange = { vm.changeBrightness(2, it) }
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
-// ===========================================================
-// Main Composable: Lights Screen
-// ===========================================================
-@Composable
-fun LightsScreen() {
-    val ctx = LocalContext.current // Context for Toast messages
-
-    // -----------------------------
-    // Background Gradient
-    // -----------------------------
-    val bgGradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFF0D1B2A), Color(0xFF0A1320))
-    )
-
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(bgGradient),
-        containerColor = Color.Transparent
-    ) { paddingValues ->
-
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) {
-
-            // -----------------------------
-            // Top Navigation Row
-            // -----------------------------
-            TopNavigation()
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            // -----------------------------
-            // Screen Title and Subtitle
-            // -----------------------------
-            Text(
-                "Lights Control",
-                color = Color.White,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-            )
-            Text(
-                "Manage all your smart lights",
-                color = Color.White.copy(alpha = 0.7f)
-            )
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            // -----------------------------
-            // Top Status Card (Total Lights)
-            // -----------------------------
-            TopStatusCard(
-                activeCount = 2,
-                onTurnOffAll = { Toast.makeText(ctx, "Turned off", Toast.LENGTH_SHORT).show() }
-            )
-
-            Spacer(modifier = Modifier.height(25.dp))
-
-            // -----------------------------
-            // Room Controls Section
-            // -----------------------------
-            Text(
-                "Room Controls",
-                color = Color.White,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LightControlCard(label = "Light 1")
-            Spacer(modifier = Modifier.height(16.dp))
-            LightControlCard(label = "Light 2")
-        }
-    }
-}
-
-// ===========================================================
-// Top Navigation Row
-// ===========================================================
-@Composable
-fun TopNavigation() {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            Icons.Default.ArrowBack,
-            contentDescription = null,
-            tint = Color.White.copy(alpha = 0.7f)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text("Back", color = Color.White.copy(alpha = 0.7f))
-    }
-}
-
-// ===========================================================
+// -----------------------------
 // Top Status Card Composable
-// ===========================================================
+// -----------------------------
 @Composable
-fun TopStatusCard(activeCount: Int, onTurnOffAll: () -> Unit) {
-
+fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(Color(0xFF1D233A)),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-
-            // -----------------------------
-            // Lights Count and Icon
-            // -----------------------------
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
+            // Row: Total lights + icon
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Text("Total Lights", color = Color.White.copy(alpha = 0.6f))
                     Text(
@@ -173,7 +147,7 @@ fun TopStatusCard(activeCount: Int, onTurnOffAll: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(Color(0x33FBC02D)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -187,24 +161,18 @@ fun TopStatusCard(activeCount: Int, onTurnOffAll: () -> Unit) {
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // -----------------------------
-            // Turn All Off Button
-            // -----------------------------
+            // Master switch button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(Color(0xFFFFC107), Color(0xFFFFA000))
-                        )
-                    )
-                    .clickable { onTurnOffAll() },
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Brush.horizontalGradient(listOf(Color(0xFFFFC107), Color(0xFFFFA000))))
+                    .clickable { onToggleAll() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Turn All Off",
+                    if (masterSwitch) "Turn All Off" else "Turn All On",
                     color = Color.Black,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
@@ -213,33 +181,30 @@ fun TopStatusCard(activeCount: Int, onTurnOffAll: () -> Unit) {
     }
 }
 
-// ===========================================================
+// -----------------------------
 // Individual Light Control Card Composable
-// ===========================================================
+// -----------------------------
 @Composable
-fun LightControlCard(label: String) {
-
-    // State variables for switch and brightness
-    var switchState by remember { mutableStateOf(true) }
-    var lightPercent by remember { mutableStateOf(50f) }
-
+fun LightControlCard(
+    label: String,
+    lightStatus: Boolean,
+    brightness: Float,
+    onSwitchToggle: (Boolean) -> Unit,
+    onBrightnessChange: (Float) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(Color(0xFF1A2036)),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(20.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
 
-            // -----------------------------
-            // Row: Icon, Label, Switch
-            // -----------------------------
+            // Row: Light icon + label + switch
             Row(verticalAlignment = Alignment.CenterVertically) {
-
-                // Lightbulb icon
                 Box(
                     modifier = Modifier
                         .size(42.dp)
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(Color(0x33FBC02D)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -252,36 +217,20 @@ fun LightControlCard(label: String) {
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Label and brightness
                 Column {
-                    Text(
-                        label,
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Text(
-                        "${lightPercent.toInt()}%",
-                        color = Color.White.copy(alpha = 0.6f)
-                    )
+                    Text(label, color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text("${brightness.toInt()}%", color = Color.White.copy(alpha = 0.6f))
                 }
 
-                Spacer(modifier = Modifier.weight(1f)) // Pushes switch to the right
+                Spacer(modifier = Modifier.weight(1f))
 
-                // On/Off switch
-                Switch(
-                    checked = switchState,
-                    onCheckedChange = { switchState = it }
-                )
+                Switch(checked = lightStatus, onCheckedChange = onSwitchToggle)
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // -----------------------------
-            // Row: Brightness Slider
-            // -----------------------------
+            // Row: Brightness slider + icon + text
             Row(verticalAlignment = Alignment.CenterVertically) {
-
-                // Brightness icon
                 Icon(
                     painter = painterResource(id = R.drawable.outline_brightness_5_24),
                     contentDescription = null,
@@ -289,30 +238,17 @@ fun LightControlCard(label: String) {
                     modifier = Modifier.size(20.dp)
                 )
 
-                // Slider
                 Slider(
-                    value = lightPercent,
-                    onValueChange = { newVal -> lightPercent = newVal },
+                    value = brightness,
+                    onValueChange = onBrightnessChange,
                     valueRange = 0f..100f,
                     steps = 98,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    enabled = lightStatus
                 )
 
-                // Display current brightness
-                Text(
-                    "${lightPercent.toInt()}%",
-                    color = Color.White.copy(alpha = 0.7f)
-                )
+                Text("${brightness.toInt()}%", color = Color.White.copy(alpha = 0.7f))
             }
         }
     }
-}
-
-// ===========================================================
-// Preview Composable
-// ===========================================================
-@Preview(showBackground = true)
-@Composable
-fun LightsScreenPreview() {
-    LightsScreen()
 }
