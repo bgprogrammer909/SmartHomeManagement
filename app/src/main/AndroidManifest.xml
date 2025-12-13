@@ -23,7 +23,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".DoorlockActivity"
+            android:name=".view.DoorlockActivity"
             android:exported="true"
             android:label="DoorLockActivity"
             android:theme="@style/Theme.SmartHome">
@@ -45,7 +45,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LoginActivity"
+            android:name=".view.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.SmartHome">
