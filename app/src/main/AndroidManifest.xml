@@ -38,6 +38,17 @@
             android:exported="true"
             android:label="DoorLockActivity"
             android:theme="@style/Theme.SmartHome">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
+        <activity
+            android:name=".view.WaterActivity"
+            android:exported="true"
+            android:label="WaterActivity"
+            android:theme="@style/Theme.SmartHome">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -48,6 +59,17 @@
             android:name=".LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
+            android:theme="@style/Theme.SmartHome">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
+        <activity
+            android:name=".view.AdminActivity"
+            android:exported="true"
+            android:label="AdminActivity"
             android:theme="@style/Theme.SmartHome">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -63,16 +85,26 @@
         <activity
             android:name=".MainActivity"
             android:exported="true">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
+
+        <activity
+            android:name=".view.LightActivity"
+            android:exported="true"
+            android:label="lightActivity"
+            android:theme="@style/Theme.SmartHome">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- ⭐ ADDED WATER ACTIVITY -->
-        <activity
-            android:name=".view.WaterActivity"
-            android:exported="true"
-            android:theme="@style/Theme.SmartHome" />
+        </activity>
+
+
     </application>
 
 </manifest>
