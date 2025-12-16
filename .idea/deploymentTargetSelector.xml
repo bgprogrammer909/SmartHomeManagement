@@ -8,6 +8,16 @@
       <SelectionState runConfigName="WaterActivity">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="DoorlockActivity (3)">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="DoorlockActivity (1)">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="WaterActivity">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="AdminActivity">
       <SelectionState runConfigName="WaterActivity (1)">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
@@ -17,7 +27,7 @@
       <SelectionState runConfigName="WaterActivity (3)">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="EnergyAnalyticsActivity">
+      <SelectionState runConfigName="EnergyAnalyticsActivity">    
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
