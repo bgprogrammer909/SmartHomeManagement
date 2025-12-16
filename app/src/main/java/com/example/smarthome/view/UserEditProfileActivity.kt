@@ -1,6 +1,7 @@
 package com.example.smarthome.view
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,11 +21,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +53,10 @@ class UserEditProfileActivity : ComponentActivity() {
 
 @Composable
 fun EditBody() {
+    val context = LocalContext.current
+    var username by remember { mutableStateOf("") }
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
     Scaffold { padding ->
 
         Box(
@@ -55,7 +65,6 @@ fun EditBody() {
                 .padding(padding)
         ) {
 
-            /* 🔹 TOP GRADIENT BACKGROUND */
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,8 +148,10 @@ fun EditBody() {
                     modifier = Modifier.fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 10.dp))
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = username,
+                    onValueChange = {data->
+                        username=data
+                    },
                     shape = RoundedCornerShape(18.dp),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Email
@@ -154,6 +165,8 @@ fun EditBody() {
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor =colorResource(R.color.field),
                         unfocusedContainerColor = colorResource(R.color.radial),
+                        focusedIndicatorColor = colorResource(R.color.border1),
+                        unfocusedIndicatorColor = colorResource(R.color.border1),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White
                     )
@@ -163,8 +176,10 @@ fun EditBody() {
                     modifier = Modifier.fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 10.dp))
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = currentPassword,
+                    onValueChange = {data->
+                        currentPassword=data
+                    },
                     shape = RoundedCornerShape(18.dp),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email
@@ -178,6 +193,8 @@ fun EditBody() {
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor =colorResource(R.color.field),
                         unfocusedContainerColor = colorResource(R.color.radial),
+                        focusedIndicatorColor = colorResource(R.color.border1),
+                        unfocusedIndicatorColor = colorResource(R.color.border1),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White
                     )
@@ -187,8 +204,10 @@ fun EditBody() {
                     modifier = Modifier.fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 10.dp))
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = newPassword,
+                    onValueChange = {data->
+                        newPassword=data
+                    },
                     shape = RoundedCornerShape(18.dp),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email
@@ -202,13 +221,24 @@ fun EditBody() {
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor =colorResource(R.color.field),
                         unfocusedContainerColor = colorResource(R.color.radial),
+                        focusedIndicatorColor = colorResource(R.color.border1),
+                        unfocusedIndicatorColor = colorResource(R.color.border1),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White
                     )
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 Button(
-                    onClick = {},
+                    onClick = {
+                        if (username.isNotEmpty()&&currentPassword.isNotEmpty()&&newPassword.isNotEmpty()){
+                            Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                        else{
+                            Toast.makeText(context,"Please enter both fields",
+                                Toast.LENGTH_SHORT).show()
+                        }
+                    },
                     colors = ButtonDefaults
                         .buttonColors(Color(0xFF67A1EF)),
                     elevation = ButtonDefaults.buttonElevation(4.dp),
