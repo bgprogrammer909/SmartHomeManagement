@@ -12,6 +12,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartHome">
         <activity
+            android:name=".view.ui.theme.SecuritySystemActivity"
+            android:exported="true"
+            android:label="@string/title_activity_security_system"
+            android:theme="@style/Theme.SmartHome">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".view.EnergyAnalyticsActivity"
             android:exported="true"
             android:label="@string/title_activity_energy_analytics"
