@@ -1,4 +1,4 @@
-package com.example.smarthome
+package com.example.smarthome.view
 
 import android.os.Bundle
 import android.widget.Toast
@@ -50,7 +50,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.smarthome.ui.theme.SmartHomeTheme
+import com.example.smarthome.R
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
