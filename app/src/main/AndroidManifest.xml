@@ -12,11 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartHome">
         <activity
-            android:name=".view.ui.theme.SecuritySystemActivity"
+            android:name=".view.SecurityActivity"
             android:exported="true"
             android:label="@string/title_activity_security_system"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
+
+        <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
