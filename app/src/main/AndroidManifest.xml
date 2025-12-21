@@ -103,6 +103,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".view.ClimateControlActivity"
+            android:exported="true"
+            android:label="WaterActivity"
+            android:theme="@style/Theme.SmartHome">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
 
     </application>
