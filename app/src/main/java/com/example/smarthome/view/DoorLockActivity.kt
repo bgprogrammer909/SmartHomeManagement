@@ -1,4 +1,4 @@
-package com.example.smarthome
+package com.example.smarthome.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -42,8 +42,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.smarthome.R
 import com.example.smarthome.ui.theme.Orange
-import com.example.smarthome.ui.theme.SmartHomeTheme
 import com.example.smarthome.ui.theme.green3
 
 class DoorlockActivity : ComponentActivity() {
@@ -88,12 +88,12 @@ fun DoorBody() {
                 Icon(
                     painter = painterResource(R.drawable.outline_arrow_back_24),
                     contentDescription = null,
-                    tint = androidx.compose.ui.graphics.Color.Gray.copy(0.8f),
+                    tint = Color.Gray.copy(0.8f),
                     modifier = Modifier.size(25.dp)
                 )
                 Text(
                     "Back",
-                    style = TextStyle(color = androidx.compose.ui.graphics.Color.Gray.copy(0.8f)),
+                    style = TextStyle(color = Color.Gray.copy(0.8f)),
                     fontSize = 15.sp,
                     modifier = Modifier.padding(5.dp)
                 )
@@ -103,14 +103,14 @@ fun DoorBody() {
             ) {
                 Text(
                     "Door Lock",
-                    style = TextStyle(color = androidx.compose.ui.graphics.Color.White),
+                    style = TextStyle(color = Color.White),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
             Text(
                 "Secure your home Entrance",
-                style = TextStyle(color = androidx.compose.ui.graphics.Color.Gray.copy(0.8f)),
+                style = TextStyle(color = Color.Gray.copy(0.8f)),
                 modifier = Modifier.padding(horizontal = 15.dp)
             )
 
@@ -120,11 +120,11 @@ fun DoorBody() {
                     .padding(10.dp)
                     .border(
                         width = 1.2.dp,
-                        color = androidx.compose.ui.graphics.Color(0xFF175F86),
+                        color = Color(0xFF175F86),
                         shape = RoundedCornerShape(18.dp)
                     ),
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize()
@@ -146,13 +146,13 @@ fun DoorBody() {
                             Text(
                                 "Main Entrance",
                                 fontSize = 18.sp,
-                                color = androidx.compose.ui.graphics.Color.White
+                                color = Color.White
                             )
                             Box(
                                 modifier = Modifier
                                     .size(50.dp)
                                     .background(
-                                        color =  if(isMainLocked) androidx.compose.ui.graphics.Color(0xFF1F6C41)
+                                        color =  if(isMainLocked) Color(0xFF1F6C41)
                                         else
                                             Orange,
                                         shape = RoundedCornerShape(15.dp)
@@ -165,7 +165,7 @@ fun DoorBody() {
                                     else
                                         painterResource(R.drawable.baseline_lock_open_24),
                                     contentDescription = null,
-                                    tint = if (isMainLocked)androidx.compose.ui.graphics.Color(0xFF47F37B)
+                                    tint = if (isMainLocked) Color(0xFF47F37B)
                                     else Color.White,
                                     modifier = Modifier.size(30.dp)
                                 )
@@ -175,7 +175,7 @@ fun DoorBody() {
                             "Locked" else "Unlocked",
                             fontSize = 25.sp,
                             fontWeight = FontWeight.Bold,
-                            color = androidx.compose.ui.graphics.Color.White
+                            color = Color.White
                         )
                         Spacer(modifier = Modifier.height(15.dp))
                         Button(
@@ -184,7 +184,7 @@ fun DoorBody() {
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isMainLocked)Orange
-                                else androidx.compose.ui.graphics.Color(0xFF1F6C41)
+                                else Color(0xFF1F6C41)
                             ),
                             shape = RoundedCornerShape(18.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -207,11 +207,11 @@ fun DoorBody() {
                     .padding(10.dp)
                     .border(
                         width = 1.2.dp,
-                        color = androidx.compose.ui.graphics.Color(0xFF175F86),
+                        color = Color(0xFF175F86),
                         shape = RoundedCornerShape(18.dp)
                     ),
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize()
@@ -233,13 +233,13 @@ fun DoorBody() {
                             Text(
                                 "Home Door",
                                 fontSize = 18.sp,
-                                color = androidx.compose.ui.graphics.Color.White
+                                color = Color.White
                             )
                             Box(
                                 modifier = Modifier
                                     .size(50.dp)
                                     .background(
-                                        color = if(isHomeLocked)androidx.compose.ui.graphics.Color(0xFF1F6C41)
+                                        color = if(isHomeLocked) Color(0xFF1F6C41)
                                         else Orange,
                                         shape = RoundedCornerShape(15.dp)
                                     ),
@@ -251,7 +251,7 @@ fun DoorBody() {
                                     else
                                         painterResource(R.drawable.baseline_lock_open_24),
                                     contentDescription = null,
-                                    tint = if(isHomeLocked)androidx.compose.ui.graphics.Color(0xFF47F37B)
+                                    tint = if(isHomeLocked) Color(0xFF47F37B)
                                     else Color.White,
                                     modifier = Modifier.size(30.dp)
                                 )
@@ -261,7 +261,7 @@ fun DoorBody() {
                             "Locked" else "Unlocked",
                             fontSize = 25.sp,
                             fontWeight = FontWeight.Bold,
-                            color = androidx.compose.ui.graphics.Color.White
+                            color = Color.White
                         )
                         Spacer(modifier = Modifier.height(15.dp))
                         Button(
@@ -270,7 +270,7 @@ fun DoorBody() {
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isHomeLocked)Orange else
-                                    androidx.compose.ui.graphics.Color(0xFF1F6C41)
+                                    Color(0xFF1F6C41)
 
                             ),
                             shape = RoundedCornerShape(18.dp),
@@ -299,7 +299,7 @@ fun DoorBody() {
                         .padding(10.dp)
                         .border(
                             width = 1.2.dp,
-                            color = androidx.compose.ui.graphics.Color(0xFF29354E),
+                            color = Color(0xFF29354E),
                             shape = RoundedCornerShape(18.dp)
                         ),
                     shape = RoundedCornerShape(18.dp)
@@ -307,7 +307,7 @@ fun DoorBody() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(androidx.compose.ui.graphics.Color(0xFF1C263C)),
+                            .background(Color(0xFF1C263C)),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -317,7 +317,7 @@ fun DoorBody() {
                             Icon(
                                 painter = painterResource(R.drawable.outline_lock_24),
                                 contentDescription = null,
-                                tint = androidx.compose.ui.graphics.Color(0xFFCE4A5A),
+                                tint = Color(0xFFCE4A5A),
                                 modifier = Modifier.size(38.dp)
                             )
                             Spacer(modifier = Modifier.height(10.dp))
@@ -343,7 +343,7 @@ fun DoorBody() {
                         .padding(8.dp)
                         .border(
                             width = 1.2.dp,
-                            color = androidx.compose.ui.graphics.Color(0xFF29354E),
+                            color = Color(0xFF29354E),
                             shape = RoundedCornerShape(18.dp)
                         ),
                     shape = RoundedCornerShape(18.dp)
@@ -351,7 +351,7 @@ fun DoorBody() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(androidx.compose.ui.graphics.Color(0xFF1C263C)),
+                            .background(Color(0xFF1C263C)),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -361,7 +361,7 @@ fun DoorBody() {
                             Icon(
                                 painter = painterResource(R.drawable.baseline_lock_open_24),
                                 contentDescription = null,
-                                tint = androidx.compose.ui.graphics.Color(0xFFCE4A5A),
+                                tint = Color(0xFFCE4A5A),
                                 modifier = Modifier.size(38.dp)
                             )
                             Spacer(modifier = Modifier.height(5.dp))
