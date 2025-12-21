@@ -67,6 +67,17 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".view.UserEditProfileActivity"
+            android:exported="true"
+            android:label="UserEditProfileActivity"
+            android:theme="@style/Theme.SmartHome">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".view.RandomActivity"
             android:exported="false"
             android:label="@string/title_activity_random"
