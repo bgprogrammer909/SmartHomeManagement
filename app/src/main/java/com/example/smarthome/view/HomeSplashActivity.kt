@@ -1,7 +1,6 @@
 package com.example.smarthome.view
 
 import android.app.Activity
-import com.example.smarthome.LoginActivity
 import com.example.smarthome.R
 import android.content.Intent
 import android.os.Bundle
