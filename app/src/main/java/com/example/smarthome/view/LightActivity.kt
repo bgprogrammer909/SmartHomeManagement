@@ -229,7 +229,7 @@ fun LightControlCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Row: Brightness slider + icon + text
+            // Row: Brightness slider + icon + text check
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(id = R.drawable.outline_brightness_5_24),
