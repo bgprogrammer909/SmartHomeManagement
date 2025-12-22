@@ -16,11 +16,11 @@
             android:exported="true"
             android:label="@string/title_activity_energy_analytics"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
         </activity>
         <activity
             android:name=".DoorlockActivity"
@@ -38,11 +38,11 @@
             android:exported="true"
             android:label="WaterActivity"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
         </activity>
         <activity
             android:name=".LoginActivity"
@@ -60,11 +60,7 @@
             android:exported="true"
             android:label="AdminActivity"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--           i -->
         </activity>
         <activity
             android:name=".view.RandomActivity"
