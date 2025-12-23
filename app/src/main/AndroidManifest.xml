@@ -12,33 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartHome">
         <activity
-            android:name=".view.EditUserActivity"
+            android:name=".view.SecurityActivity"
             android:exported="true"
-            android:label="@string/title_activity_edit_user"
+            android:label="@string/title_activity_security_system"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".view.HomeSplashActivity"
-            android:exported="true"
-            android:label="@string/title_activity_home_splash"
-            android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".view.HomeDashboardActivity"
-            android:exported="true"
-            android:label="@string/title_activity_home_dashboard"
-            android:theme="@style/Theme.SmartHome">
-            <intent-filter>
+        <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
