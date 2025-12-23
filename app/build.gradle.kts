@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
     // Firebase Database
     implementation("com.google.firebase:firebase-database-ktx:20.3.1")
     implementation(libs.firebase.auth)

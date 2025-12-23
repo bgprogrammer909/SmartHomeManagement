@@ -10,6 +10,7 @@ buildscript {
     dependencies {
         // Firebase Gradle plugin
         classpath("com.google.gms:google-services:4.4.0")
+
     }
 }
 
