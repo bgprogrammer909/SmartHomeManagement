@@ -21,7 +21,7 @@ class LoginRepoImpl : LoginRepo {
         auth.sendPasswordResetEmail(email)
             .addOnCompleteListener {
                 if (it.isSuccessful) {
-                    callback(true, "Reset email sent")
+                    callback(true, "Reset link sent")
                 } else {
                     callback(false, "${it.exception?.message}")
                 }
