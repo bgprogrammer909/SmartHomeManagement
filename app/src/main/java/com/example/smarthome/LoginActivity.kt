@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,6 +72,8 @@ fun LoginBody() {
     var password by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    var showForgotDialog by remember { mutableStateOf(false) }
+    var forgotEmail by remember { mutableStateOf("") }
     val loginRepo = LoginRepoImpl()
     val loginViewModel = LoginViewModel(loginRepo)
 
@@ -226,13 +229,74 @@ fun LoginBody() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 10.dp)
-                        )
+                                .clickable {
+                                    showForgotDialog = true
+                                })
                     }
                 }
             }
         }
     }
+    if (showForgotDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showForgotDialog = false },
+            title = {
+                Text("Forget Password")
+            },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = forgotEmail,
+                        onValueChange = { forgotEmail = it },
+                        shape = RoundedCornerShape(18.dp),
+                        label = { Text("Enter your email", color = Color.Black) },
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color.Black,
+                            focusedTextColor = Color.Black
+                        ),
+
+                            modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },confirmButton = {
+                Button(
+                    onClick = {
+                        loginViewModel.forgetPassword(forgotEmail) { success, message ->
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            if (success) showForgotDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF32A7EE)
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Text(
+                        "Send Reset Link",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showForgotDialog = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Gray
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Text(
+                        "Cancel",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        )
+    }
 }
+
 
 
 
