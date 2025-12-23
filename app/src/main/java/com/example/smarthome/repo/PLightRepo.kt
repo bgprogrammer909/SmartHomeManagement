@@ -2,13 +2,15 @@ package com.example.smarthome.repo
 
 import com.example.smarthome.model.LightModel
 
-// Interface for managing smart lights in a repository (e.g., Firebase)
-interface LightRepo {
+interface PLightRepo {
 
-    fun getLightsRealtime(callback: (success: Boolean, data: LightModel?) -> Unit)
-
+    fun getLightsRealtime(
+        userId: String,
+        callback: (success: Boolean, data: LightModel?) -> Unit
+    )
 
     fun updateLight(
+        userId: String,
         lightNumber: Int,
         isOn: Boolean,
         brightness: Float,
