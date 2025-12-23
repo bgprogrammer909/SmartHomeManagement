@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.smarthome"
-    compileSdk = 36 // simplified, no need for 'release()'
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.smarthome"
@@ -15,7 +15,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -41,15 +40,25 @@ android {
     buildFeatures {
         compose = true
     }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.0" // Match your Compose version
+    }
 }
 
 dependencies {
+    // Android core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+
+    // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2") // Compose-friendly ViewModel
+
+    // Compose
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -57,8 +66,11 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
-    // Firebase Database
+    // Firebase
     implementation("com.google.firebase:firebase-database-ktx:20.3.1")
+
+    // Kotlin Coroutines (for suspend & StateFlow)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // Testing
     testImplementation(libs.junit)
