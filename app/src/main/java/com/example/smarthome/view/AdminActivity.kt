@@ -1,4 +1,3 @@
-// AdminActivity.kt
 package com.example.smarthome.view
 
 import android.os.Bundle
@@ -63,11 +62,12 @@ fun AdminScreen(viewModel: AdminViewModel) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.generateNextUserId { nextId ->
-                        generatedId = nextId
-                        newPassword = ""
-                        showAddDialog = true
-                    }
+                    // --- Safe ID generation ---
+                    val numericIds = users.mapNotNull { it.id.toIntOrNull() }
+                    val maxId = numericIds.maxOrNull() ?: 9999
+                    generatedId = (maxId + 1).toString()
+                    newPassword = ""
+                    showAddDialog = true
                 },
                 containerColor = Color.Blue
             ) {
@@ -125,7 +125,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
                     UserRow(
                         id = user.id,
                         password = user.password,
-                        isActive = user.isActive,
+                        isActive = true,
                         onToggle = { viewModel.toggleUserStatus(user.id) },
                         onEdit = {
                             editUserId = user.id
