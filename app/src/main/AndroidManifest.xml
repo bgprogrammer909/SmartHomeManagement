@@ -12,7 +12,30 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartHome">
         <activity
+            android:name=".view.SecurityActivity"
+            android:exported="true"
+            android:label="@string/title_activity_security_system"
+            android:theme="@style/Theme.SmartHome">
+
+        <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".view.EnergyAnalyticsActivity"
+            android:exported="true"
+            android:label="@string/title_activity_energy_analytics"
+            android:theme="@style/Theme.SmartHome">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
+        <activity
+            android:name=".view.ClimateControlActivity"
             android:exported="true"
             android:label="@string/title_activity_energy_analytics"
             android:theme="@style/Theme.SmartHome">
@@ -23,32 +46,23 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".DoorlockActivity"
+            android:name=".view.DoorlockActivity"
             android:exported="true"
             android:label="DoorLockActivity"
             android:theme="@style/Theme.SmartHome">
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
         </activity>
         <activity
             android:name=".view.WaterActivity"
             android:exported="true"
             android:label="WaterActivity"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".LoginActivity"
-            android:exported="true"
-            android:label="@string/title_activity_login"
-            android:theme="@style/Theme.SmartHome">
 <!--            <intent-filter>-->
 <!--                <action android:name="android.intent.action.MAIN" />-->
 
@@ -56,9 +70,9 @@
 <!--            </intent-filter>-->
         </activity>
         <activity
-            android:name=".view.AdminActivity"
+            android:name=".view.LoginActivity"
             android:exported="true"
-            android:label="AdminActivity"
+            android:label="@string/title_activity_login"
             android:theme="@style/Theme.SmartHome">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -67,15 +81,16 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".view.UserEditProfileActivity"
+            android:name=".view.AdminActivity"
             android:exported="true"
-            android:label="UserEditProfileActivity"
+            android:label="AdminActivity"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+<!--           i -->
         </activity>
         <activity
             android:name=".view.RandomActivity"
@@ -85,26 +100,25 @@
         <activity
             android:name=".MainActivity"
             android:exported="true">
+
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
+        </activity>
+        <activity
+            android:name=".view.LightActivity"
+            android:exported="true"
+            android:label="lightActivity"
+            android:theme="@style/Theme.SmartHome">
 <!--            <intent-filter>-->
 <!--                <action android:name="android.intent.action.MAIN" />-->
 
 <!--                <category android:name="android.intent.category.LAUNCHER" />-->
 <!--            </intent-filter>-->
         </activity>
-
-        <activity
-            android:name=".view.LightActivity"
-            android:exported="true"
-            android:label="lightActivity"
-            android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-
     </application>
 
 </manifest>
