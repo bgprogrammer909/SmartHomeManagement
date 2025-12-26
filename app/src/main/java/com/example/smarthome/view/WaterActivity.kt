@@ -271,4 +271,15 @@ fun PumpInfoBox(title: String, value: String) {
         Text(title, color = Color.Gray, fontSize = 12.sp)
         Text(value, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
+<<<<<<< HEAD
+=======
+}
+
+@Preview(showSystemUi = true, showBackground = true)
+@Composable
+fun WaterBodyPreview() {
+    SmartHomeTheme {
+        WaterBody()
+    }
+>>>>>>> 804a727d93142c285d129923f1ff519834cdcd7f
 }
