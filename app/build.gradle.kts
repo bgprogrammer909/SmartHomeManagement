@@ -67,7 +67,11 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     // Firebase
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
+    // Firebase Database
     implementation("com.google.firebase:firebase-database-ktx:20.3.1")
+    implementation(libs.firebase.auth)
 
     // Kotlin Coroutines (for suspend & StateFlow)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
