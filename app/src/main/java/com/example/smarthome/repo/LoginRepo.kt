@@ -2,7 +2,6 @@ package com.example.smarthome.repo
 import com.google.firebase.auth.FirebaseUser
 
 interface LoginRepo {
-
     fun login(
         email: String,
         password: String,
