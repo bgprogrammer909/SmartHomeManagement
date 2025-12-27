@@ -20,8 +20,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
 import com.example.smarthome.view.ui.theme.SmartHomeTheme
+import com.example.smarthome.viewmodel.WaterViewModel
 
 class WaterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,11 +39,14 @@ class WaterActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WaterBody() {
+fun WaterBody(
+    viewModel: WaterViewModel = viewModel()
+) {
 
-    var isPumpOn = remember { mutableStateOf(false) }
+    // 🔥 STATE FROM VIEWMODEL (Firebase-backed)
+    val isPumpOn = viewModel.waterOn.collectAsState()
+    val autoMode = viewModel.autoMode.collectAsState()
 
-    // ⭐ Snackbar state
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
@@ -62,7 +67,9 @@ fun WaterBody() {
         ) {
             PumpStatusCard(
                 isPumpOn = isPumpOn,
-                snackbarHostState = snackbarHostState
+                autoMode = autoMode,
+                snackbarHostState = snackbarHostState,
+                viewModel = viewModel
             )
         }
     }
@@ -70,15 +77,14 @@ fun WaterBody() {
 
 @Composable
 fun PumpStatusCard(
-    isPumpOn: MutableState<Boolean>,
-    snackbarHostState: SnackbarHostState
+    isPumpOn: State<Boolean>,
+    autoMode: State<Boolean>,
+    snackbarHostState: SnackbarHostState,
+    viewModel: WaterViewModel
 ) {
-    var autoMode by remember { mutableStateOf(false) }
 
-    // ⭐ ADDED — controls alert triggering
     var triggerAlert by remember { mutableStateOf(false) }
 
-    // ⭐ ADDED — SAFE snackbar trigger
     LaunchedEffect(triggerAlert) {
         if (triggerAlert) {
             snackbarHostState.showSnackbar("⚠ Water did not reach expected level!")
@@ -166,7 +172,7 @@ fun PumpStatusCard(
                 Spacer(Modifier.height(20.dp))
 
                 Button(
-                    onClick = { isPumpOn.value = !isPumpOn.value },
+                    onClick = { viewModel.togglePump() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF2295F3)
@@ -180,7 +186,6 @@ fun PumpStatusCard(
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        // AUTO MODE CARD
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -211,14 +216,11 @@ fun PumpStatusCard(
                 }
                 Spacer(Modifier.weight(1f))
 
-                // ⭐ FIXED SWITCH HANDLER — NO COMPOSABLES INSIDE
                 Switch(
-                    checked = autoMode,
+                    checked = autoMode.value,
                     onCheckedChange = {
-                        autoMode = it
-                        if (autoMode) {
-                            triggerAlert = true // triggers snackbar
-                        }
+                        viewModel.toggleAutoMode()
+                        if (it) triggerAlert = true
                     }
                 )
             }
@@ -260,7 +262,12 @@ fun PumpStatusCard(
                 ) {
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Energy Efficiency", color = Color(0xFFB8E9D0), fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Energy Efficiency",
+                            color = Color(0xFFB8E9D0),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                         Spacer(Modifier.height(6.dp))
                         Text(
                             "Current settings are energy efficient. You're saving 15% compared to average usage.",
