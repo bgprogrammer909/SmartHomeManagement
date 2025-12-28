@@ -107,6 +107,39 @@
 <!--            </intent-filter>-->
         </activity>
         <activity
+            android:name=".view.HomeDashboardActivity"
+            android:exported="true"
+            android:label="HomeDashboardActivity"
+            android:theme="@style/Theme.SmartHome">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".view.PLightActivity"
+            android:exported="true"
+            android:label="PLightActivity"
+            android:theme="@style/Theme.SmartHome">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".view.HomeSplashActivity"
+            android:exported="true"
+            android:label="HomeSplashActivity"
+            android:theme="@style/Theme.SmartHome">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".view.AdminActivity"
             android:exported="true"
             android:label="AdminActivity"
@@ -142,9 +175,6 @@
 <!--            <intent-filter>-->
 <!--                <action android:name="android.intent.action.MAIN" />-->
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-        </activity>
     </application>
 
 </manifest>

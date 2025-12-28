@@ -43,8 +43,13 @@ class LoginRepoImpl : LoginRepo {
 
     override fun forgetPassword(email: String, callback: (Boolean, String) -> Unit) {
         auth.sendPasswordResetEmail(email)
-            .addOnSuccessListener { callback(true, "Password reset email sent") }
-            .addOnFailureListener { callback(false, it.message ?: "Error sending email") }
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    callback(true, "Reset link sent")
+                } else {
+                    callback(false, "${it.exception?.message}")
+                }
+            }
     }
 
     override fun getCurrentUser(): FirebaseUser? = auth.currentUser
