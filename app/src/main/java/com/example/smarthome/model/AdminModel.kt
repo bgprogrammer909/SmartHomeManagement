@@ -4,5 +4,8 @@ data class AdminModel(
     val id: String = "",
     val email: String = "",
     val password: String = "",
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val lights: Boolean = false,
+    val fan: Boolean = false,
+    val door: Boolean = false
 )
