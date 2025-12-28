@@ -1,5 +1,6 @@
 package com.example.smarthome.view
 
+
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -50,7 +51,11 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.smarthome.repo.LoginRepoImpl
+import com.example.smarthome.ui.theme.SmartHomeTheme
+import com.example.smarthome.viewmodel.LoginViewModel
 import com.example.smarthome.R
+
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,10 +73,14 @@ fun LoginBody() {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
-    val context= LocalContext.current
+    val context = LocalContext.current
+    val loginRepo = LoginRepoImpl()
+    val loginViewModel = LoginViewModel(loginRepo)
+
     Scaffold { padding ->
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(padding)
         ) {
             Image(
@@ -81,7 +90,8 @@ fun LoginBody() {
                 contentScale = ContentScale.Crop
             )
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
@@ -90,23 +100,28 @@ fun LoginBody() {
                             )
                         )
                     )
-                    .pointerInput(Unit){}
             )
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(top = 150.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Sign in", color = Color.White, style = TextStyle(fontWeight = FontWeight.Bold),
+                    "Sign in",
+                    color = Color.White,
+                    style = TextStyle(fontWeight = FontWeight.Bold),
                     fontSize = 35.sp
                 )
                 Text(
-                    "Welcome to Smart Home", style = TextStyle(fontSize = 16.sp),
-                    color = Color.Gray.copy(1f), fontWeight = FontWeight.Bold
+                    "Welcome to Smart Home",
+                    style = TextStyle(fontSize = 16.sp),
+                    color = Color.Gray.copy(1f),
+                    fontWeight = FontWeight.Bold
                 )
-                Card (
-                    modifier = Modifier.height(450.dp)
+                Card(
+                    modifier = Modifier
+                        .height(450.dp)
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp)
                         .padding(vertical = 20.dp),
@@ -114,11 +129,13 @@ fun LoginBody() {
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF1B243A).copy(0.8f))
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .padding(horizontal = 30.dp)
                             .padding(top = 40.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        // Email field
                         Text(
                             "Email",
                             color = Color.White,
@@ -128,56 +145,11 @@ fun LoginBody() {
                         )
                         OutlinedTextField(
                             value = email,
-                            onValueChange = { data ->
-                                email=data
-                            },
+                            onValueChange = { email = it },
                             shape = RoundedCornerShape(20.dp),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Email
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                                .padding(horizontal = 2.dp),
-                            placeholder = {Text("Enter your Email", color = Color.Gray)},
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = colorResource(R.color.radial),
-                                unfocusedContainerColor = colorResource(R.color.radial),
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
-                            )
-                        )
-                        Text("Password",
-                            color = Color.White,
-                            style = TextStyle(fontSize = 20.sp),
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.fillMaxWidth()
-                                .padding(top = 10.dp)
-                        )
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = {data->
-                                password=data
-                            },
-                            visualTransformation = if(!visibility) PasswordVisualTransformation() else
-                                VisualTransformation.None,
-                            trailingIcon = {
-                                IconButton(
-                                    onClick = {
-                                        visibility=!visibility
-                                    })
-                                {
-                                    Icon(painter = if (visibility)
-                                        painterResource(R.drawable.baseline_remove_red_eye_24)
-                                    else
-                                        painterResource(R.drawable.baseline_visibility_off_24),
-                                        contentDescription = null,
-                                        tint = Color(0xFF67A1EF))
-                                }
-                            },
-                            shape = RoundedCornerShape(20.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = {Text("********", color = Color.Gray)},
+                            placeholder = { Text("Enter your Email", color = Color.Gray) },
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = colorResource(R.color.radial),
                                 unfocusedContainerColor = colorResource(R.color.radial),
@@ -188,41 +160,81 @@ fun LoginBody() {
                             )
                         )
 
-                        Button(onClick = {
-                            if(email.isNotEmpty()&&password.isNotEmpty()) {
-                                Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                            else{
-                                Toast.makeText(context,"Please enter both fields",
-                                    Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                            colors = ButtonDefaults
-                                .buttonColors(containerColor = Color(0xFF32A7EE)),
+                        // Password field
+                        Text(
+                            "Password",
+                            color = Color.White,
+                            style = TextStyle(fontSize = 20.sp),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            visualTransformation = if (!visibility) PasswordVisualTransformation() else VisualTransformation.None,
+                            trailingIcon = {
+                                IconButton(onClick = { visibility = !visibility }) {
+                                    Icon(
+                                        painter = if (visibility)
+                                            painterResource(R.drawable.baseline_remove_red_eye_24)
+                                        else
+                                            painterResource(R.drawable.baseline_visibility_off_24),
+                                        contentDescription = null,
+                                        tint = Color(0xFF67A1EF)
+                                    )
+                                }
+                            },
+                            shape = RoundedCornerShape(20.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("********", color = Color.Gray) },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = colorResource(R.color.radial),
+                                unfocusedContainerColor = colorResource(R.color.radial),
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
+                        )
+
+                        // Login button
+                        Button(
+                            onClick = {
+                                if (email.isNotEmpty() && password.isNotEmpty()) {
+                                    loginViewModel.login(email, password) { success, message ->
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                        if (success) { }
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Please enter both fields", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32A7EE)),
                             shape = RoundedCornerShape(20.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(70.dp)
                                 .padding(horizontal = 15.dp)
-                                .padding(top = 15.dp)) {
+                                .padding(top = 15.dp)
+                        ) {
                             Text("Log in", style = TextStyle(fontSize = 20.sp), fontWeight = FontWeight.Bold)
                         }
-                        Text("Forget Password?", color = Color.Gray, style = TextStyle(fontSize = 16.sp),
+
+                        Text(
+                            "Forget Password?",
+                            color = Color.Gray,
+                            style = TextStyle(fontSize = 16.sp),
                             textDecoration = TextDecoration.Underline,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                                .padding(top = 10.dp))
-
-
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp)
+                        )
                     }
                 }
             }
-
         }
-
     }
-
 }
 
 
