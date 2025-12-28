@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,15 +59,18 @@ private fun modeIconColor(mode: SecurityMode): Color =
 @Composable
 fun SecurityScreen(onBack: () -> Unit) {
     var activeMode by remember { mutableStateOf(SecurityMode.HOME) }
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFF0A1A2F), Color(0xFF05101F))
+                    listOf(Color(0xFF0B132B), Color(0xFF1C1C2E))
                 )
-            ),
+            )
+            .statusBarsPadding(),
         contentPadding = PaddingValues(20.dp)
     ) {
 
@@ -80,9 +84,11 @@ fun SecurityScreen(onBack: () -> Unit) {
                     contentDescription = null,
                     tint = Color(0xFF9DB9D0),
                     modifier = Modifier.size(20.dp)
+                        .clickable { activity?.finish() }
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("Back", color = Color(0xFF9DB9D0))
+                Text("Back", color = Color(0xFF9DB9D0),
+                    modifier = Modifier.clickable { activity?.finish() })
             }
 
             Spacer(Modifier.height(20.dp))
@@ -222,6 +228,8 @@ fun SecurityModeCard(
 @Composable
 fun SensorItem(icon: Int, title: String, subtitle: String) {
     var enabled by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
     Box(
         modifier = Modifier

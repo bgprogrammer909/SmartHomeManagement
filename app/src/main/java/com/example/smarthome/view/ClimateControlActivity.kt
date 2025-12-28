@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,7 +27,6 @@ import com.example.smarthome.viewmodel.ClimateViewModel
 class ClimateControlActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             val viewModel: ClimateViewModel = viewModel()
             ClimateControlScreen(viewModel)
@@ -39,16 +39,18 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
 
     val state by viewModel.state
     val fan = state.fanSpeed.toFloat()
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
     val bg = Brush.verticalGradient(
-        listOf(Color(0xFF05060A), Color(0xFF051225))
+        listOf(Color(0xFF0B132B), Color(0xFF1C1C2E))
     )
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(bg)
             .padding(20.dp)
+            .statusBarsPadding()
     ) {
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -57,9 +59,11 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
                 contentDescription = null,
                 tint = Color(0xFF9DB9D0),
                 modifier = Modifier.size(20.dp)
+                    .clickable { activity?.finish() }
             )
             Spacer(Modifier.width(8.dp))
-            Text("Back", color = Color(0xFF9DB9D0))
+            Text("Back", color = Color(0xFF9DB9D0),
+                modifier = Modifier.clickable { activity?.finish() })
         }
 
         Spacer(Modifier.height(16.dp))
