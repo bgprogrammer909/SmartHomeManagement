@@ -1,41 +1,34 @@
 package com.example.smarthome.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.compose.runtime.mutableStateOf
-import com.example.smarthome.model.WaterModel
-import com.example.smarthome.repo.WaterRepo
-import com.example.smarthome.repo.WaterRepoImpl
+import androidx.lifecycle.viewModelScope
+import com.example.smarthome.repo.WaterRepository
+import com.example.smarthome.repo.WaterRepositoryImpl
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class WaterViewModel(
-    private val repo: WaterRepo = WaterRepoImpl()
+    private val repo: WaterRepository = WaterRepositoryImpl()
 ) : ViewModel() {
 
-    val state = mutableStateOf(WaterModel())
+    private val _waterOn = MutableStateFlow(false)
+    val waterOn: StateFlow<Boolean> get() = _waterOn
+
+    private val _autoMode = MutableStateFlow(false)
+    val autoMode: StateFlow<Boolean> get() = _autoMode
 
     init {
-        repo.observeWater {
-            state.value = it
+        viewModelScope.launch {
+            repo.getWaterRealtime().collect { water ->
+                _waterOn.value = water.waterOn
+                _autoMode.value = water.automaticMode
+            }
         }
     }
 
-    fun setPumpOn(value: Boolean) {
-        update(state.value.copy(isPumpOn = value))
-    }
-
-    fun setAutoMode(value: Boolean) {
-        update(state.value.copy(autoMode = value))
-    }
-
-    fun setTodayUsage(value: Double) {
-        update(state.value.copy(todayUsage = value))
-    }
-
-    fun setFlowRate(value: Double) {
-        update(state.value.copy(flowRate = value))
-    }
-
-    private fun update(model: WaterModel) {
-        state.value = model
-        repo.updateWater(model)
-    }
+    fun togglePump() = repo.togglePump()
+    fun toggleAutoMode() = repo.toggleAutoMode()
+    fun turnOn() = repo.turnOn()
+    fun turnOff() = repo.turnOff()
 }

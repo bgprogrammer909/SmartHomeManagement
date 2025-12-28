@@ -41,7 +41,13 @@ class WaterActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WaterBody(viewModel: WaterViewModel) {
+fun WaterBody(
+    viewModel: WaterViewModel = viewModel()
+) {
+
+    // 🔥 STATE FROM VIEWMODEL (Firebase-backed)
+    val isPumpOn = viewModel.waterOn.collectAsState()
+    val autoMode = viewModel.autoMode.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -62,8 +68,10 @@ fun WaterBody(viewModel: WaterViewModel) {
                 )
         ) {
             PumpStatusCard(
-                viewModel = viewModel,
-                snackbarHostState = snackbarHostState
+                isPumpOn = isPumpOn,
+                autoMode = autoMode,
+                snackbarHostState = snackbarHostState,
+                viewModel = viewModel
             )
         }
     }
@@ -71,10 +79,12 @@ fun WaterBody(viewModel: WaterViewModel) {
 
 @Composable
 fun PumpStatusCard(
-    viewModel: WaterViewModel,
-    snackbarHostState: SnackbarHostState
+    isPumpOn: State<Boolean>,
+    autoMode: State<Boolean>,
+    snackbarHostState: SnackbarHostState,
+    viewModel: WaterViewModel
 ) {
-    val state by viewModel.state
+
     var triggerAlert by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val activity = context as? ComponentActivity
@@ -152,7 +162,7 @@ fun PumpStatusCard(
                 Spacer(Modifier.height(20.dp))
 
                 Button(
-                    onClick = { viewModel.setPumpOn(!state.isPumpOn) },
+                    onClick = { viewModel.togglePump() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF2295F3)
@@ -192,12 +202,10 @@ fun PumpStatusCard(
                 Spacer(Modifier.weight(1f))
 
                 Switch(
-                    checked = state.autoMode,
+                    checked = autoMode.value,
                     onCheckedChange = {
-                        viewModel.setAutoMode(it)
-                        if (it) {
-                            triggerAlert = true
-                        }
+                        viewModel.toggleAutoMode()
+                        if (it) triggerAlert = true
                     }
                 )
             }
@@ -239,7 +247,12 @@ fun PumpStatusCard(
                 ) {
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Energy Efficiency", color = Color(0xFFB8E9D0), fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Energy Efficiency",
+                            color = Color(0xFFB8E9D0),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                         Spacer(Modifier.height(6.dp))
                         Text(
                             "Current settings are energy efficient. You're saving ${state.energySavings}% compared to average usage.",
@@ -277,3 +290,10 @@ fun PumpInfoBox(title: String, value: String) {
     }
 }
 
+@Preview(showSystemUi = true, showBackground = true)
+@Composable
+fun WaterBodyPreview() {
+    SmartHomeTheme {
+        WaterBody()
+    }
+}
