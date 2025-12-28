@@ -7,5 +7,8 @@
     <color name="radial">#1A1E39</color>
     <color name="Radial">#071526</color>
     <color name="search">#292E38</color>
+    <color name="field">#1C263C</color>
+    <color name="border1">#29354E</color>
+
 
 </resources>

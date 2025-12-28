@@ -5,9 +5,5 @@
     <string name="title_activity_door_lock">DoorLockActivity</string>
     <string name="title_activity_water_pump">WaterPumpActivity</string>
     <string name="title_activity_energy_analytics">EnergyAnalyticsActivity</string>
-    <string name="title_activity_home_dashboard">HomeDashboardActivity</string>
-    <string name="title_activity_home_splash">HomeSplashActivity</string>
-    <string name="title_activity_edit_user">EditUserActivity</string>
-    <string name="title_activity_profile">ProfileActivity</string>
-    <string name="title_activity_add_user">AddUserActivity</string>
+    <string name="title_activity_security_system">SecuritySystemActivity</string>
 </resources>
