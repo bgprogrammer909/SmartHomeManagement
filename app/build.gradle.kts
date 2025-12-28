@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.gms.google-services") // Firebase plugin
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -42,25 +42,27 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.0" // Match your Compose version
+        // ✅ MATCHES COMPOSE BOM
+        kotlinCompilerExtensionVersion = "1.6.8"
     }
 }
 
 dependencies {
-    // Android core
+
+    // Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+
+    // Activity + Compose
     implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.activity.compose)
 
     // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2") // Compose-friendly ViewModel
-
-    // Compose
-    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -70,13 +72,10 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
 
     // Firebase
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-    implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
-    // Firebase Database
     implementation("com.google.firebase:firebase-database-ktx:20.3.1")
     implementation(libs.firebase.auth)
 
-    // Kotlin Coroutines (for suspend & StateFlow)
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // Testing
