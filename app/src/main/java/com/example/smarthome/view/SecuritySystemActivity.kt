@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,9 +73,10 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFF0A1A2F), Color(0xFF05101F))
+                    listOf(Color(0xFF0B132B), Color(0xFF1C1C2E))
                 )
-            ),
+            )
+            .statusBarsPadding(),
         contentPadding = PaddingValues(20.dp)
     ) {
 

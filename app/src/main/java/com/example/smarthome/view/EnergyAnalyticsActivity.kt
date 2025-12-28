@@ -3,6 +3,7 @@ package com.example.smarthome.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,6 +31,7 @@ import com.example.smarthome.viewmodel.EnergyViewModel
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             val viewModel: EnergyViewModel = viewModel()
             EnergyAnalyticsScreen(viewModel = viewModel, onBack = { finish() })
@@ -40,6 +43,8 @@ class EnergyAnalyticsActivity : ComponentActivity() {
 fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
     val state by viewModel.state
     var selectedTab by remember { mutableStateOf("Week") }
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
     LazyColumn(
         modifier = Modifier
@@ -61,24 +66,21 @@ fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
             ) {
                 Text("← Back", color = Color.White, fontSize = 16.sp)
             }
-        }
-
-        // TITLE
-        item {
-            Column {
-                Text(
-                    "Energy Analytics",
-                    color = Color.White,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "Track your power consumption",
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 14.sp
-                )
+            item {
+                Column {
+                    Text(
+                        "Energy Analytics",
+                        color = Color.White,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "Track your power consumption",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 14.sp
+                    )
+                }
             }
-        }
 
         // TOTAL USAGE CARD
         item {
@@ -106,7 +108,8 @@ fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
         item { EstimatedBillCard(state) }
         item { TipsCard() }
 
-        item { Spacer(modifier = Modifier.height(50.dp)) }
+            item { Spacer(modifier = Modifier.height(50.dp)) }
+        }
     }
 }
 
