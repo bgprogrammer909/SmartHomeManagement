@@ -4,6 +4,8 @@ import com.example.smarthome.repo.LoginRepo
 import com.google.firebase.auth.FirebaseUser
 
 class LoginViewModel(val repo: LoginRepo) : ViewModel() {
+
+
     fun login(
         email: String, password: String, callback: (Boolean, String) -> Unit){
         repo.login(email, password, callback)
