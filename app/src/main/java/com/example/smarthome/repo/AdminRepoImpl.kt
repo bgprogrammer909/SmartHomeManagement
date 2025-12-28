@@ -1,87 +1,70 @@
 package com.example.smarthome.repo
 
 import com.example.smarthome.model.AdminModel
-import com.google.firebase.database.*
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 class AdminRepoImpl : AdminRepo {
 
-    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
-    private val ref: DatabaseReference = database.getReference("users")
+    private val auth = FirebaseAuth.getInstance()
+    private val ref = FirebaseDatabase.getInstance().getReference("users")
 
-    override fun addUserToDatabase(model: AdminModel, callback: (Boolean, String) -> Unit) {
-        ref.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val existingIds = snapshot.children.mapNotNull {
-                    it.child("id").getValue(String::class.java)?.toIntOrNull()
-                }
-                val nextId = if (existingIds.isEmpty()) 10000 else (existingIds.maxOrNull()!! + 1)
-                val userWithId = AdminModel(
-                    id = nextId.toString(),
-                    password = model.password,
-                    isActive = true
+    override fun addUser(email: String, password: String, callback: (Boolean, String) -> Unit) {
+        // Create user in Auth
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnSuccessListener { result ->
+                val uid = result.user!!.uid
+                // Default modules
+                val user = AdminModel(
+                    id = uid,
+                    email = email,
+                    password = password,
+                    isActive = true,
+                    lights = false,
+                    fan = false,
+                    door = false
                 )
-
-
-                ref.child(userWithId.id).setValue(userWithId).addOnCompleteListener { task ->
-                    if (task.isSuccessful) callback(true, "User added successfully")
-                    else callback(false, task.exception?.message ?: "Error adding user")
-                }
+                // Add to Realtime Database
+                ref.child(uid).setValue(user)
+                    .addOnSuccessListener { callback(true, "User added to Auth & DB") }
+                    .addOnFailureListener { callback(false, it.message ?: "DB error") }
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                callback(false, error.message)
-            }
-        })
-    }
-
-    override fun getUserById(userId: String, callback: (Boolean, String, AdminModel?) -> Unit) {
-        ref.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val user = snapshot.getValue(AdminModel::class.java)
-                if (user != null) callback(true, "User fetched", user)
-                else callback(false, "User not found", null)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                callback(false, error.message, null)
-            }
-        })
+            .addOnFailureListener { callback(false, it.message ?: "Auth error") }
     }
 
     override fun getAllUsers(callback: (Boolean, String, List<AdminModel>?) -> Unit) {
-        ref.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val allUsers = snapshot.children.mapNotNull { it.getValue(AdminModel::class.java) }
-                callback(true, "Users fetched", allUsers)
+        ref.get()
+            .addOnSuccessListener { snapshot ->
+                val list = snapshot.children.mapNotNull { it.getValue(AdminModel::class.java) }
+                callback(true, "Fetched", list)
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                callback(false, error.message, emptyList())
-            }
-        })
+            .addOnFailureListener { callback(false, it.message ?: "Error", null) }
     }
 
-    override fun updateUser(userId: String, model: AdminModel, callback: (Boolean, String) -> Unit) {
-        ref.child(userId).setValue(model).addOnCompleteListener {
-            if (it.isSuccessful) callback(true, "User updated")
-            else callback(false, it.exception?.message ?: "Error updating user")
+    override fun updateUserStatus(userId: String, isActive: Boolean, callback: (Boolean, String) -> Unit) {
+        ref.child(userId).child("isActive").setValue(isActive)
+            .addOnSuccessListener { callback(true, "Status updated") }
+            .addOnFailureListener { callback(false, it.message ?: "Error") }
+    }
+
+    override fun updateUserPassword(userId: String, newPassword: String, callback: (Boolean, String) -> Unit) {
+        // Update password in Auth
+        auth.fetchSignInMethodsForEmail(auth.currentUser?.email ?: "").addOnCompleteListener {
+            val user = auth.currentUser
+            user?.updatePassword(newPassword)
+                ?.addOnSuccessListener {
+                    // Update password in DB
+                    ref.child(userId).child("password").setValue(newPassword)
+                        .addOnSuccessListener { callback(true, "Password updated") }
+                        .addOnFailureListener { callback(false, it.message ?: "DB error") }
+                }
+                ?.addOnFailureListener { callback(false, it.message ?: "Auth error") }
         }
     }
 
-    override fun toggleUserStatus(userId: String, callback: (Boolean, String) -> Unit) {
-        ref.child(userId).child("isActive").addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val currentStatus = snapshot.getValue(Boolean::class.java) ?: true
-                ref.child(userId).child("isActive").setValue(!currentStatus)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) callback(true, "Status toggled")
-                        else callback(false, task.exception?.message ?: "Error toggling status")
-                    }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                callback(false, error.message)
-            }
-        })
+    override fun updateModule(userId: String, moduleName: String, moduleData: Any, callback: (Boolean, String) -> Unit) {
+        ref.child(userId).child(moduleName).setValue(moduleData)
+            .addOnSuccessListener { callback(true, "$moduleName updated") }
+            .addOnFailureListener { callback(false, it.message ?: "Error updating module") }
     }
 }
