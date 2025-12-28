@@ -2,17 +2,10 @@ package com.example.smarthome.model
 
 data class AdminModel(
     val id: String = "",
+    val email: String = "",
     val password: String = "",
-    val isActive: Boolean? = true // default true
+    val isActive: Boolean = true,
+    val lights: Boolean = false,
+    val fan: Boolean = false,
+    val door: Boolean = false
 )
-
-
-{
-    fun toMap(): Map<String, Any?> {
-        return mapOf(
-            "id" to id,
-            "password" to password,
-            "isActive" to isActive
-        )
-    }
-}
