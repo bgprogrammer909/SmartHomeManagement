@@ -21,15 +21,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
 import com.example.smarthome.view.ui.theme.SmartHomeTheme
+import com.example.smarthome.viewmodel.SecurityViewModel
 
 class SecurityActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             SmartHomeTheme {
-                SecurityScreen { finish() }
+                val viewModel: SecurityViewModel = viewModel()
+                SecurityScreen(viewModel) { finish() }
             }
         }
     }
@@ -56,8 +59,13 @@ private fun modeIconColor(mode: SecurityMode): Color =
     }
 
 @Composable
-fun SecurityScreen(onBack: () -> Unit) {
-    var activeMode by remember { mutableStateOf(SecurityMode.HOME) }
+fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
+    val state by viewModel.state
+    val activeMode = when (state.activeMode) {
+        "AWAY" -> SecurityMode.AWAY
+        "NIGHT" -> SecurityMode.NIGHT
+        else -> SecurityMode.HOME
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -75,14 +83,7 @@ fun SecurityScreen(onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { onBack() }
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.baseline_arrow_back_24),
-                    contentDescription = null,
-                    tint = Color(0xFF9DB9D0),
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("Back", color = Color(0xFF9DB9D0))
+                Text("← Back", color = Color(0xFF9DB9D0))
             }
 
             Spacer(Modifier.height(20.dp))
@@ -104,16 +105,18 @@ fun SecurityScreen(onBack: () -> Unit) {
                 SecurityModeCard(
                     mode = SecurityMode.HOME,
                     selected = activeMode == SecurityMode.HOME,
-                    modifier = Modifier.weight(1f)
-                ) { activeMode = it }
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.setActiveMode("HOME") }
+                )
 
                 Spacer(Modifier.width(16.dp))
 
                 SecurityModeCard(
                     mode = SecurityMode.AWAY,
                     selected = activeMode == SecurityMode.AWAY,
-                    modifier = Modifier.weight(1f)
-                ) { activeMode = it }
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.setActiveMode("AWAY") }
+                )
             }
 
             Spacer(Modifier.height(16.dp))
@@ -122,10 +125,12 @@ fun SecurityScreen(onBack: () -> Unit) {
                 SecurityModeCard(
                     mode = SecurityMode.NIGHT,
                     selected = activeMode == SecurityMode.NIGHT,
-                    modifier = Modifier.weight(1f)
-                ) { activeMode = it }
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.setActiveMode("NIGHT") }
+                )
 
                 Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.weight(1f))
             }
 
             Spacer(Modifier.height(28.dp))
@@ -133,26 +138,38 @@ fun SecurityScreen(onBack: () -> Unit) {
             Text("Sensors & Alerts", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
 
             Spacer(Modifier.height(16.dp))
-        }
 
-        items(
-            listOf(
-                Triple(R.drawable.baseline_videocam_24, "Motion Detection", "Camera-based monitoring"),
-                Triple(R.drawable.baseline_security_24, "Door Sensors", "All entry points"),
-                Triple(R.drawable.baseline_notifications_24, "Push Notifications", "Instant alerts")
+            SensorItem(
+                icon = R.drawable.baseline_videocam_24,
+                title = "Motion Detection",
+                subtitle = "Camera-based monitoring",
+                enabled = state.motionDetection,
+                onToggle = { viewModel.setMotionDetection(it) }
             )
-        ) { sensor ->
-            SensorItem(sensor.first, sensor.second, sensor.third)
-        }
 
-        item {
+            SensorItem(
+                icon = R.drawable.baseline_security_24,
+                title = "Door Sensors",
+                subtitle = "All entry points",
+                enabled = state.doorSensors,
+                onToggle = { viewModel.setDoorSensors(it) }
+            )
+
+            SensorItem(
+                icon = R.drawable.baseline_notifications_24,
+                title = "Push Notifications",
+                subtitle = "Instant alerts",
+                enabled = state.pushNotifications,
+                onToggle = { viewModel.setPushNotifications(it) }
+            )
+
             Spacer(Modifier.height(28.dp))
 
             Text("Recent Activity", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
 
             Spacer(Modifier.height(12.dp))
 
-            RecentActivityCard()
+            RecentActivityCard(state.recentActivities)
         }
     }
 }
@@ -174,11 +191,13 @@ fun ActiveModeCard(mode: SecurityMode) {
                 Text(mode.description, color = Color.White.copy(alpha = 0.7f))
             }
 
-            Icon(
-                painter = painterResource(mode.icon),
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(36.dp)
+            Text(
+                when (mode) {
+                    SecurityMode.HOME -> "🏠"
+                    SecurityMode.AWAY -> "🛡️"
+                    SecurityMode.NIGHT -> "🌙"
+                },
+                fontSize = 36.sp
             )
         }
     }
@@ -189,26 +208,28 @@ fun SecurityModeCard(
     mode: SecurityMode,
     selected: Boolean,
     modifier: Modifier = Modifier,
-    onClick: (SecurityMode) -> Unit
+    onClick: () -> Unit
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
+            .clickable { onClick() }
             .then(
                 if (selected)
                     Modifier.background(Brush.linearGradient(modeGradient(mode)))
                 else
                     Modifier.background(Color(0xFF101F33))
             )
-            .clickable { onClick(mode) }
             .padding(16.dp)
     ) {
         Column {
-            Icon(
-                painter = painterResource(mode.icon),
-                contentDescription = null,
-                tint = if (selected) Color.White else modeIconColor(mode),
-                modifier = Modifier.size(28.dp)
+            Text(
+                when (mode) {
+                    SecurityMode.HOME -> "🏠"
+                    SecurityMode.AWAY -> "🛡️"
+                    SecurityMode.NIGHT -> "🌙"
+                },
+                fontSize = 28.sp
             )
 
             Spacer(Modifier.height(12.dp))
@@ -220,9 +241,13 @@ fun SecurityModeCard(
 }
 
 @Composable
-fun SensorItem(icon: Int, title: String, subtitle: String) {
-    var enabled by remember { mutableStateOf(true) }
-
+fun SensorItem(
+    icon: Int,
+    title: String,
+    subtitle: String,
+    enabled: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -236,11 +261,14 @@ fun SensorItem(icon: Int, title: String, subtitle: String) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    tint = Color(0xFFFF9800),
-                    modifier = Modifier.size(28.dp)
+                Text(
+                    when (icon) {
+                        R.drawable.baseline_videocam_24 -> "📹"
+                        R.drawable.baseline_security_24 -> "🔒"
+                        R.drawable.baseline_notifications_24 -> "🔔"
+                        else -> "⚙️"
+                    },
+                    fontSize = 28.sp
                 )
 
                 Spacer(Modifier.width(12.dp))
@@ -251,7 +279,7 @@ fun SensorItem(icon: Int, title: String, subtitle: String) {
                 }
             }
 
-            Switch(checked = enabled, onCheckedChange = { enabled = it })
+            Switch(checked = enabled, onCheckedChange = onToggle)
         }
     }
 
@@ -259,7 +287,7 @@ fun SensorItem(icon: Int, title: String, subtitle: String) {
 }
 
 @Composable
-fun RecentActivityCard() {
+fun RecentActivityCard(activities: List<com.example.smarthome.model.ActivityLog>) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -268,10 +296,13 @@ fun RecentActivityCard() {
             .padding(16.dp)
     ) {
         Column {
-            repeat(3) {
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Text("Motion detected – Front door", color = Color(0xFF9AB3C8), fontSize = 13.sp)
-                    Text("2 min ago", color = Color(0xFF6B7C93), fontSize = 12.sp)
+            activities.take(3).forEach { activity ->
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(activity.description, color = Color(0xFF9AB3C8), fontSize = 13.sp)
+                    Text(activity.timestamp, color = Color(0xFF6B7C93), fontSize = 12.sp)
                 }
                 Spacer(Modifier.height(6.dp))
             }
@@ -283,6 +314,23 @@ fun RecentActivityCard() {
 @Composable
 fun SecurityScreenPreview() {
     SmartHomeTheme {
-        SecurityScreen(onBack = {})
+        // Preview without ViewModel
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0xFF0A1A2F), Color(0xFF05101F))
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            Text("← Back", color = Color(0xFF9DB9D0))
+            Spacer(Modifier.height(20.dp))
+            Text("Security System", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+            Text("Manage your home security", color = Color(0xFF9AB3C8), fontSize = 14.sp)
+            Spacer(Modifier.height(20.dp))
+            ActiveModeCard(SecurityMode.HOME)
+        }
     }
 }

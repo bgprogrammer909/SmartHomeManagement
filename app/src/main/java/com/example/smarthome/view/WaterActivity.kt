@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -271,15 +272,5 @@ fun PumpInfoBox(title: String, value: String) {
         Text(title, color = Color.Gray, fontSize = 12.sp)
         Text(value, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
-<<<<<<< HEAD
-=======
 }
 
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun WaterBodyPreview() {
-    SmartHomeTheme {
-        WaterBody()
-    }
->>>>>>> 804a727d93142c285d129923f1ff519834cdcd7f
-}
