@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -77,6 +78,8 @@ fun PumpStatusCard(
 
     // ⭐ ADDED — controls alert triggering
     var triggerAlert by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
     // ⭐ ADDED — SAFE snackbar trigger
     LaunchedEffect(triggerAlert) {
@@ -99,10 +102,11 @@ fun PumpStatusCard(
                 tint = Color(0xFF9DB9D0),
                 modifier = Modifier
                     .size(20.dp)
-                    .clickable { }
+                    .clickable { activity?.finish() }
             )
             Spacer(Modifier.width(8.dp))
-            Text("Back", color = Color(0xFF9DB9D0), fontSize = 16.sp)
+            Text("Back", color = Color(0xFF9DB9D0), fontSize = 16.sp,
+                modifier = Modifier.clickable { activity?.finish() })
         }
 
         Spacer(Modifier.height(16.dp))

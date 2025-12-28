@@ -3,6 +3,7 @@ package com.example.smarthome.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,91 +30,86 @@ import com.example.smarthome.R
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             EnergyAnalyticsScreen(onBack = { finish() })
         }
     }
 }
+
 @Composable
 fun EnergyAnalyticsScreen(onBack: () -> Unit) {
 
-    // ADD THIS → Controls the selected tab
     var selectedTab by remember { mutableStateOf("Week") }
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF0A1A2F), Color(0xFF05101F))
+    Scaffold { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0xFF0B132B), Color(0xFF1C1C2E))
+                    )
                 )
-            )
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
+                .padding(20.dp)
+                .statusBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
 
-        // BACK BUTTON
-        item {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { onBack() }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.outline_arrow_back_24),
-                    tint = Color.White,
-                    contentDescription = "Back"
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("Back", color = Color.White, fontSize = 16.sp)
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clickable { activity?.finish() }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.outline_arrow_back_24),
+                        tint = Color.White,
+                        contentDescription = "Back"
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Back", color = Color.White, fontSize = 16.sp)
+                }
             }
-        }
+            item {
+                Column {
+                    Text(
+                        "Energy Analytics",
+                        color = Color.White,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "Track your power consumption",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 14.sp
+                    )
+                }
+            }
 
-        // TITLE
-        item {
-            Column {
-                Text(
-                    "Energy Analytics",
-                    color = Color.White,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "Track your power consumption",
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 14.sp
+            item { TotalUsageCard() }
+
+            item {
+                TabRowSection(
+                    selectedTab = selectedTab,
+                    onTabChange = { selectedTab = it }
                 )
             }
+
+            item { GraphCardWithChart(selectedTab) }
+
+            item { UsageItem("Lights", 28, Color(0xFFFFD740)) }
+            item { UsageItem("AC", 42, Color(0xFF4CC3FF)) }
+            item { UsageItem("Water Pump", 78, Color(0xFF3C6DFF)) }
+            item { UsageItem("Others", 18, Color(0xFFCE93D8)) }
+
+            item { EstimatedBillCard() }
+            item { TipsCard() }
+
+            item { Spacer(modifier = Modifier.height(50.dp)) }
         }
-
-        // TOTAL USAGE CARD
-        item {
-            TotalUsageCard()
-        }
-
-        // FIXED → Pass state into the TabRow
-        item {
-            TabRowSection(
-                selectedTab = selectedTab,
-                onTabChange = { selectedTab = it }
-            )
-        }
-
-        // FIXED → Graph receives selectedTab
-        item {
-            GraphCardWithChart(selectedTab)
-        }
-
-        // USAGE ITEMS
-        item { UsageItem("Lights", 28, Color(0xFFFFD740)) }
-        item { UsageItem("AC", 42, Color(0xFF4CC3FF)) }
-        item { UsageItem("Water Pump", 78, Color(0xFF3C6DFF)) }
-        item { UsageItem("Others", 18, Color(0xFFCE93D8)) }
-
-        // BILL + TIPS
-        item { EstimatedBillCard() }
-        item { TipsCard() }
-
-        item { Spacer(modifier = Modifier.height(50.dp)) }
     }
 }
 
@@ -435,4 +432,3 @@ fun TipItem(text: String) {
 fun PreviewEnergyAnalytics() {
     EnergyAnalyticsScreen(onBack = {})
 }
-//whatsupp suchit broo

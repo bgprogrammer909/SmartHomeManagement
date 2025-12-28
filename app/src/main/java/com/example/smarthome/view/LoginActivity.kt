@@ -1,6 +1,9 @@
 package com.example.smarthome.view
 
 
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -69,16 +72,18 @@ class LoginActivity : ComponentActivity() {
 }
 
 
+
 @Composable
 fun LoginBody() {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val activity = context as? Activity
     var showForgotDialog by remember { mutableStateOf(false) }
     var forgotEmail by remember { mutableStateOf("") }
     val loginRepo = LoginRepoImpl()
-    val loginViewModel = LoginViewModel(loginRepo)
+    val loginViewModel= LoginViewModel(loginRepo)
 
     Scaffold { padding ->
         Box(
@@ -206,7 +211,14 @@ fun LoginBody() {
                                 if (email.isNotEmpty() && password.isNotEmpty()) {
                                     loginViewModel.login(email, password) { success, message ->
                                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                        if (success) { }
+                                        if (success) {
+                                            val intent = Intent(
+                                                context, HomeDashboardActivity::class.java
+                                            )
+
+                                            context.startActivity(intent)
+                                            activity?.finish()
+                                        }
                                     }
                                 } else {
                                     Toast.makeText(context, "Please enter both fields", Toast.LENGTH_SHORT).show()

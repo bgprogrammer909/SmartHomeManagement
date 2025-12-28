@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -45,6 +47,8 @@ class DoorlockActivity : ComponentActivity() {
 fun DoorBody(viewModel: DoorViewModel = viewModel()) {
     val isMainLocked by viewModel.mainDoor.collectAsState()
     val isHomeLocked by viewModel.homeDoor.collectAsState()
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
     Scaffold { padding ->
         Column(
@@ -75,12 +79,14 @@ fun DoorBody(viewModel: DoorViewModel = viewModel()) {
                     contentDescription = null,
                     tint = Color.Gray.copy(0.8f),
                     modifier = Modifier.size(24.dp)
+                        .clickable { activity?.finish() }
                 )
                 Text(
                     "Back",
                     color = Color.Gray.copy(0.8f),
                     fontSize = 15.sp,
                     modifier = Modifier.padding(start = 5.dp)
+                            .clickable { activity?.finish() }
                 )
             }
 
