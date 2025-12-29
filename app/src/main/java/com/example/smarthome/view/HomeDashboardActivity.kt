@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,281 +23,264 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
+import com.example.smarthome.model.*
 import com.example.smarthome.util.CurrentUser
-import com.example.smarthome.viewmodel.PLightsViewModel
-import com.example.smarthome.viewmodel.PLightsViewModelFactory
-import com.example.smarthome.repo.PLightRepoImpl
-
+import com.google.firebase.database.*
 
 class HomeDashboardActivity : ComponentActivity() {
+
+    private val db = FirebaseDatabase.getInstance().reference
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             HomeDashboardBody()
         }
     }
-}
 
-@Composable
-fun HomeDashboardBody() {
-    val context = LocalContext.current
-    var selectedIndex by remember { mutableStateOf(0) }
+    @Composable
+    fun HomeDashboardBody() {
+        var selectedIndex by remember { mutableStateOf(0) }
 
-    Scaffold(
-        bottomBar = {
-            BottomNavigationBar(selectedIndex) { index ->
-                selectedIndex = index
+        // Device states
+        var lights by remember { mutableStateOf(listOf(LightModel(), LightModel())) }
+        var fan by remember { mutableStateOf(ClimateModel()) }
+        var door by remember { mutableStateOf(DoorModel()) }
+        var water by remember { mutableStateOf(WaterModel()) }
+
+        // Observe Firebase for current user
+        LaunchedEffect(Unit) {
+            val uid = CurrentUser.userId ?: return@LaunchedEffect
+            val userRef = db.child("users").child(uid)
+
+            fun <T> ensureChild(path: String, default: T) {
+                userRef.child(path).get().addOnSuccessListener { snapshot ->
+                    if (!snapshot.exists()) userRef.child(path).setValue(default)
+                }
             }
-        },
-        containerColor = Color(0xFF0B1225)
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when (selectedIndex) {
-                0 -> DashboardScreen()
-                1 -> EnergyAnalyticsActivityScreen()
-                2 -> SecurityScreenActivity()
-                3 -> ProfileActivityScreen()
+
+            // Create default objects if missing
+            ensureChild("lights", listOf(LightModel(), LightModel()))
+            ensureChild("fan", ClimateModel())
+            ensureChild("door", DoorModel())
+            ensureChild("water", WaterModel())
+
+            // Observe lights
+            userRef.child("lights").addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    lights = snapshot.children.map { it.getValue(LightModel::class.java) ?: LightModel() }
+                }
+                override fun onCancelled(error: DatabaseError) {}
+            })
+
+            // Observe fan safely
+            userRef.child("fan").addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    fan = snapshot.getValue(ClimateModel::class.java)
+                        ?: ClimateModel().also { userRef.child("fan").setValue(it) }
+                }
+                override fun onCancelled(error: DatabaseError) {}
+            })
+
+            // Observe door
+            userRef.child("door").addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    door = snapshot.getValue(DoorModel::class.java)
+                        ?: DoorModel().also { userRef.child("door").setValue(it) }
+                }
+                override fun onCancelled(error: DatabaseError) {}
+            })
+
+            // Observe water
+            userRef.child("water").addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    water = snapshot.getValue(WaterModel::class.java)
+                        ?: WaterModel().also { userRef.child("water").setValue(it) }
+                }
+                override fun onCancelled(error: DatabaseError) {}
+            })
+        }
+
+        Scaffold(
+            bottomBar = { BottomNavigationBar(selectedIndex) { selectedIndex = it } },
+            containerColor = Color(0xFF0B1225)
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                when (selectedIndex) {
+                    0 -> DashboardScreen(lights, fan, door, water)
+                    1 -> EnergyAnalyticsActivityScreen()
+                    2 -> SecurityScreen()
+                    3 -> ProfileActivityScreen()
+                }
             }
         }
     }
-}
 
-@Composable
-fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
-    val navItems = listOf(
-        NavItem(R.drawable.baseline_home_24, "Dashboard"),
-        NavItem(R.drawable.baseline_query_stats_24, "Analytics"),
-        NavItem(R.drawable.baseline_security_24, "Security"),
-        NavItem(R.drawable.baseline_person_24, "Profile")
-    )
+    @Composable
+    fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
+        val navItems = listOf(
+            NavItem(R.drawable.baseline_home_24, "Dashboard"),
+            NavItem(R.drawable.baseline_query_stats_24, "Analytics"),
+            NavItem(R.drawable.baseline_security_24, "Security"),
+            NavItem(R.drawable.baseline_person_24, "Profile")
+        )
 
-    NavigationBar(
-        containerColor = Color(0xFF0D152F),
-        tonalElevation = 4.dp
-    ) {
-        navItems.forEachIndexed { index, item ->
-            NavigationBarItem(
-                icon = { Icon(painterResource(item.icon), contentDescription = item.label) },
-                label = { Text(item.label, fontSize = 12.sp, color = Color.White) },
-                selected = selectedIndex == index,
-                onClick = { onItemSelected(index) },
-                alwaysShowLabel = true
+        NavigationBar(
+            containerColor = Color(0xFF0D152F),
+            tonalElevation = 4.dp
+        ) {
+            navItems.forEachIndexed { index, item ->
+                NavigationBarItem(
+                    icon = { Icon(painterResource(item.icon), contentDescription = item.label) },
+                    label = { Text(item.label, fontSize = 12.sp, color = Color.White) },
+                    selected = selectedIndex == index,
+                    onClick = { onItemSelected(index) },
+                    alwaysShowLabel = true
+                )
+            }
+        }
+    }
+
+    data class NavItem(val icon: Int, val label: String)
+
+    @Composable
+    fun DashboardScreen(lights: List<LightModel>, fan: ClimateModel, door: DoorModel, water: WaterModel) {
+        val context = LocalContext.current
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF0B1225))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 90.dp)
+            ) {
+                HeaderSection()
+                Spacer(modifier = Modifier.height(24.dp))
+                DeviceGrid(context, lights, fan, door, water)
+            }
+        }
+    }
+
+    @Composable
+    fun HeaderSection() {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text("Welcome Home,", color = Color.White.copy(0.7f), fontSize = 15.sp)
+                Text("Alex", color = Color.White, fontSize = 20.sp)
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .background(Color.Gray),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.baseline_person_24),
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun DeviceGrid(context: Context, lights: List<LightModel>, fan: ClimateModel, door: DoorModel, water: WaterModel) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            DeviceRow(
+                context,
+                CardData("Light", "${lights.count { it.isOn }} On", R.drawable.outline_lightbulb_24, Color.Yellow, null),
+                CardData("Water", if (water.isPumpOn) "Pump On" else "Pump Off", R.drawable.baseline_water_drop_24, Color.Cyan, WaterActivity::class.java)
+            )
+            DeviceRow(
+                context,
+                CardData("Door", if (door.mainDoorLocked) "Locked" else "Unlocked", R.drawable.baseline_sensor_door_24, Color(0xFF4CAF50), DoorlockActivity::class.java),
+                CardData("Fan", "${fan.temperature}°C", R.drawable.baseline_air_24, Color(0xFF1FB7FF), ClimateControlActivity::class.java)
+            )
+            DeviceRow(
+                context,
+                CardData("Security", "Away Mode", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java),
+                CardData("Analytics", "120 kWh", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java)
             )
         }
     }
-}
 
-data class NavItem(val icon: Int, val label: String)
+    data class CardData(
+        val title: String,
+        val status: String,
+        val icon: Int,
+        val color: Color,
+        val activity: Class<*>?
+    )
 
-@Composable
-fun DashboardScreen() {
-    val context = LocalContext.current
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0B1225))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 90.dp)
+    @Composable
+    fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            HeaderSection()
-            Spacer(modifier = Modifier.height(24.dp))
-            DeviceGrid(context)
+            DeviceCard(modifier = Modifier.weight(1f), card = card1, context = context)
+            DeviceCard(modifier = Modifier.weight(1f), card = card2, context = context)
         }
     }
-}
 
-@Composable
-fun HeaderSection() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text("Welcome Home,", color = Color.White.copy(0.7f), fontSize = 15.sp)
-            Text("", color = Color.White, fontSize = 20.sp)
-        }
-
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(Color.Gray),
-            contentAlignment = Alignment.Center
+    @Composable
+    fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
+        Column(
+            modifier = modifier
+                .height(135.dp)
+                .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
+                .let { if (card.activity != null) it.clickable { context.startActivity(Intent(context, card.activity)) } else it }
+                .padding(16.dp),
         ) {
             Image(
-                painter = painterResource(R.drawable.baseline_person_24),
+                painter = painterResource(card.icon),
                 contentDescription = null,
                 modifier = Modifier.size(28.dp),
-                colorFilter = ColorFilter.tint(Color.White)
+                colorFilter = ColorFilter.tint(card.color)
             )
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(card.title, color = Color.White, fontSize = 16.sp)
+            Text(card.status, color = Color.White.copy(0.6f), fontSize = 13.sp)
         }
     }
-}
 
-@Composable
-fun DeviceGrid(context: Context) {
-    // Get userId safely
-    val userId = CurrentUser.userId ?: run {
-        // If no user is logged in, finish activity
-        if (context is ComponentActivity) context.finish()
-        return
+    @Composable
+    fun EnergyAnalyticsActivityScreen() = ScreenBox("Analytics Page")
+    @Composable
+    fun SecurityScreen() = ScreenBox("Security Page")
+    @Composable
+    fun ProfileActivityScreen() = ScreenBox("Profile Page")
+
+    @Composable
+    fun ScreenBox(title: String) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF111A32)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(title, color = Color.White, fontSize = 20.sp)
+        }
     }
 
-    // Initialize lights view model for this user
-    val lightsViewModel: PLightsViewModel = viewModel(
-        factory = PLightsViewModelFactory(
-            repo = PLightRepoImpl(),
-            userId = userId
-        )
-    )
-
-    val lightsState by lightsViewModel.lights.collectAsState()
-
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-
-        DeviceRow(
-            context,
-            CardData(
-                "Light",
-                "${listOf(lightsState.light1On, lightsState.light2On).count { it }} On",
-                R.drawable.outline_lightbulb_24,
-                Color.Yellow,
-                PLightActivity::class.java
-            ),
-            CardData(
-                "Water",
-                "Pump Off",
-                R.drawable.baseline_water_drop_24,
-                Color.Cyan,
-                null
-            )
-        )
-
-        DeviceRow(
-            context,
-            CardData(
-                "Door",
-                "Main Entrance",
-                R.drawable.baseline_sensor_door_24,
-                Color(0xFF4CAF50),
-                null
-            ),
-            CardData(
-                "Fan",
-                "24°C",
-                R.drawable.baseline_air_24,
-                Color(0xFF1FB7FF),
-                null
-            )
-        )
-
-        DeviceRow(
-            context,
-            CardData(
-                "Security",
-                "Away Mode",
-                R.drawable.baseline_security_24,
-                Color(0xFFFF9800),
-                null
-            ),
-            CardData(
-                "Analytics",
-                "120 kWh",
-                R.drawable.baseline_query_stats_24,
-                Color(0xFF7A4FFF),
-                null
-            )
-        )
+    @Preview(showBackground = true)
+    @Composable
+    fun PreviewDashboard() {
+        DashboardScreen(listOf(LightModel(), LightModel()), ClimateModel(), DoorModel(), WaterModel())
     }
-}
-
-data class CardData(
-    val title: String,
-    val status: String,
-    val icon: Int,
-    val color: Color,
-    val activity: Class<*>?
-)
-
-@Composable
-fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        DeviceCard(modifier = Modifier.weight(1f), card = card1, context = context)
-        DeviceCard(modifier = Modifier.weight(1f), card = card2, context = context)
-    }
-}
-
-@Composable
-fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
-    Column(
-        modifier = modifier
-            .height(135.dp)
-            .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
-            .let {
-                if (card.activity != null)
-                    it.clickable {
-                        context.startActivity(Intent(context, card.activity).apply {
-                            // pass userId to PLightActivity
-                            putExtra("USER_ID", CurrentUser.userId)
-                        })
-                    }
-                else it
-            }
-            .padding(16.dp),
-    ) {
-        Image(
-            painter = painterResource(card.icon),
-            contentDescription = null,
-            modifier = Modifier.size(28.dp),
-            colorFilter = ColorFilter.tint(card.color)
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(card.title, color = Color.White, fontSize = 16.sp)
-        Text(card.status, color = Color.White.copy(0.6f), fontSize = 13.sp)
-    }
-}
-
-@Composable
-fun EnergyAnalyticsActivityScreen() = ScreenBox("Analytics")
-
-@Composable
-fun SecurityScreenActivity() = ScreenBox("Security")
-
-@Composable
-fun ProfileActivityScreen() = ScreenBox("Profile Page")
-
-@Composable
-fun ScreenBox(title: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF111A32)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(title, color = Color.White, fontSize = 20.sp)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewDashboard() {
-    DashboardScreen()
 }

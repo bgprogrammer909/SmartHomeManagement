@@ -1,5 +1,6 @@
 package com.example.smarthome.model
 
+// Represents water system state
 data class WaterModel(
     val isPumpOn: Boolean = false,
     val autoMode: Boolean = false,
