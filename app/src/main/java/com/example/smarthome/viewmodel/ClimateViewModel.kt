@@ -1,50 +1,62 @@
 package com.example.smarthome.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.smarthome.model.ClimateModel
 import com.example.smarthome.repo.ClimateRepo
 import com.example.smarthome.repo.ClimateRepoImpl
-import com.example.smarthome.util.CurrentUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class ClimateViewModel(
-    private val repo: ClimateRepo = ClimateRepoImpl()
+    private val repo: ClimateRepo = ClimateRepoImpl(),
+    private val userId: String
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ClimateModel())
     val state = _state.asStateFlow()
 
     init {
-        CurrentUser.userId?.let { userId ->
-            repo.getFanRealtime(userId) { success, data ->
-                if (success && data != null) {
-                    _state.value = data
-                }
+        // Fetch initial data and listen for realtime updates
+        repo.getFanRealtime(userId) { success, data ->
+            if (success && data != null) {
+                _state.value = data
             }
         }
     }
 
     fun setFanSpeed(value: Int) {
-        update(_state.value.copy(fanSpeed = value))
+        val updated = _state.value.copy(fanSpeed = value)
+        update(updated)
     }
 
     fun setPower(value: Boolean) {
-        update(_state.value.copy(powerOn = value))
+        val updated = _state.value.copy(powerOn = value)
+        update(updated)
     }
 
     fun setAutoMode(value: Boolean) {
-        update(_state.value.copy(autoMode = value))
+        val updated = _state.value.copy(autoMode = value)
+        update(updated)
     }
 
     fun setTemperature(value: Int) {
-        update(_state.value.copy(temperature = value))
+        val updated = _state.value.copy(temperature = value)
+        update(updated)
     }
 
     private fun update(model: ClimateModel) {
+        // Update local state immediately
         _state.value = model
-        CurrentUser.userId?.let { userId ->
-            repo.updateFan(userId, model) { _, _ -> }
+
+        // Persist to Firebase asynchronously
+        viewModelScope.launch {
+            repo.updateFan(userId, model) { success, _ ->
+                if (!success) {
+                    // Optional: handle failure (retry, show Toast, etc.)
+                }
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,292 +24,258 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
-import com.example.smarthome.model.*
 import com.example.smarthome.util.CurrentUser
-import com.google.firebase.database.*
+import com.example.smarthome.viewmodel.PLightsViewModel
+import com.example.smarthome.viewmodel.PLightsViewModelFactory
+import com.example.smarthome.repo.PLightRepoImpl
 
 class HomeDashboardActivity : ComponentActivity() {
-
-    private val db = FirebaseDatabase.getInstance().reference
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { HomeDashboardBody() }
-    }
-
-    @Composable
-    fun HomeDashboardBody() {
-        var selectedIndex by remember { mutableStateOf(0) }
-
-        var lights by remember { mutableStateOf(listOf(LightModel(), LightModel())) }
-        var fan by remember { mutableStateOf(ClimateModel()) }
-        var door by remember { mutableStateOf(DoorModel()) }
-        var water by remember { mutableStateOf(WaterModel()) }
-
-        val uid = CurrentUser.userId
-
-        LaunchedEffect(uid) {
-            if (uid == null) return@LaunchedEffect
-
-            val userRef = db.child("users").child(uid)
-
-            val lightsRef = userRef.child("lights")
-            lightsRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (!snapshot.exists()) lightsRef.setValue(listOf(LightModel(), LightModel()))
-                }
-                override fun onCancelled(error: DatabaseError) {}
-            })
-            lightsRef.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val list = snapshot.children.map { it.getValue(LightModel::class.java) ?: LightModel() }
-                    lights = list
-                }
-                override fun onCancelled(error: DatabaseError) {}
-            })
-
-            val fanRef = userRef.child("fan")
-            fanRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (!snapshot.exists() || snapshot.getValue(ClimateModel::class.java) == null)
-                        fanRef.setValue(ClimateModel())
-                }
-                override fun onCancelled(error: DatabaseError) {}
-            })
-            fanRef.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    fan = snapshot.getValue(ClimateModel::class.java) ?: ClimateModel()
-                }
-                override fun onCancelled(error: DatabaseError) {}
-            })
-
-            val doorRef = userRef.child("door")
-            doorRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (!snapshot.exists() || snapshot.getValue(DoorModel::class.java) == null)
-                        doorRef.setValue(DoorModel())
-                }
-                override fun onCancelled(error: DatabaseError) {}
-            })
-            doorRef.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    door = snapshot.getValue(DoorModel::class.java) ?: DoorModel()
-                }
-                override fun onCancelled(error: DatabaseError) {}
-            })
-
-            val waterRef = userRef.child("water")
-            waterRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (!snapshot.exists() || snapshot.getValue(WaterModel::class.java) == null)
-                        waterRef.setValue(WaterModel())
-                }
-                override fun onCancelled(error: DatabaseError) {}
-            })
-            waterRef.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    water = snapshot.getValue(WaterModel::class.java) ?: WaterModel()
-                }
-                override fun onCancelled(error: DatabaseError) {}
-            })
-        }
-
-        Scaffold(
-            bottomBar = { BottomNavigationBar(selectedIndex) { selectedIndex = it } },
-            containerColor = Color(0xFF0B1225)
-        ) { padding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                when (selectedIndex) {
-                    0 -> DashboardScreen(lights, fan, door, water)
-                    1 -> EnergyAnalyticsActivityScreen()
-                    2 -> SecurityScreen()
-                    3 -> ProfileActivityScreen()
-                }
-            }
+        enableEdgeToEdge()
+        setContent {
+            HomeDashboardBody()
         }
     }
+}
 
-    @Composable
-    fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
-        val navItems = listOf(
-            NavItem(R.drawable.baseline_home_24, "Dashboard"),
-            NavItem(R.drawable.baseline_query_stats_24, "Analytics"),
-            NavItem(R.drawable.baseline_security_24, "Security"),
-            NavItem(R.drawable.baseline_person_24, "Profile")
-        )
-        NavigationBar(
-            containerColor = Color(0xFF0D152F),
-            tonalElevation = 4.dp
-        ) {
-            navItems.forEachIndexed { index, item ->
-                NavigationBarItem(
-                    icon = { Icon(painterResource(item.icon), contentDescription = item.label) },
-                    label = { Text(item.label, fontSize = 12.sp, color = Color.White) },
-                    selected = selectedIndex == index,
-                    onClick = { onItemSelected(index) },
-                    alwaysShowLabel = true
-                )
-            }
-        }
-    }
+@Composable
+fun HomeDashboardBody() {
+    val context = LocalContext.current
+    var selectedIndex by remember { mutableStateOf(0) }
 
-    data class NavItem(val icon: Int, val label: String)
-
-    @Composable
-    fun DashboardScreen(lights: List<LightModel>, fan: ClimateModel, door: DoorModel, water: WaterModel) {
-        val context = LocalContext.current
-        val uid = CurrentUser.userId ?: return
+    Scaffold(
+        bottomBar = { BottomNavigationBar(selectedIndex) { index -> selectedIndex = index } },
+        containerColor = Color(0xFF0B1225)
+    ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF0B1225))
+                .padding(padding)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 90.dp)
-            ) {
-                HeaderSection()
-                Spacer(modifier = Modifier.height(24.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    lights.forEachIndexed { index, light ->
-                        LightControlCard(context, light, index, uid)
-                    }
-                    DeviceRow(
-                        context,
-                        CardData("Water", if (water.isPumpOn) "Pump On" else "Pump Off", R.drawable.baseline_water_drop_24, Color.Cyan, WaterActivity::class.java),
-                        CardData("Fan", "${fan.temperature}°C", R.drawable.baseline_air_24, Color(0xFF1FB7FF), ClimateControlActivity::class.java)
-                    )
-                    DeviceRow(
-                        context,
-                        CardData("Door", if (door.mainDoorLocked) "Locked" else "Unlocked", R.drawable.baseline_sensor_door_24, Color(0xFF4CAF50), DoorlockActivity::class.java),
-                        CardData("Analytics", "120 kWh", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java)
-                    )
-                }
+            when (selectedIndex) {
+                0 -> DashboardScreen()
+                1 -> ScreenBox("Analytics")
+                2 -> ScreenBox("Security")
+                3 -> ScreenBox("Profile Page")
             }
         }
     }
+}
 
-    @Composable
-    fun HeaderSection() {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+@Composable
+fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
+    val navItems = listOf(
+        NavItem(R.drawable.baseline_home_24, "Dashboard"),
+        NavItem(R.drawable.baseline_query_stats_24, "Analytics"),
+        NavItem(R.drawable.baseline_security_24, "Security"),
+        NavItem(R.drawable.baseline_person_24, "Profile")
+    )
+
+    NavigationBar(
+        containerColor = Color(0xFF0D152F),
+        tonalElevation = 4.dp
+    ) {
+        navItems.forEachIndexed { index, item ->
+            NavigationBarItem(
+                icon = { Icon(painterResource(item.icon), contentDescription = item.label) },
+                label = { Text(item.label, fontSize = 12.sp, color = Color.White) },
+                selected = selectedIndex == index,
+                onClick = { onItemSelected(index) },
+                alwaysShowLabel = true
+            )
+        }
+    }
+}
+
+data class NavItem(val icon: Int, val label: String)
+
+@Composable
+fun DashboardScreen() {
+    val context = LocalContext.current
+    val userId = CurrentUser.userId ?: return
+
+    // Lights ViewModel
+    val lightsViewModel: PLightsViewModel = viewModel(
+        factory = PLightsViewModelFactory(
+            repo = PLightRepoImpl(),
+            userId = userId
+        )
+    )
+
+    val lightsState by lightsViewModel.lights.collectAsState()
+    val activeLightsCount = listOf(lightsState.light1On, lightsState.light2On).count { it }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0B1225))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 90.dp)
         ) {
-            Column {
-                Text("Welcome Home,", color = Color.White.copy(0.7f), fontSize = 15.sp)
-                Text("Alex", color = Color.White, fontSize = 20.sp)
-            }
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(Color.Gray),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.baseline_person_24),
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                    colorFilter = ColorFilter.tint(Color.White)
+            HeaderSection()
+            Spacer(modifier = Modifier.height(24.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+
+                // Lights and Water
+                DeviceRow(
+                    context,
+                    CardData(
+                        "Light",
+                        "$activeLightsCount On",
+                        R.drawable.outline_lightbulb_24,
+                        Color.Yellow,
+                        PLightActivity::class.java
+                    ),
+                    CardData(
+                        "Water",
+                        "Pump Off",  // placeholder
+                        R.drawable.baseline_water_drop_24,
+                        Color.Cyan,
+                        null
+                    )
+                )
+
+                // Door and Fan
+                DeviceRow(
+                    context,
+                    CardData(
+                        "Fan",
+                        "24°C",
+                        R.drawable.baseline_air_24,
+                        Color(0xFF1FB7FF),
+                        ClimateControlActivity::class.java // open this on click
+                    ),
+                    CardData(
+                        "Door",
+                        "Main Entrance",
+                        R.drawable.baseline_sensor_door_24,
+                        Color(0xFF4CAF50),
+                        null
+                    )
+                )
+
+
+                // Security and Analytics
+                DeviceRow(
+                    context,
+                    CardData(
+                        "Security",
+                        "Away Mode",
+                        R.drawable.baseline_security_24,
+                        Color(0xFFFF9800),
+                        null
+                    ),
+                    CardData(
+                        "Analytics",
+                        "120 kWh",
+                        R.drawable.baseline_query_stats_24,
+                        Color(0xFF7A4FFF),
+                        null
+                    )
                 )
             }
         }
     }
+}
 
-    @Composable
-    fun LightControlCard(context: Context, light: LightModel, lightIndex: Int, uid: String) {
-        val db = FirebaseDatabase.getInstance().reference
-        var lightState by remember { mutableStateOf(light) }
-        Column(
-            modifier = Modifier
-                .height(135.dp)
-                .fillMaxWidth()
-                .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
-                .clickable {
-                    val updatedLight = if (lightIndex == 0) lightState.copy(light1On = !lightState.light1On)
-                    else lightState.copy(light2On = !lightState.light2On)
-                    lightState = updatedLight
-                    db.child("users").child(uid).child("lights").child(lightIndex.toString()).setValue(updatedLight)
-                }
-                .padding(16.dp)
-        ) {
-            Image(
-                painter = painterResource(R.drawable.outline_lightbulb_24),
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                colorFilter = ColorFilter.tint(Color.Yellow)
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Text("Light ${lightIndex + 1}", color = Color.White, fontSize = 16.sp)
-            Text(
-                if ((lightIndex == 0 && lightState.light1On) || (lightIndex == 1 && lightState.light2On)) "On" else "Off",
-                color = Color.White.copy(0.6f),
-                fontSize = 13.sp
-            )
-        }
+data class CardData(
+    val title: String,
+    val status: String,
+    val icon: Int,
+    val color: Color,
+    val activity: Class<*>?
+)
+
+@Composable
+fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        DeviceCard(modifier = Modifier.weight(1f), card = card1, context = context)
+        DeviceCard(modifier = Modifier.weight(1f), card = card2, context = context)
     }
+}
 
-    @Composable
-    fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            DeviceCard(modifier = Modifier.weight(1f), card = card1, context = context)
-            DeviceCard(modifier = Modifier.weight(1f), card = card2, context = context)
-        }
+@Composable
+fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
+    Column(
+        modifier = modifier
+            .height(135.dp)
+            .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
+            .let {
+                if (card.activity != null)
+                    it.clickable {
+                        context.startActivity(Intent(context, card.activity).apply {
+                            putExtra("USER_ID", CurrentUser.userId)
+                        })
+                    }
+                else it
+            }
+            .padding(16.dp),
+    ) {
+        Image(
+            painter = painterResource(card.icon),
+            contentDescription = null,
+            modifier = Modifier.size(28.dp),
+            colorFilter = ColorFilter.tint(card.color)
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(card.title, color = Color.White, fontSize = 16.sp)
+        Text(card.status, color = Color.White.copy(0.6f), fontSize = 13.sp)
     }
+}
 
-    @Composable
-    fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
-        Column(
-            modifier = modifier
-                .height(135.dp)
-                .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
-                .let { if (card.activity != null) it.clickable { context.startActivity(Intent(context, card.activity)) } else it }
-                .padding(16.dp),
-        ) {
-            Image(
-                painter = painterResource(card.icon),
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                colorFilter = ColorFilter.tint(card.color)
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(card.title, color = Color.White, fontSize = 16.sp)
-            Text(card.status, color = Color.White.copy(0.6f), fontSize = 13.sp)
+@Composable
+fun HeaderSection() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text("Welcome Home,", color = Color.White.copy(0.7f), fontSize = 15.sp)
+            Text("Alex", color = Color.White, fontSize = 20.sp)
         }
-    }
 
-    data class CardData(val title: String, val status: String, val icon: Int, val color: Color, val activity: Class<*>?)
-
-    @Composable
-    fun EnergyAnalyticsActivityScreen() = ScreenBox("Analytics Page")
-    @Composable
-    fun SecurityScreen() = ScreenBox("Security Page")
-    @Composable
-    fun ProfileActivityScreen() = ScreenBox("Profile Page")
-    @Composable
-    fun ScreenBox(title: String) {
         Box(
-            modifier = Modifier.fillMaxSize().background(Color(0xFF111A32)),
+            modifier = Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+                .background(Color.Gray),
             contentAlignment = Alignment.Center
         ) {
-            Text(title, color = Color.White, fontSize = 20.sp)
+            Image(
+                painter = painterResource(R.drawable.baseline_person_24),
+                contentDescription = null,
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(Color.White)
+            )
         }
     }
+}
 
-    @Preview(showBackground = true)
-    @Composable
-    fun PreviewDashboard() {
-        DashboardScreen(listOf(LightModel(), LightModel()), ClimateModel(), DoorModel(), WaterModel())
+@Composable
+fun ScreenBox(title: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF111A32)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(title, color = Color.White, fontSize = 20.sp)
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewDashboard() {
+    DashboardScreen()
 }
