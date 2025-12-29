@@ -5,52 +5,44 @@ import com.google.firebase.database.*
 
 class ClimateRepoImpl : ClimateRepo {
 
-    private val ref = FirebaseDatabase.getInstance().getReference("climateControl")
+    private var listener: ValueEventListener? = null
 
-    override fun observeClimate(onChange: (ClimateModel) -> Unit) {
-        ref.addValueEventListener(object : ValueEventListener {
+    private fun fanRef(userId: String) =
+        FirebaseDatabase.getInstance()
+            .getReference("users")
+            .child(userId)
+            .child("fan")
+
+    override fun getFanRealtime(userId: String, callback: (success: Boolean, data: ClimateModel?) -> Unit) {
+        val ref = fanRef(userId)
+        listener?.let { ref.removeEventListener(it) }
+
+        listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 try {
-                    // Manual parsing to handle string/int conversion
-                    val fanSpeed = snapshot.child("fanSpeed").getValue(Any::class.java).let {
-                        when (it) {
-                            is Long -> it.toInt()
-                            is Int -> it
-                            is String -> it.toIntOrNull() ?: 0
-                            else -> 0
-                        }
-                    }
-
-                    val temperature = snapshot.child("temperature").getValue(Any::class.java).let {
-                        when (it) {
-                            is Long -> it.toInt()
-                            is Int -> it
-                            is String -> it.toIntOrNull() ?: 28
-                            else -> 28
-                        }
-                    }
-
+                    val fanSpeed = snapshot.child("fanSpeed").getValue(Int::class.java) ?: 0
+                    val temperature = snapshot.child("temperature").getValue(Int::class.java) ?: 28
                     val powerOn = snapshot.child("powerOn").getValue(Boolean::class.java) ?: true
                     val autoMode = snapshot.child("autoMode").getValue(Boolean::class.java) ?: false
 
-                    val model = ClimateModel(
-                        fanSpeed = fanSpeed,
-                        powerOn = powerOn,
-                        autoMode = autoMode,
-                        temperature = temperature
-                    )
-
-                    onChange(model)
+                    callback(true, ClimateModel(fanSpeed, powerOn, autoMode, temperature))
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    callback(false, null)
                 }
             }
 
-            override fun onCancelled(error: DatabaseError) {}
-        })
+            override fun onCancelled(error: DatabaseError) {
+                callback(false, null)
+            }
+        }
+
+        ref.addValueEventListener(listener!!)
     }
 
-    override fun updateClimate(model: ClimateModel) {
-        ref.setValue(model)
+    override fun updateFan(userId: String, model: ClimateModel, callback: (success: Boolean, error: String?) -> Unit) {
+        fanRef(userId).setValue(model)
+            .addOnSuccessListener { callback(true, null) }
+            .addOnFailureListener { callback(false, it.message) }
     }
 }

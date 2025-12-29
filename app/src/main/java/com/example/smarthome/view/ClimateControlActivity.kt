@@ -27,6 +27,8 @@ import com.example.smarthome.viewmodel.ClimateViewModel
 class ClimateControlActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
         setContent {
             val viewModel: ClimateViewModel = viewModel()
             ClimateControlScreen(viewModel)
@@ -36,8 +38,7 @@ class ClimateControlActivity : ComponentActivity() {
 
 @Composable
 fun ClimateControlScreen(viewModel: ClimateViewModel) {
-
-    val state by viewModel.state
+    val state by viewModel.state.collectAsState()
     val fan = state.fanSpeed.toFloat()
     val context = LocalContext.current
     val activity = context as? ComponentActivity
@@ -45,6 +46,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
     val bg = Brush.verticalGradient(
         listOf(Color(0xFF0B132B), Color(0xFF1C1C2E))
     )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -62,8 +64,11 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
                     .clickable { activity?.finish() }
             )
             Spacer(Modifier.width(8.dp))
-            Text("Back", color = Color(0xFF9DB9D0),
-                modifier = Modifier.clickable { activity?.finish() })
+            Text(
+                "Back",
+                color = Color(0xFF9DB9D0),
+                modifier = Modifier.clickable { activity?.finish() }
+            )
         }
 
         Spacer(Modifier.height(16.dp))

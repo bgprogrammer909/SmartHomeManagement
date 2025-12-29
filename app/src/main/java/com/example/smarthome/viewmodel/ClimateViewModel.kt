@@ -1,41 +1,50 @@
 package com.example.smarthome.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.compose.runtime.mutableStateOf
 import com.example.smarthome.model.ClimateModel
 import com.example.smarthome.repo.ClimateRepo
 import com.example.smarthome.repo.ClimateRepoImpl
+import com.example.smarthome.util.CurrentUser
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class ClimateViewModel(
     private val repo: ClimateRepo = ClimateRepoImpl()
 ) : ViewModel() {
 
-    val state = mutableStateOf(ClimateModel())
+    private val _state = MutableStateFlow(ClimateModel())
+    val state = _state.asStateFlow()
 
     init {
-        repo.observeClimate {
-            state.value = it
+        CurrentUser.userId?.let { userId ->
+            repo.getFanRealtime(userId) { success, data ->
+                if (success && data != null) {
+                    _state.value = data
+                }
+            }
         }
     }
 
     fun setFanSpeed(value: Int) {
-        update(state.value.copy(fanSpeed = value))
+        update(_state.value.copy(fanSpeed = value))
     }
 
     fun setPower(value: Boolean) {
-        update(state.value.copy(powerOn = value))
+        update(_state.value.copy(powerOn = value))
     }
 
     fun setAutoMode(value: Boolean) {
-        update(state.value.copy(autoMode = value))
+        update(_state.value.copy(autoMode = value))
     }
 
     fun setTemperature(value: Int) {
-        update(state.value.copy(temperature = value))
+        update(_state.value.copy(temperature = value))
     }
 
     private fun update(model: ClimateModel) {
-        state.value = model
-        repo.updateClimate(model)
+        _state.value = model
+        CurrentUser.userId?.let { userId ->
+            repo.updateFan(userId, model) { _, _ -> }
+        }
     }
 }
