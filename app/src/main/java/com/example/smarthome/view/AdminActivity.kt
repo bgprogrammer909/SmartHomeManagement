@@ -48,18 +48,25 @@ fun AdminScreen(viewModel: AdminViewModel) {
     var newEmail by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
 
-    var showEditDialog by remember { mutableStateOf(false) }
-    var editPassword by remember { mutableStateOf("") }
-    var editUserId by remember { mutableStateOf("") }
-
     val filteredUsers = if (searchQuery.isBlank()) users else users.filter {
         it.id.contains(searchQuery, true) || it.email.contains(searchQuery, true)
     }
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true; newEmail = ""; newPassword = "" }, containerColor = Color.Blue) {
-                Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Add User", tint = Color.White)
+            FloatingActionButton(
+                onClick = {
+                    showAddDialog = true
+                    newEmail = ""
+                    newPassword = ""
+                },
+                containerColor = Color.Blue
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.baseline_edit_24),
+                    contentDescription = "Add User",
+                    tint = Color.White
+                )
             }
         }
     ) { padding ->
@@ -73,14 +80,32 @@ fun AdminScreen(viewModel: AdminViewModel) {
                     interactionSource = remember { MutableInteractionSource() }
                 ) { focusManager.clearFocus() }
         ) {
-            Text("Admin", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth().padding(16.dp), textAlign = TextAlign.Center)
+            Text(
+                text = "Admin",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                textAlign = TextAlign.Center
+            )
 
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 placeholder = { Text("Search by ID or Email", color = Color.Gray) },
-                leadingIcon = { Icon(painter = painterResource(R.drawable.baseline_search_24), contentDescription = null, tint = Color.Gray) },
-                modifier = Modifier.padding(horizontal = 18.dp).fillMaxWidth().background(Color.DarkGray, RoundedCornerShape(18.dp)),
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_search_24),
+                        contentDescription = null,
+                        tint = Color.Gray
+                    )
+                },
+                modifier = Modifier
+                    .padding(horizontal = 18.dp)
+                    .fillMaxWidth()
+                    .background(Color.DarkGray, RoundedCornerShape(18.dp)),
                 singleLine = true
             )
 
@@ -88,10 +113,9 @@ fun AdminScreen(viewModel: AdminViewModel) {
 
             LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
                 items(filteredUsers) { user ->
-                    UserRow(user,
-                        onToggle = { viewModel.updateUserStatus(user.id, it) },
-                        onEdit = { editUserId = user.id; editPassword = user.password; showEditDialog = true },
-                        onModuleUpdate = { moduleName, moduleData -> viewModel.updateModule(user.id, moduleName, moduleData) }
+                    UserRow(
+                        user = user,
+                        onToggle = { viewModel.updateUserStatus(user.id, it) }
                     )
                 }
             }
@@ -105,34 +129,36 @@ fun AdminScreen(viewModel: AdminViewModel) {
             title = { Text("Add New User") },
             text = {
                 Column {
-                    OutlinedTextField(value = newEmail, onValueChange = { newEmail = it }, label = { Text("Email") })
+                    OutlinedTextField(
+                        value = newEmail,
+                        onValueChange = { newEmail = it },
+                        label = { Text("Email") }
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(value = newPassword, onValueChange = { newPassword = it }, label = { Text("Password") })
+                    OutlinedTextField(
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
+                        label = { Text("Password") }
+                    )
                 }
             },
             confirmButton = {
-                Button(onClick = { if (newEmail.isNotBlank() && newPassword.isNotBlank()) { viewModel.addUser(newEmail, newPassword); showAddDialog = false } }) { Text("Add") }
-            },
-            dismissButton = { Button(onClick = { showAddDialog = false }) { Text("Cancel") } }
-        )
-    }
-
-    // Edit Password Dialog
-    if (showEditDialog) {
-        AlertDialog(
-            onDismissRequest = { showEditDialog = false },
-            title = { Text("Edit User Password") },
-            text = {
-                Column {
-                    Text("User ID = $editUserId", color = Color.Gray)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(value = editPassword, onValueChange = { editPassword = it }, label = { Text("Password") })
+                Button(
+                    onClick = {
+                        if (newEmail.isNotBlank() && newPassword.isNotBlank()) {
+                            viewModel.addUser(newEmail, newPassword)
+                            showAddDialog = false
+                        }
+                    }
+                ) {
+                    Text("Add")
                 }
             },
-            confirmButton = {
-                Button(onClick = { if (editPassword.isNotBlank()) { viewModel.updatePassword(editUserId, editPassword); showEditDialog = false } }) { Text("Save") }
-            },
-            dismissButton = { Button(onClick = { showEditDialog = false }) { Text("Cancel") } }
+            dismissButton = {
+                Button(onClick = { showAddDialog = false }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 }
@@ -140,29 +166,49 @@ fun AdminScreen(viewModel: AdminViewModel) {
 @Composable
 fun UserRow(
     user: AdminModel,
-    onToggle: (Boolean) -> Unit,
-    onEdit: () -> Unit,
-    onModuleUpdate: (String, Any) -> Unit
+    onToggle: (Boolean) -> Unit
 ) {
+    var isActive by remember { mutableStateOf(user.isActive) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 8.dp)
-            .background(if (user.isActive) Color.DarkGray else Color.Black, RoundedCornerShape(12.dp))
+            .background(
+                if (isActive) Color.DarkGray else Color.Black,
+                RoundedCornerShape(12.dp)
+            )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(painter = painterResource(R.drawable.baseline_person_24), contentDescription = null, tint = Color.White, modifier = Modifier.size(40.dp))
+        Icon(
+            painter = painterResource(R.drawable.baseline_person_24),
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(40.dp)
+        )
+
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text("ID: ${user.id}", color = Color.White, fontWeight = FontWeight.Medium)
-            Text("Email: ${user.email}", color = Color.Gray, fontSize = 12.sp)
+            Text(
+                text = "ID: ${user.id}",
+                color = Color.White,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = "Email: ${user.email}",
+                color = Color.Gray,
+                fontSize = 12.sp
+            )
         }
 
         Switch(
-            checked = user.isActive,
-            onCheckedChange = onToggle,
+            checked = isActive,
+            onCheckedChange = { checked ->
+                isActive = checked      // immediate UI update
+                onToggle(checked)       // backend / Firebase update
+            },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.Green,
                 uncheckedThumbColor = Color.Red,
@@ -170,11 +216,5 @@ fun UserRow(
                 uncheckedTrackColor = Color.DarkGray
             )
         )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        IconButton(onClick = onEdit) {
-            Icon(painter = painterResource(R.drawable.baseline_edit_24), contentDescription = "Edit Password", tint = Color.White)
-        }
     }
 }
