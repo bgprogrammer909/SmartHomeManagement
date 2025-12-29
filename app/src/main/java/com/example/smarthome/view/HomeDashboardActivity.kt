@@ -43,60 +43,82 @@ class HomeDashboardActivity : ComponentActivity() {
     fun HomeDashboardBody() {
         var selectedIndex by remember { mutableStateOf(0) }
 
-        // Device states
         var lights by remember { mutableStateOf(listOf(LightModel(), LightModel())) }
         var fan by remember { mutableStateOf(ClimateModel()) }
         var door by remember { mutableStateOf(DoorModel()) }
         var water by remember { mutableStateOf(WaterModel()) }
 
-        // Observe Firebase for current user
         LaunchedEffect(Unit) {
             val uid = CurrentUser.userId ?: return@LaunchedEffect
-            val userRef = db.child("users").child(uid)
 
-            fun <T> ensureChild(path: String, default: T) {
-                userRef.child(path).get().addOnSuccessListener { snapshot ->
-                    if (!snapshot.exists()) userRef.child(path).setValue(default)
-                }
-            }
-
-            // Create default objects if missing
-            ensureChild("lights", listOf(LightModel(), LightModel()))
-            ensureChild("fan", ClimateModel())
-            ensureChild("door", DoorModel())
-            ensureChild("water", WaterModel())
-
-            // Observe lights
-            userRef.child("lights").addValueEventListener(object : ValueEventListener {
+            val lightsRef = db.child("users").child(uid).child("lights")
+            lightsRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    lights = snapshot.children.map { it.getValue(LightModel::class.java) ?: LightModel() }
+                    if (!snapshot.exists()) lightsRef.setValue(listOf(LightModel(), LightModel()))
+                }
+                override fun onCancelled(error: DatabaseError) {}
+            })
+            lightsRef.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val list = snapshot.children.map { it.getValue(LightModel::class.java) ?: LightModel() }
+                    lights = list
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
 
-            // Observe fan safely
-            userRef.child("fan").addValueEventListener(object : ValueEventListener {
+            val fanRef = db.child("users").child(uid).child("fan")
+            fanRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    fan = snapshot.getValue(ClimateModel::class.java)
-                        ?: ClimateModel().also { userRef.child("fan").setValue(it) }
+                    if (!snapshot.exists() || snapshot.value !is Map<*, *>) fanRef.setValue(ClimateModel())
+                }
+                override fun onCancelled(error: DatabaseError) {}
+            })
+            fanRef.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    fan = if (snapshot.value is Map<*, *>) {
+                        snapshot.getValue(ClimateModel::class.java) ?: ClimateModel()
+                    } else {
+                        fanRef.setValue(ClimateModel())
+                        ClimateModel()
+                    }
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
 
-            // Observe door
-            userRef.child("door").addValueEventListener(object : ValueEventListener {
+            val doorRef = db.child("users").child(uid).child("door")
+            doorRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    door = snapshot.getValue(DoorModel::class.java)
-                        ?: DoorModel().also { userRef.child("door").setValue(it) }
+                    if (!snapshot.exists() || snapshot.value !is Map<*, *>) doorRef.setValue(DoorModel())
+                }
+                override fun onCancelled(error: DatabaseError) {}
+            })
+            doorRef.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    door = if (snapshot.value is Map<*, *>) {
+                        snapshot.getValue(DoorModel::class.java) ?: DoorModel()
+                    } else {
+                        doorRef.setValue(DoorModel())
+                        DoorModel()
+                    }
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
 
-            // Observe water
-            userRef.child("water").addValueEventListener(object : ValueEventListener {
+            val waterRef = db.child("users").child(uid).child("water")
+            waterRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    water = snapshot.getValue(WaterModel::class.java)
-                        ?: WaterModel().also { userRef.child("water").setValue(it) }
+                    if (!snapshot.exists() || snapshot.value !is Map<*, *>) waterRef.setValue(WaterModel())
+                }
+                override fun onCancelled(error: DatabaseError) {}
+            })
+            waterRef.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    water = if (snapshot.value is Map<*, *>) {
+                        snapshot.getValue(WaterModel::class.java) ?: WaterModel()
+                    } else {
+                        waterRef.setValue(WaterModel())
+                        WaterModel()
+                    }
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
@@ -180,7 +202,6 @@ class HomeDashboardActivity : ComponentActivity() {
                 Text("Welcome Home,", color = Color.White.copy(0.7f), fontSize = 15.sp)
                 Text("Alex", color = Color.White, fontSize = 20.sp)
             }
-
             Box(
                 modifier = Modifier
                     .size(50.dp)
@@ -219,13 +240,7 @@ class HomeDashboardActivity : ComponentActivity() {
         }
     }
 
-    data class CardData(
-        val title: String,
-        val status: String,
-        val icon: Int,
-        val color: Color,
-        val activity: Class<*>?
-    )
+    data class CardData(val title: String, val status: String, val icon: Int, val color: Color, val activity: Class<*>?)
 
     @Composable
     fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
@@ -245,7 +260,7 @@ class HomeDashboardActivity : ComponentActivity() {
                 .height(135.dp)
                 .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
                 .let { if (card.activity != null) it.clickable { context.startActivity(Intent(context, card.activity)) } else it }
-                .padding(16.dp),
+                .padding(16.dp)
         ) {
             Image(
                 painter = painterResource(card.icon),
@@ -265,17 +280,12 @@ class HomeDashboardActivity : ComponentActivity() {
     fun SecurityScreen() = ScreenBox("Security Page")
     @Composable
     fun ProfileActivityScreen() = ScreenBox("Profile Page")
-
     @Composable
     fun ScreenBox(title: String) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF111A32)),
+            modifier = Modifier.fillMaxSize().background(Color(0xFF111A32)),
             contentAlignment = Alignment.Center
-        ) {
-            Text(title, color = Color.White, fontSize = 20.sp)
-        }
+        ) { Text(title, color = Color.White, fontSize = 20.sp) }
     }
 
     @Preview(showBackground = true)
