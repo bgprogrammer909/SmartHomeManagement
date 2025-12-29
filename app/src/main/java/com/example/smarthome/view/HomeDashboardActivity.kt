@@ -23,7 +23,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
+import com.example.smarthome.viewmodel.EnergyViewModel
+import com.example.smarthome.viewmodel.SecurityViewModel
 
 class HomeDashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,7 +57,7 @@ fun HomeDashboardBody() {
             when (selectedIndex) {
                 0 -> DashboardScreen()
                 1 -> EnergyAnalyticsActivityScreen()
-                2 -> SecurityScreen()
+                2 -> SecurityScreenActivity()
                 3 -> ProfileActivityScreen()
             }
         }
@@ -210,18 +213,24 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
     }
 }
 
+
 @Composable
 fun EnergyAnalyticsActivityScreen() {
+    val viewModel: EnergyViewModel = viewModel()
     EnergyAnalyticsScreen(
+        viewModel = viewModel,
         onBack = {}
     )
 }
 
 
 
+
 @Composable
-fun SecurityScreen() {
+fun SecurityScreenActivity() {
+    val viewModel: SecurityViewModel = viewModel()
     SecurityScreen(
+        viewModel = viewModel,
         onBack = {}
     )
 }

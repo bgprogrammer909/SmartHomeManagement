@@ -16,7 +16,7 @@ class LoginRepoImpl : LoginRepo {
             .addOnFailureListener { callback(false, it.message ?: "Login failed") }
     }
 
-    override fun registerUser(email: String, password: String, callback: (Boolean, String) -> Unit) {
+    fun registerUser(email: String, password: String, callback: (Boolean, String) -> Unit) {
         // Create in Auth first
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->

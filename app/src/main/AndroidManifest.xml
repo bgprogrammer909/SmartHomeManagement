@@ -18,24 +18,24 @@
     <activity
             android:name=".AddUserActivity"
             android:exported="true"
-            android:label="@string/title_activity_add_user"
+            android:label="title_activity_add_user"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
         </activity>
         <activity
             android:name=".view.ProfileActivity"
             android:exported="true"
-            android:label="@string/title_activity_profile"
+            android:label="title_activity_profile"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
         </activity>
         <activity
             android:name=".view.SecurityActivity"
@@ -100,6 +100,17 @@
             android:exported="true"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.SmartHome">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".view.HomeDashboardActivity"
+            android:exported="true"
+            android:label="HomeDashboardActivity"
+            android:theme="@style/Theme.SmartHome">
 <!--            <intent-filter>-->
 <!--                <action android:name="android.intent.action.MAIN" />-->
 
@@ -107,48 +118,37 @@
 <!--            </intent-filter>-->
         </activity>
         <activity
-            android:name=".view.HomeDashboardActivity"
-            android:exported="true"
-            android:label="HomeDashboardActivity"
-            android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name=".view.PLightActivity"
             android:exported="true"
             android:label="PLightActivity"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
         </activity>
         <activity
             android:name=".view.HomeSplashActivity"
             android:exported="true"
             android:label="HomeSplashActivity"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
         </activity>
         <activity
             android:name=".view.AdminActivity"
             android:exported="true"
             android:label="AdminActivity"
             android:theme="@style/Theme.SmartHome">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
 <!--           i -->
         </activity>
         <activity
@@ -167,13 +167,13 @@
             <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
             <!-- </intent-filter> -->
         </activity>
-        <activity
-            android:name=".view.PLightActivity"
-            android:exported="true"
-            android:label="plightActivity"
-            android:theme="@style/Theme.SmartHome">
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--        <activity-->
+<!--            android:name=".view.PLightActivity"-->
+<!--            android:exported="true"-->
+<!--            android:label="plightActivity"-->
+<!--            android:theme="@style/Theme.SmartHome">-->
+<!--&lt;!&ndash;            <intent-filter>&ndash;&gt;-->
+<!--&lt;!&ndash;                <action android:name="android.intent.action.MAIN" />&ndash;&gt;-->
 
     </application>
 

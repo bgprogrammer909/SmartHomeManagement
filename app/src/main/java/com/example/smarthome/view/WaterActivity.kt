@@ -16,15 +16,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.smarthome.R
-import com.example.smarthome.view.ui.theme.SmartHomeTheme
 import com.example.smarthome.viewmodel.WaterViewModel
+import com.example.smarthome.view.ui.theme.SmartHomeTheme
+import com.example.smarthome.model.WaterModel
 
 class WaterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +32,8 @@ class WaterActivity : ComponentActivity() {
         setContent {
             SmartHomeTheme {
                 val viewModel: WaterViewModel = viewModel()
-                WaterBody(viewModel)
+                val state by viewModel.state.collectAsState()
+                WaterBody(state = state, viewModel = viewModel)
             }
         }
     }
@@ -42,36 +42,39 @@ class WaterActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WaterBody(
-    viewModel: WaterViewModel = viewModel()
+    state: WaterModel,
+    viewModel: WaterViewModel
 ) {
-
-    // 🔥 STATE FROM VIEWMODEL (Firebase-backed)
-    val isPumpOn = viewModel.waterOn.collectAsState()
-    val autoMode = viewModel.autoMode.collectAsState()
-
     val snackbarHostState = remember { SnackbarHostState() }
+    var triggerAlert by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    LaunchedEffect(triggerAlert) {
+        if (triggerAlert) {
+            snackbarHostState.showSnackbar("Water did not reach expected level!")
+            triggerAlert = false
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { pad ->
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(pad)
+                .padding(padding)
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF0B132B),
-                            Color(0xFF1C1C2E)
-                        )
+                        listOf(Color(0xFF0B132B), Color(0xFF1C1C2E))
                     )
                 )
         ) {
             PumpStatusCard(
-                isPumpOn = isPumpOn,
-                autoMode = autoMode,
-                snackbarHostState = snackbarHostState,
-                viewModel = viewModel
+                state = state,
+                viewModel = viewModel,
+                triggerAlert = triggerAlert,
+                onTriggerAlert = { triggerAlert = it },
+                context = context
             )
         }
     }
@@ -79,23 +82,12 @@ fun WaterBody(
 
 @Composable
 fun PumpStatusCard(
-    isPumpOn: State<Boolean>,
-    autoMode: State<Boolean>,
-    snackbarHostState: SnackbarHostState,
-    viewModel: WaterViewModel
+    state: WaterModel,
+    viewModel: WaterViewModel,
+    triggerAlert: Boolean,
+    onTriggerAlert: (Boolean) -> Unit,
+    context: android.content.Context
 ) {
-
-    var triggerAlert by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val activity = context as? ComponentActivity
-
-    LaunchedEffect(triggerAlert) {
-        if (triggerAlert) {
-            snackbarHostState.showSnackbar("⚠️ Water did not reach expected level!")
-            triggerAlert = false
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -103,7 +95,12 @@ fun PumpStatusCard(
     ) {
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("← Back", color = Color(0xFF9DB9D0), fontSize = 16.sp, modifier = Modifier.clickable { })
+            Text(
+                "Back",
+                color = Color(0xFF9DB9D0),
+                fontSize = 16.sp,
+                modifier = Modifier.clickable { (context as? ComponentActivity)?.finish() }
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -114,7 +111,11 @@ fun PumpStatusCard(
             fontSize = 30.sp,
             fontWeight = FontWeight.ExtraBold
         )
-        Text("Control and Schedule your water pump", color = Color(0xFF9AB3C8), fontSize = 14.sp)
+        Text(
+            "Control and schedule your water pump",
+            color = Color(0xFF9AB3C8),
+            fontSize = 14.sp
+        )
 
         Spacer(Modifier.height(20.dp))
 
@@ -131,7 +132,6 @@ fun PumpStatusCard(
                 .padding(18.dp)
         ) {
             Column {
-
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -145,8 +145,7 @@ fun PumpStatusCard(
                             fontWeight = FontWeight.Bold
                         )
                     }
-
-                    Text("💧", fontSize = 40.sp)
+                    Text("", fontSize = 40.sp)
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -164,9 +163,7 @@ fun PumpStatusCard(
                 Button(
                     onClick = { viewModel.togglePump() },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2295F3)
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2295F3)),
                     shape = RoundedCornerShape(14.dp)
                 ) {
                     Text(if (state.isPumpOn) "Turn Off" else "Turn On")
@@ -189,7 +186,7 @@ fun PumpStatusCard(
                     .padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("🌡️", fontSize = 28.sp)
+                Text("", fontSize = 28.sp)
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text("Auto Mode", color = Color.White, fontSize = 16.sp)
@@ -202,10 +199,10 @@ fun PumpStatusCard(
                 Spacer(Modifier.weight(1f))
 
                 Switch(
-                    checked = autoMode.value,
+                    checked = state.autoMode,
                     onCheckedChange = {
                         viewModel.toggleAutoMode()
-                        if (it) triggerAlert = true
+                        onTriggerAlert(it)
                     }
                 )
             }
@@ -214,66 +211,11 @@ fun PumpStatusCard(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            "Receive alert if water fails to reach the expected level",
+            "Receive alert if water fails to reach expected level",
             color = Color(0xFFCED4DA),
             fontSize = 13.sp,
             modifier = Modifier.padding(start = 6.dp)
         )
-
-        Spacer(modifier = Modifier.height(50.dp))
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(Color(0xFF0B3B25), Color(0xFF063026))
-                        )
-                    )
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Energy Efficiency",
-                            color = Color(0xFFB8E9D0),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            "Current settings are energy efficient. You're saving ${state.energySavings}% compared to average usage.",
-                            color = Color(0xFFBFDCD0),
-                            fontSize = 13.sp
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF0EA96F).copy(alpha = 0.12f))
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Text("Optimal", color = Color(0xFF3CE387), fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -294,6 +236,8 @@ fun PumpInfoBox(title: String, value: String) {
 @Composable
 fun WaterBodyPreview() {
     SmartHomeTheme {
-        WaterBody()
+        val viewModel: WaterViewModel = viewModel()
+        val state by viewModel.state.collectAsState()
+        WaterBody(state = state, viewModel = viewModel)
     }
 }
