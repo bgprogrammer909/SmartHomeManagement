@@ -20,12 +20,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.smarthome.R
 import com.example.smarthome.viewmodel.EnergyViewModel
 
 class EnergyAnalyticsActivity : ComponentActivity() {
@@ -43,8 +41,6 @@ class EnergyAnalyticsActivity : ComponentActivity() {
 fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
     val state by viewModel.state
     var selectedTab by remember { mutableStateOf("Week") }
-    val context = LocalContext.current
-    val activity = context as? ComponentActivity
 
     LazyColumn(
         modifier = Modifier
@@ -57,7 +53,6 @@ fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-
         // BACK BUTTON
         item {
             Row(
@@ -66,37 +61,33 @@ fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
             ) {
                 Text("← Back", color = Color.White, fontSize = 16.sp)
             }
-            item {
-                Column {
-                    Text(
-                        "Energy Analytics",
-                        color = Color.White,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "Track your power consumption",
-                        color = Color.White.copy(alpha = 0.6f),
-                        fontSize = 14.sp
-                    )
-                }
+        }
+
+        // TITLE & SUBTITLE
+        item {
+            Column {
+                Text(
+                    "Energy Analytics",
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Track your power consumption",
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 14.sp
+                )
             }
+        }
 
         // TOTAL USAGE CARD
-        item {
-            TotalUsageCard(state)
-        }
+        item { TotalUsageCard(state) }
 
-        item {
-            TabRowSection(
-                selectedTab = selectedTab,
-                onTabChange = { selectedTab = it }
-            )
-        }
+        // TABS
+        item { TabRowSection(selectedTab = selectedTab, onTabChange = { selectedTab = it }) }
 
-        item {
-            GraphCardWithChart(selectedTab, state)
-        }
+        // GRAPH
+        item { GraphCardWithChart(selectedTab, state) }
 
         // USAGE ITEMS
         item { UsageItem("Lights", state.lightsUsage, Color(0xFFFFD740)) }
@@ -108,8 +99,8 @@ fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
         item { EstimatedBillCard(state) }
         item { TipsCard() }
 
-            item { Spacer(modifier = Modifier.height(50.dp)) }
-        }
+        // SPACER
+        item { Spacer(modifier = Modifier.height(50.dp)) }
     }
 }
 
@@ -237,7 +228,6 @@ fun GraphCardWithChart(selectedTab: String, state: com.example.smarthome.model.E
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF14203D))
     ) {
-
         Column(Modifier.padding(20.dp)) {
 
             Row(
