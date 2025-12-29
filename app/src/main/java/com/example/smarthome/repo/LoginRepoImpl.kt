@@ -12,44 +12,30 @@ class LoginRepoImpl : LoginRepo {
 
     override fun login(email: String, password: String, callback: (Boolean, String) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener { callback(true, "Login successful") }
-            .addOnFailureListener { callback(false, it.message ?: "Login failed") }
-    }
+            .addOnSuccessListener {
+                val uid = auth.currentUser!!.uid
 
-    fun registerUser(email: String, password: String, callback: (Boolean, String) -> Unit) {
-        // Create in Auth first
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener { result ->
-                val user = result.user
-                if (user != null) {
-                    val uid = user.uid
-                    val adminModel = AdminModel(
-                        id = uid,
-                        email = email,
-                        password = password,
-                        isActive = true
-                    )
-
-                    // Add to Realtime Database
-                    ref.child(uid).setValue(adminModel)
-                        .addOnSuccessListener { callback(true, "User added to Auth & Database") }
-                        .addOnFailureListener { callback(false, it.message ?: "DB write failed") }
-                } else {
-                    callback(false, "Failed to get UID")
-                }
+                // Check if user is active
+                ref.child(uid).child("isActive").get()
+                    .addOnSuccessListener { snapshot ->
+                        val isActive = snapshot.getValue(Boolean::class.java) ?: false
+                        if (!isActive) {
+                            auth.signOut()
+                            callback(false, "Account disabled by admin")
+                        } else {
+                            callback(true, "Login successful")
+                        }
+                    }
             }
-            .addOnFailureListener { callback(false, it.message ?: "Registration failed") }
+            .addOnFailureListener {
+                callback(false, it.message ?: "Login failed")
+            }
     }
 
     override fun forgetPassword(email: String, callback: (Boolean, String) -> Unit) {
         auth.sendPasswordResetEmail(email)
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    callback(true, "Reset link sent")
-                } else {
-                    callback(false, "${it.exception?.message}")
-                }
-            }
+            .addOnSuccessListener { callback(true, "Reset link sent") }
+            .addOnFailureListener { callback(false, it.message ?: "Failed") }
     }
 
     override fun getCurrentUser(): FirebaseUser? = auth.currentUser
@@ -60,14 +46,13 @@ class LoginRepoImpl : LoginRepo {
     }
 
     override fun updatePassword(uid: String, newPassword: String, callback: (Boolean, String) -> Unit) {
-        val currentUser = auth.currentUser
-        if (currentUser != null && currentUser.uid == uid) {
-            currentUser.updatePassword(newPassword)
+        val user = auth.currentUser
+        if (user != null && user.uid == uid) {
+            user.updatePassword(newPassword)
                 .addOnSuccessListener { callback(true, "Password updated") }
-                .addOnFailureListener { callback(false, it.message ?: "Password update failed") }
+                .addOnFailureListener { callback(false, it.message ?: "Failed") }
         } else {
-            // Admin changing another user's password cannot be done directly from app.
-            callback(false, "Cannot update other user's password directly. Use Firebase Admin SDK on server.")
+            callback(false, "Not authorized")
         }
     }
 }
