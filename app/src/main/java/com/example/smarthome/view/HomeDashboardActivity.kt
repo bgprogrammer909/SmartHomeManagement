@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,12 +26,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
-import com.example.smarthome.viewmodel.EnergyViewModel
-import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.util.CurrentUser
+import com.example.smarthome.viewmodel.PLightsViewModel
+import com.example.smarthome.viewmodel.PLightsViewModelFactory
+import com.example.smarthome.repo.PLightRepoImpl
+
 
 class HomeDashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             HomeDashboardBody()
         }
@@ -39,11 +44,12 @@ class HomeDashboardActivity : ComponentActivity() {
 
 @Composable
 fun HomeDashboardBody() {
+    val context = LocalContext.current
     var selectedIndex by remember { mutableStateOf(0) }
 
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(selectedIndex) { index->
+            BottomNavigationBar(selectedIndex) { index ->
                 selectedIndex = index
             }
         },
@@ -122,7 +128,7 @@ fun HeaderSection() {
     ) {
         Column {
             Text("Welcome Home,", color = Color.White.copy(0.7f), fontSize = 15.sp)
-            Text("Alex", color = Color.White, fontSize = 20.sp)
+            Text("", color = Color.White, fontSize = 20.sp)
         }
 
         Box(
@@ -144,24 +150,77 @@ fun HeaderSection() {
 
 @Composable
 fun DeviceGrid(context: Context) {
+    // Get userId safely
+    val userId = CurrentUser.userId ?: run {
+        // If no user is logged in, finish activity
+        if (context is ComponentActivity) context.finish()
+        return
+    }
+
+    // Initialize lights view model for this user
+    val lightsViewModel: PLightsViewModel = viewModel(
+        factory = PLightsViewModelFactory(
+            repo = PLightRepoImpl(),
+            userId = userId
+        )
+    )
+
+    val lightsState by lightsViewModel.lights.collectAsState()
+
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
         DeviceRow(
             context,
-            CardData("Light", "4 On", R.drawable.outline_lightbulb_24, Color.Yellow, null),
-            CardData("Water", "Pump Off", R.drawable.baseline_water_drop_24, Color.Cyan, WaterActivity::class.java)
+            CardData(
+                "Light",
+                "${listOf(lightsState.light1On, lightsState.light2On).count { it }} On",
+                R.drawable.outline_lightbulb_24,
+                Color.Yellow,
+                PLightActivity::class.java
+            ),
+            CardData(
+                "Water",
+                "Pump Off",
+                R.drawable.baseline_water_drop_24,
+                Color.Cyan,
+                null
+            )
         )
 
         DeviceRow(
             context,
-            CardData("Door", "Main Entrance", R.drawable.baseline_sensor_door_24, Color(0xFF4CAF50), DoorlockActivity::class.java),
-            CardData("Fan", "24°C", R.drawable.baseline_air_24, Color(0xFF1FB7FF), ClimateControlActivity::class.java)
+            CardData(
+                "Door",
+                "Main Entrance",
+                R.drawable.baseline_sensor_door_24,
+                Color(0xFF4CAF50),
+                null
+            ),
+            CardData(
+                "Fan",
+                "24°C",
+                R.drawable.baseline_air_24,
+                Color(0xFF1FB7FF),
+                null
+            )
         )
 
         DeviceRow(
             context,
-            CardData("Security", "Away Mode", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java),
-            CardData("Analytics", "120 kWh", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java)
+            CardData(
+                "Security",
+                "Away Mode",
+                R.drawable.baseline_security_24,
+                Color(0xFFFF9800),
+                null
+            ),
+            CardData(
+                "Analytics",
+                "120 kWh",
+                R.drawable.baseline_query_stats_24,
+                Color(0xFF7A4FFF),
+                null
+            )
         )
     }
 }
@@ -193,11 +252,15 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
             .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
             .let {
                 if (card.activity != null)
-                    it.clickable { context.startActivity(Intent(context, card.activity)) }
+                    it.clickable {
+                        context.startActivity(Intent(context, card.activity).apply {
+                            // pass userId to PLightActivity
+                            putExtra("USER_ID", CurrentUser.userId)
+                        })
+                    }
                 else it
             }
             .padding(16.dp),
-
     ) {
         Image(
             painter = painterResource(card.icon),
@@ -213,28 +276,11 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
     }
 }
 
+@Composable
+fun EnergyAnalyticsActivityScreen() = ScreenBox("Analytics")
 
 @Composable
-fun EnergyAnalyticsActivityScreen() {
-    val viewModel: EnergyViewModel = viewModel()
-    EnergyAnalyticsScreen(
-        viewModel = viewModel,
-        onBack = {}
-    )
-}
-
-
-
-
-@Composable
-fun SecurityScreenActivity() {
-    val viewModel: SecurityViewModel = viewModel()
-    SecurityScreen(
-        viewModel = viewModel,
-        onBack = {}
-    )
-}
-
+fun SecurityScreenActivity() = ScreenBox("Security")
 
 @Composable
 fun ProfileActivityScreen() = ScreenBox("Profile Page")
@@ -250,7 +296,6 @@ fun ScreenBox(title: String) {
         Text(title, color = Color.White, fontSize = 20.sp)
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
