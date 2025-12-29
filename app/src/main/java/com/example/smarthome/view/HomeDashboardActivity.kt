@@ -34,9 +34,7 @@ class HomeDashboardActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            HomeDashboardBody()
-        }
+        setContent { HomeDashboardBody() }
     }
 
     @Composable
@@ -48,10 +46,14 @@ class HomeDashboardActivity : ComponentActivity() {
         var door by remember { mutableStateOf(DoorModel()) }
         var water by remember { mutableStateOf(WaterModel()) }
 
-        LaunchedEffect(Unit) {
-            val uid = CurrentUser.userId ?: return@LaunchedEffect
+        val uid = CurrentUser.userId
 
-            val lightsRef = db.child("users").child(uid).child("lights")
+        LaunchedEffect(uid) {
+            if (uid == null) return@LaunchedEffect
+
+            val userRef = db.child("users").child(uid)
+
+            val lightsRef = userRef.child("lights")
             lightsRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (!snapshot.exists()) lightsRef.setValue(listOf(LightModel(), LightModel()))
@@ -66,59 +68,47 @@ class HomeDashboardActivity : ComponentActivity() {
                 override fun onCancelled(error: DatabaseError) {}
             })
 
-            val fanRef = db.child("users").child(uid).child("fan")
+            val fanRef = userRef.child("fan")
             fanRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (!snapshot.exists() || snapshot.value !is Map<*, *>) fanRef.setValue(ClimateModel())
+                    if (!snapshot.exists() || snapshot.getValue(ClimateModel::class.java) == null)
+                        fanRef.setValue(ClimateModel())
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
             fanRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    fan = if (snapshot.value is Map<*, *>) {
-                        snapshot.getValue(ClimateModel::class.java) ?: ClimateModel()
-                    } else {
-                        fanRef.setValue(ClimateModel())
-                        ClimateModel()
-                    }
+                    fan = snapshot.getValue(ClimateModel::class.java) ?: ClimateModel()
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
 
-            val doorRef = db.child("users").child(uid).child("door")
+            val doorRef = userRef.child("door")
             doorRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (!snapshot.exists() || snapshot.value !is Map<*, *>) doorRef.setValue(DoorModel())
+                    if (!snapshot.exists() || snapshot.getValue(DoorModel::class.java) == null)
+                        doorRef.setValue(DoorModel())
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
             doorRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    door = if (snapshot.value is Map<*, *>) {
-                        snapshot.getValue(DoorModel::class.java) ?: DoorModel()
-                    } else {
-                        doorRef.setValue(DoorModel())
-                        DoorModel()
-                    }
+                    door = snapshot.getValue(DoorModel::class.java) ?: DoorModel()
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
 
-            val waterRef = db.child("users").child(uid).child("water")
+            val waterRef = userRef.child("water")
             waterRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (!snapshot.exists() || snapshot.value !is Map<*, *>) waterRef.setValue(WaterModel())
+                    if (!snapshot.exists() || snapshot.getValue(WaterModel::class.java) == null)
+                        waterRef.setValue(WaterModel())
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
             waterRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    water = if (snapshot.value is Map<*, *>) {
-                        snapshot.getValue(WaterModel::class.java) ?: WaterModel()
-                    } else {
-                        waterRef.setValue(WaterModel())
-                        WaterModel()
-                    }
+                    water = snapshot.getValue(WaterModel::class.java) ?: WaterModel()
                 }
                 override fun onCancelled(error: DatabaseError) {}
             })
@@ -151,7 +141,6 @@ class HomeDashboardActivity : ComponentActivity() {
             NavItem(R.drawable.baseline_security_24, "Security"),
             NavItem(R.drawable.baseline_person_24, "Profile")
         )
-
         NavigationBar(
             containerColor = Color(0xFF0D152F),
             tonalElevation = 4.dp
@@ -173,6 +162,7 @@ class HomeDashboardActivity : ComponentActivity() {
     @Composable
     fun DashboardScreen(lights: List<LightModel>, fan: ClimateModel, door: DoorModel, water: WaterModel) {
         val context = LocalContext.current
+        val uid = CurrentUser.userId ?: return
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -186,7 +176,21 @@ class HomeDashboardActivity : ComponentActivity() {
             ) {
                 HeaderSection()
                 Spacer(modifier = Modifier.height(24.dp))
-                DeviceGrid(context, lights, fan, door, water)
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    lights.forEachIndexed { index, light ->
+                        LightControlCard(context, light, index, uid)
+                    }
+                    DeviceRow(
+                        context,
+                        CardData("Water", if (water.isPumpOn) "Pump On" else "Pump Off", R.drawable.baseline_water_drop_24, Color.Cyan, WaterActivity::class.java),
+                        CardData("Fan", "${fan.temperature}°C", R.drawable.baseline_air_24, Color(0xFF1FB7FF), ClimateControlActivity::class.java)
+                    )
+                    DeviceRow(
+                        context,
+                        CardData("Door", if (door.mainDoorLocked) "Locked" else "Unlocked", R.drawable.baseline_sensor_door_24, Color(0xFF4CAF50), DoorlockActivity::class.java),
+                        CardData("Analytics", "120 kWh", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java)
+                    )
+                }
             }
         }
     }
@@ -220,27 +224,37 @@ class HomeDashboardActivity : ComponentActivity() {
     }
 
     @Composable
-    fun DeviceGrid(context: Context, lights: List<LightModel>, fan: ClimateModel, door: DoorModel, water: WaterModel) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            DeviceRow(
-                context,
-                CardData("Light", "${lights.count { it.isOn }} On", R.drawable.outline_lightbulb_24, Color.Yellow, null),
-                CardData("Water", if (water.isPumpOn) "Pump On" else "Pump Off", R.drawable.baseline_water_drop_24, Color.Cyan, WaterActivity::class.java)
+    fun LightControlCard(context: Context, light: LightModel, lightIndex: Int, uid: String) {
+        val db = FirebaseDatabase.getInstance().reference
+        var lightState by remember { mutableStateOf(light) }
+        Column(
+            modifier = Modifier
+                .height(135.dp)
+                .fillMaxWidth()
+                .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
+                .clickable {
+                    val updatedLight = if (lightIndex == 0) lightState.copy(light1On = !lightState.light1On)
+                    else lightState.copy(light2On = !lightState.light2On)
+                    lightState = updatedLight
+                    db.child("users").child(uid).child("lights").child(lightIndex.toString()).setValue(updatedLight)
+                }
+                .padding(16.dp)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.outline_lightbulb_24),
+                contentDescription = null,
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(Color.Yellow)
             )
-            DeviceRow(
-                context,
-                CardData("Door", if (door.mainDoorLocked) "Locked" else "Unlocked", R.drawable.baseline_sensor_door_24, Color(0xFF4CAF50), DoorlockActivity::class.java),
-                CardData("Fan", "${fan.temperature}°C", R.drawable.baseline_air_24, Color(0xFF1FB7FF), ClimateControlActivity::class.java)
-            )
-            DeviceRow(
-                context,
-                CardData("Security", "Away Mode", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java),
-                CardData("Analytics", "120 kWh", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java)
+            Spacer(modifier = Modifier.height(20.dp))
+            Text("Light ${lightIndex + 1}", color = Color.White, fontSize = 16.sp)
+            Text(
+                if ((lightIndex == 0 && lightState.light1On) || (lightIndex == 1 && lightState.light2On)) "On" else "Off",
+                color = Color.White.copy(0.6f),
+                fontSize = 13.sp
             )
         }
     }
-
-    data class CardData(val title: String, val status: String, val icon: Int, val color: Color, val activity: Class<*>?)
 
     @Composable
     fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
@@ -260,7 +274,7 @@ class HomeDashboardActivity : ComponentActivity() {
                 .height(135.dp)
                 .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
                 .let { if (card.activity != null) it.clickable { context.startActivity(Intent(context, card.activity)) } else it }
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             Image(
                 painter = painterResource(card.icon),
@@ -274,6 +288,8 @@ class HomeDashboardActivity : ComponentActivity() {
         }
     }
 
+    data class CardData(val title: String, val status: String, val icon: Int, val color: Color, val activity: Class<*>?)
+
     @Composable
     fun EnergyAnalyticsActivityScreen() = ScreenBox("Analytics Page")
     @Composable
@@ -285,7 +301,9 @@ class HomeDashboardActivity : ComponentActivity() {
         Box(
             modifier = Modifier.fillMaxSize().background(Color(0xFF111A32)),
             contentAlignment = Alignment.Center
-        ) { Text(title, color = Color.White, fontSize = 20.sp) }
+        ) {
+            Text(title, color = Color.White, fontSize = 20.sp)
+        }
     }
 
     @Preview(showBackground = true)
