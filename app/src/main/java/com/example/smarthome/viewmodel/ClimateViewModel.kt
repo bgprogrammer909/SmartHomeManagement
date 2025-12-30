@@ -1,41 +1,62 @@
 package com.example.smarthome.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.viewModelScope
 import com.example.smarthome.model.ClimateModel
 import com.example.smarthome.repo.ClimateRepo
 import com.example.smarthome.repo.ClimateRepoImpl
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class ClimateViewModel(
-    private val repo: ClimateRepo = ClimateRepoImpl()
+    private val repo: ClimateRepo = ClimateRepoImpl(),
+    private val userId: String
 ) : ViewModel() {
 
-    val state = mutableStateOf(ClimateModel())
+    private val _state = MutableStateFlow(ClimateModel())
+    val state = _state.asStateFlow()
 
     init {
-        repo.observeClimate {
-            state.value = it
+        // Fetch initial data and listen for realtime updates
+        repo.getFanRealtime(userId) { success, data ->
+            if (success && data != null) {
+                _state.value = data
+            }
         }
     }
 
     fun setFanSpeed(value: Int) {
-        update(state.value.copy(fanSpeed = value))
+        val updated = _state.value.copy(fanSpeed = value)
+        update(updated)
     }
 
     fun setPower(value: Boolean) {
-        update(state.value.copy(powerOn = value))
+        val updated = _state.value.copy(powerOn = value)
+        update(updated)
     }
 
     fun setAutoMode(value: Boolean) {
-        update(state.value.copy(autoMode = value))
+        val updated = _state.value.copy(autoMode = value)
+        update(updated)
     }
 
     fun setTemperature(value: Int) {
-        update(state.value.copy(temperature = value))
+        val updated = _state.value.copy(temperature = value)
+        update(updated)
     }
 
     private fun update(model: ClimateModel) {
-        state.value = model
-        repo.updateClimate(model)
+        // Update local state immediately
+        _state.value = model
+
+        // Persist to Firebase asynchronously
+        viewModelScope.launch {
+            repo.updateFan(userId, model) { success, _ ->
+                if (!success) {
+                    // Optional: handle failure (retry, show Toast, etc.)
+                }
+            }
+        }
     }
 }

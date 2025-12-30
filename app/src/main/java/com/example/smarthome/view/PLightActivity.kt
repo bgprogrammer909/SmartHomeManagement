@@ -35,10 +35,7 @@ class PLightActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val userId = intent.getStringExtra("USER_ID")
-        if (userId.isNullOrEmpty()) {
-            finish()
-            return
-        }
+        if (userId.isNullOrEmpty()) finish()
 
         setContent {
             val ctx = LocalContext.current
@@ -46,7 +43,7 @@ class PLightActivity : ComponentActivity() {
             val vm: PLightsViewModel = viewModel(
                 factory = PLightsViewModelFactory(
                     repo = PLightRepoImpl(),
-                    userId = userId
+                    userId = userId!!
                 )
             )
 
@@ -57,80 +54,74 @@ class PLightActivity : ComponentActivity() {
             )
 
             Scaffold { padding ->
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(bgGradient)
                         .padding(padding)
                         .padding(16.dp)
                 ) {
-                    Column {
-
-                        // Top bar
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White,
-                                modifier = Modifier.clickable { finish() }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Lights", color = Color.White)
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Text(
-                            "My Lights",
-                            color = Color.White,
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                    // Top Bar
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White,
+                            modifier = Modifier.clickable { finish() }
                         )
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        TopStatusCard(
-                            activeCount = listOf(state.light1On, state.light2On).count { it },
-                            masterSwitch = state.light1On && state.light2On,
-                            onToggleAll = {
-                                if (state.light1On && state.light2On) {
-                                    vm.turnOffAll()
-                                    Toast.makeText(ctx, "All lights OFF", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    vm.turnOnAll()
-                                    Toast.makeText(ctx, "All lights ON", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        LightControlCard(
-                            label = "Light 1",
-                            lightStatus = state.light1On,
-                            brightness = state.light1Brightness,
-                            onSwitchToggle = { vm.toggleLight(1, it) },
-                            onBrightnessChange = { vm.changeBrightness(1, it) }
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        LightControlCard(
-                            label = "Light 2",
-                            lightStatus = state.light2On,
-                            brightness = state.light2Brightness,
-                            onSwitchToggle = { vm.toggleLight(2, it) },
-                            onBrightnessChange = { vm.changeBrightness(2, it) }
-                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Lights", color = Color.White)
                     }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        "My Lights",
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    TopStatusCard(
+                        activeCount = listOf(state.light1On, state.light2On).count { it },
+                        masterSwitch = state.light1On && state.light2On,
+                        onToggleAll = {
+                            if (state.light1On && state.light2On) {
+                                vm.turnOffAll()
+                                Toast.makeText(ctx, "All lights OFF", Toast.LENGTH_SHORT).show()
+                            } else {
+                                vm.turnOnAll()
+                                Toast.makeText(ctx, "All lights ON", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    LightControlCard(
+                        label = "Light 1",
+                        lightStatus = state.light1On,
+                        brightness = state.light1Brightness,
+                        onSwitchToggle = { vm.toggleLight(1, it) },
+                        onBrightnessChange = { vm.changeBrightness(1, it) }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    LightControlCard(
+                        label = "Light 2",
+                        lightStatus = state.light2On,
+                        brightness = state.light2Brightness,
+                        onSwitchToggle = { vm.toggleLight(2, it) },
+                        onBrightnessChange = { vm.changeBrightness(2, it) }
+                    )
                 }
             }
         }
     }
 }
 
-// -----------------------------
-// Top Status Card Composable
-// -----------------------------
 @Composable
 fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Unit) {
     Card(
@@ -187,9 +178,6 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
     }
 }
 
-// -----------------------------
-// Individual Light Control Card Composable
-// -----------------------------
 @Composable
 fun LightControlCard(
     label: String,

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,11 +24,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
+import com.example.smarthome.util.CurrentUser
+import com.example.smarthome.viewmodel.PLightsViewModel
+import com.example.smarthome.viewmodel.PLightsViewModelFactory
+import com.example.smarthome.repo.PLightRepoImpl
 
 class HomeDashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             HomeDashboardBody()
         }
@@ -36,14 +43,11 @@ class HomeDashboardActivity : ComponentActivity() {
 
 @Composable
 fun HomeDashboardBody() {
+    val context = LocalContext.current
     var selectedIndex by remember { mutableStateOf(0) }
 
     Scaffold(
-        bottomBar = {
-            BottomNavigationBar(selectedIndex) { index->
-                selectedIndex = index
-            }
-        },
+        bottomBar = { BottomNavigationBar(selectedIndex) { index -> selectedIndex = index } },
         containerColor = Color(0xFF0B1225)
     ) { padding ->
         Box(
@@ -53,9 +57,9 @@ fun HomeDashboardBody() {
         ) {
             when (selectedIndex) {
                 0 -> DashboardScreen()
-                1 -> EnergyAnalyticsActivityScreen()
-                2 -> SecurityScreen()
-                3 -> ProfileActivityScreen()
+                1 -> ScreenBox("Analytics")
+                2 -> ScreenBox("Security")
+                3 -> ScreenBox("Profile Page")
             }
         }
     }
@@ -91,6 +95,18 @@ data class NavItem(val icon: Int, val label: String)
 @Composable
 fun DashboardScreen() {
     val context = LocalContext.current
+    val userId = CurrentUser.userId ?: return
+
+    // Lights ViewModel
+    val lightsViewModel: PLightsViewModel = viewModel(
+        factory = PLightsViewModelFactory(
+            repo = PLightRepoImpl(),
+            userId = userId
+        )
+    )
+
+    val lightsState by lightsViewModel.lights.collectAsState()
+    val activeLightsCount = listOf(lightsState.light1On, lightsState.light2On).count { it }
 
     Box(
         modifier = Modifier
@@ -105,8 +121,115 @@ fun DashboardScreen() {
         ) {
             HeaderSection()
             Spacer(modifier = Modifier.height(24.dp))
-            DeviceGrid(context)
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+
+                // Lights and Water
+                DeviceRow(
+                    context,
+                    CardData(
+                        "Light",
+                        "$activeLightsCount On",
+                        R.drawable.outline_lightbulb_24,
+                        Color.Yellow,
+                        PLightActivity::class.java
+                    ),
+                    CardData(
+                        "Water",
+                        "Pump Off",  // placeholder
+                        R.drawable.baseline_water_drop_24,
+                        Color.Cyan,
+                        null
+                    )
+                )
+
+                // Door and Fan
+                DeviceRow(
+                    context,
+                    CardData(
+                        "Fan",
+                        "24°C",
+                        R.drawable.baseline_air_24,
+                        Color(0xFF1FB7FF),
+                        ClimateControlActivity::class.java // open this on click
+                    ),
+                    CardData(
+                        "Door",
+                        "Main Entrance",
+                        R.drawable.baseline_sensor_door_24,
+                        Color(0xFF4CAF50),
+                        null
+                    )
+                )
+
+
+                // Security and Analytics
+                DeviceRow(
+                    context,
+                    CardData(
+                        "Security",
+                        "Away Mode",
+                        R.drawable.baseline_security_24,
+                        Color(0xFFFF9800),
+                        null
+                    ),
+                    CardData(
+                        "Analytics",
+                        "120 kWh",
+                        R.drawable.baseline_query_stats_24,
+                        Color(0xFF7A4FFF),
+                        null
+                    )
+                )
+            }
         }
+    }
+}
+
+data class CardData(
+    val title: String,
+    val status: String,
+    val icon: Int,
+    val color: Color,
+    val activity: Class<*>?
+)
+
+@Composable
+fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        DeviceCard(modifier = Modifier.weight(1f), card = card1, context = context)
+        DeviceCard(modifier = Modifier.weight(1f), card = card2, context = context)
+    }
+}
+
+@Composable
+fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
+    Column(
+        modifier = modifier
+            .height(135.dp)
+            .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
+            .let {
+                if (card.activity != null)
+                    it.clickable {
+                        context.startActivity(Intent(context, card.activity).apply {
+                            putExtra("USER_ID", CurrentUser.userId)
+                        })
+                    }
+                else it
+            }
+            .padding(16.dp),
+    ) {
+        Image(
+            painter = painterResource(card.icon),
+            contentDescription = null,
+            modifier = Modifier.size(28.dp),
+            colorFilter = ColorFilter.tint(card.color)
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(card.title, color = Color.White, fontSize = 16.sp)
+        Text(card.status, color = Color.White.copy(0.6f), fontSize = 13.sp)
     }
 }
 
@@ -140,97 +263,6 @@ fun HeaderSection() {
 }
 
 @Composable
-fun DeviceGrid(context: Context) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-
-        DeviceRow(
-            context,
-            CardData("Light", "4 On", R.drawable.outline_lightbulb_24, Color.Yellow, null),
-            CardData("Water", "Pump Off", R.drawable.baseline_water_drop_24, Color.Cyan, WaterActivity::class.java)
-        )
-
-        DeviceRow(
-            context,
-            CardData("Door", "Main Entrance", R.drawable.baseline_sensor_door_24, Color(0xFF4CAF50), DoorlockActivity::class.java),
-            CardData("Fan", "24°C", R.drawable.baseline_air_24, Color(0xFF1FB7FF), ClimateControlActivity::class.java)
-        )
-
-        DeviceRow(
-            context,
-            CardData("Security", "Away Mode", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java),
-            CardData("Analytics", "120 kWh", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java)
-        )
-    }
-}
-
-data class CardData(
-    val title: String,
-    val status: String,
-    val icon: Int,
-    val color: Color,
-    val activity: Class<*>?
-)
-
-@Composable
-fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        DeviceCard(modifier = Modifier.weight(1f), card = card1, context = context)
-        DeviceCard(modifier = Modifier.weight(1f), card = card2, context = context)
-    }
-}
-
-@Composable
-fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
-    Column(
-        modifier = modifier
-            .height(135.dp)
-            .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
-            .let {
-                if (card.activity != null)
-                    it.clickable { context.startActivity(Intent(context, card.activity)) }
-                else it
-            }
-            .padding(16.dp),
-
-    ) {
-        Image(
-            painter = painterResource(card.icon),
-            contentDescription = null,
-            modifier = Modifier.size(28.dp),
-            colorFilter = ColorFilter.tint(card.color)
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(card.title, color = Color.White, fontSize = 16.sp)
-        Text(card.status, color = Color.White.copy(0.6f), fontSize = 13.sp)
-    }
-}
-
-@Composable
-fun EnergyAnalyticsActivityScreen() {
-    EnergyAnalyticsScreen(
-        onBack = {}
-    )
-}
-
-
-
-@Composable
-fun SecurityScreen() {
-    SecurityScreen(
-        onBack = {}
-    )
-}
-
-
-@Composable
-fun ProfileActivityScreen() = ScreenBox("Profile Page")
-
-@Composable
 fun ScreenBox(title: String) {
     Box(
         modifier = Modifier
@@ -241,7 +273,6 @@ fun ScreenBox(title: String) {
         Text(title, color = Color.White, fontSize = 20.sp)
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

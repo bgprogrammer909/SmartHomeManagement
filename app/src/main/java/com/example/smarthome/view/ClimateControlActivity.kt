@@ -23,12 +23,17 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
 import com.example.smarthome.viewmodel.ClimateViewModel
+import com.example.smarthome.viewmodel.ClimateViewModelFactory
 
 class ClimateControlActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        val userId = intent.getStringExtra("USER_ID") ?: return
+
         setContent {
-            val viewModel: ClimateViewModel = viewModel()
+            val viewModel: ClimateViewModel = viewModel(factory = ClimateViewModelFactory(userId))
             ClimateControlScreen(viewModel)
         }
     }
@@ -36,8 +41,7 @@ class ClimateControlActivity : ComponentActivity() {
 
 @Composable
 fun ClimateControlScreen(viewModel: ClimateViewModel) {
-
-    val state by viewModel.state
+    val state by viewModel.state.collectAsState()
     val fan = state.fanSpeed.toFloat()
     val context = LocalContext.current
     val activity = context as? ComponentActivity
@@ -45,6 +49,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
     val bg = Brush.verticalGradient(
         listOf(Color(0xFF0B132B), Color(0xFF1C1C2E))
     )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -53,6 +58,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
             .statusBarsPadding()
     ) {
 
+        // Top Back Row
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 painter = painterResource(R.drawable.outline_arrow_back_24),
@@ -62,8 +68,11 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
                     .clickable { activity?.finish() }
             )
             Spacer(Modifier.width(8.dp))
-            Text("Back", color = Color(0xFF9DB9D0),
-                modifier = Modifier.clickable { activity?.finish() })
+            Text(
+                "Back",
+                color = Color(0xFF9DB9D0),
+                modifier = Modifier.clickable { activity?.finish() }
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -74,7 +83,6 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
             fontSize = 30.sp,
             fontWeight = FontWeight.ExtraBold
         )
-
         Text(
             "Adjust temperature and fan settings",
             color = Color(0xFF9AB3C8),
@@ -96,7 +104,6 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
         ) {
 
             Column {
-
                 Row(modifier = Modifier.fillMaxWidth()) {
 
                     Column(modifier = Modifier.weight(1f)) {
@@ -181,6 +188,19 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
 }
 
 @Composable
+fun StyledChip(text: String, active: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (active) Color(0xFF1FB7FF) else Color(0xFF0F2A3D))
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        Text(text, color = Color.White)
+    }
+}
+
+@Composable
 fun FeatureCard(
     icon: Int,
     title: String,
@@ -230,7 +250,6 @@ fun EnergyCard() {
         ) {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-
                     Spacer(Modifier.width(1.dp))
                     Text(
                         "Energy Efficiency",
@@ -240,9 +259,7 @@ fun EnergyCard() {
                     Spacer(Modifier.weight(1f))
                     Text("Optimal", color = Color(0xFF2EFFA3))
                 }
-
                 Spacer(Modifier.height(6.dp))
-
                 Text(
                     "Current settings are energy efficient. You're saving 15% compared to average usage.",
                     color = Color(0xFFB7E8D8),
@@ -250,18 +267,5 @@ fun EnergyCard() {
                 )
             }
         }
-    }
-}
-
-@Composable
-fun StyledChip(text: String, active: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (active) Color(0xFF1FB7FF) else Color(0xFF0F2A3D))
-            .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 8.dp)
-    ) {
-        Text(text, color = Color.White)
     }
 }

@@ -1,58 +1,69 @@
 package com.example.smarthome.repo
 
-import android.util.Log
 import com.example.smarthome.model.WaterModel
 import com.google.firebase.database.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
-class WaterRepositoryImpl : WaterRepository {
+class WaterRepoImpl : WaterRepo {
 
-    private val dbRef = FirebaseDatabase.getInstance().getReference("water")
-    private val _waterFlow = MutableStateFlow(WaterModel())
+    private val ref = FirebaseDatabase.getInstance().getReference("waterControl")
 
-    override fun getWaterRealtime(): StateFlow<WaterModel> = _waterFlow
-
-    init {
-        dbRef.addValueEventListener(object : ValueEventListener {
+    override fun observeWater(onChange: (WaterModel) -> Unit) {
+        ref.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                try {
+                    val isPumpOn = snapshot.child("isPumpOn").getValue(Boolean::class.java) ?: false
+                    val autoMode = snapshot.child("autoMode").getValue(Boolean::class.java) ?: false
 
-                val waterOn = snapshot.child("waterOn").getValue(Boolean::class.java)
-                val auto = snapshot.child("automaticMode").getValue(Boolean::class.java)
+                    val todayUsage = snapshot.child("todayUsage").getValue(Any::class.java).let {
+                        when (it) {
+                            is Double -> it
+                            is Long -> it.toDouble()
+                            is Int -> it.toDouble()
+                            is String -> it.toDoubleOrNull() ?: 0.0
+                            else -> 0.0
+                        }
+                    }
 
-                if (waterOn == null || auto == null) {
-                    // 🔥 Create default if node missing
-                    val default = WaterModel()
-                    dbRef.setValue(default)
-                    _waterFlow.value = default
-                } else {
-                    _waterFlow.value = WaterModel(waterOn, auto)
+                    val flowRate = snapshot.child("flowRate").getValue(Any::class.java).let {
+                        when (it) {
+                            is Double -> it
+                            is Long -> it.toDouble()
+                            is Int -> it.toDouble()
+                            is String -> it.toDoubleOrNull() ?: 0.0
+                            else -> 0.0
+                        }
+                    }
+
+                    val energySavings = snapshot.child("energySavings").getValue(Any::class.java).let {
+                        when (it) {
+                            is Long -> it.toInt()
+                            is Int -> it
+                            is String -> it.toIntOrNull() ?: 15
+                            else -> 15
+                        }
+                    }
+
+                    val model = WaterModel(
+                        isPumpOn = isPumpOn,
+                        autoMode = autoMode,
+                        todayUsage = todayUsage,
+                        flowRate = flowRate,
+                        energySavings = energySavings
+                    )
+
+                    onChange(model)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.e("WaterRepo", "Firebase error: ${error.message}")
+                error.toException().printStackTrace()
             }
         })
     }
 
-    override fun togglePump() {
-        val current = _waterFlow.value
-        dbRef.setValue(current.copy(waterOn = !current.waterOn))
-    }
-
-    override fun toggleAutoMode() {
-        val current = _waterFlow.value
-        dbRef.setValue(current.copy(automaticMode = !current.automaticMode))
-    }
-
-    override fun turnOn() {
-        val current = _waterFlow.value
-        dbRef.setValue(current.copy(waterOn = true))
-    }
-
-    override fun turnOff() {
-        val current = _waterFlow.value
-        dbRef.setValue(current.copy(waterOn = false))
+    override fun updateWater(model: WaterModel) {
+        ref.setValue(model)
     }
 }
