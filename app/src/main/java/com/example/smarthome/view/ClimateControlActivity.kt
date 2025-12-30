@@ -164,7 +164,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
         Spacer(Modifier.height(16.dp))
 
         FeatureCard(
-            icon = R.drawable.baseline_air_24,
+            icon = R.drawable.ic_refresh,
             title = "Power",
             subtitle = "System on",
             checked = state.powerOn,
