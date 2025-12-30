@@ -201,7 +201,7 @@ fun DashboardScreen() {
                     CardData(
                         "Fan",
                         "24°C",
-                        R.drawable.baseline_air_24,
+                        R.drawable.ic_refresh,
                         Color(0xFF1FB7FF),
                         ClimateControlActivity::class.java
                     ),
