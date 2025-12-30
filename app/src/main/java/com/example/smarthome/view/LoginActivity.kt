@@ -43,9 +43,7 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            LoginScreen()
-        }
+        setContent { LoginScreen() }
     }
 
     @Composable
@@ -53,15 +51,17 @@ class LoginActivity : ComponentActivity() {
         val context = LocalContext.current
         val activity = context as? Activity
 
+        // States
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
-        var visibility by remember { mutableStateOf(false) }
+        var isPasswordVisible by remember { mutableStateOf(false) }
         var isLoading by remember { mutableStateOf(false) }
         var showForgotDialog by remember { mutableStateOf(false) }
         var forgotEmail by remember { mutableStateOf("") }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // Background image
+
+            // Background Image
             Image(
                 painter = painterResource(R.drawable.computer),
                 contentDescription = null,
@@ -75,7 +75,7 @@ class LoginActivity : ComponentActivity() {
                     .fillMaxSize()
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(
+                            listOf(
                                 colorResource(R.color.semi),
                                 colorResource(R.color.darker)
                             )
@@ -89,79 +89,69 @@ class LoginActivity : ComponentActivity() {
                     .padding(top = 150.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Title
                 Text(
                     "Sign in",
                     color = Color.White,
-                    style = TextStyle(fontWeight = FontWeight.Bold),
-                    fontSize = 35.sp
+                    fontSize = 35.sp,
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
                     "Welcome to Smart Home",
-                    style = TextStyle(fontSize = 16.sp),
-                    color = Color.Gray.copy(1f),
+                    color = Color.Gray,
                     fontWeight = FontWeight.Bold
                 )
 
+                // Card Container
                 Card(
                     modifier = Modifier
                         .height(450.dp)
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp)
-                        .padding(vertical = 20.dp),
+                        .padding(horizontal = 10.dp, vertical = 20.dp),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF1B243A).copy(0.8f))
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 30.dp)
-                            .padding(top = 40.dp),
+                            .padding(horizontal = 30.dp, vertical = 40.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         // Email field
-                        Text(
-                            "Email",
-                            color = Color.White,
-                            style = TextStyle(fontSize = 20.sp),
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Text("Email", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
-                            shape = RoundedCornerShape(20.dp),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("Enter your Email", color = Color.Gray) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            shape = RoundedCornerShape(20.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = colorResource(R.color.radial),
                                 unfocusedContainerColor = colorResource(R.color.radial),
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
                                 focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
+                                unfocusedTextColor = Color.White,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
                             )
                         )
 
                         // Password field
-                        Text(
-                            "Password",
-                            color = Color.White,
-                            style = TextStyle(fontSize = 20.sp),
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Text("Password", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
-                            visualTransformation = if (!visibility) PasswordVisualTransformation() else VisualTransformation.None,
+                            placeholder = { Text("********", color = Color.Gray) },
+                            visualTransformation = if (!isPasswordVisible) PasswordVisualTransformation() else VisualTransformation.None,
                             trailingIcon = {
-                                IconButton(onClick = { visibility = !visibility }) {
+                                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                                     Icon(
-                                        painter = if (visibility)
-                                            painterResource(R.drawable.baseline_remove_red_eye_24)
-                                        else
-                                            painterResource(R.drawable.baseline_visibility_off_24),
+                                        painter = painterResource(
+                                            if (isPasswordVisible)
+                                                R.drawable.baseline_remove_red_eye_24
+                                            else
+                                                R.drawable.baseline_visibility_off_24
+                                        ),
                                         contentDescription = null,
                                         tint = Color(0xFF67A1EF)
                                     )
@@ -169,91 +159,82 @@ class LoginActivity : ComponentActivity() {
                             },
                             shape = RoundedCornerShape(20.dp),
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("********", color = Color.Gray) },
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = colorResource(R.color.radial),
                                 unfocusedContainerColor = colorResource(R.color.radial),
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
                                 focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
+                                unfocusedTextColor = Color.White,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
                             )
                         )
 
-                        // Login button
+                        // Login Button
                         Button(
                             onClick = {
                                 if (email.isBlank() || password.isBlank()) {
                                     Toast.makeText(context, "Enter email & password", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    isLoading = true
-                                    auth.signInWithEmailAndPassword(email, password)
-                                        .addOnSuccessListener { result ->
-                                            val uid = result.user?.uid
-                                            if (uid != null) {
-                                                CurrentUser.userId = uid
-                                                context.startActivity(Intent(context, HomeDashboardActivity::class.java))
-                                                activity?.finish()
-                                            } else {
-                                                Toast.makeText(context, "Login failed: UID not found", Toast.LENGTH_SHORT).show()
-                                            }
-                                            isLoading = false
-                                        }
-                                        .addOnFailureListener { e ->
-                                            Toast.makeText(context, "Login failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                                            isLoading = false
-                                        }
+                                    return@Button
                                 }
+                                isLoading = true
+                                auth.signInWithEmailAndPassword(email, password)
+                                    .addOnSuccessListener { result ->
+                                        val uid = result.user?.uid
+                                        if (uid != null) {
+                                            CurrentUser.userId = uid
+                                            context.startActivity(Intent(context, HomeDashboardActivity::class.java))
+                                            activity?.finish()
+                                        } else {
+                                            Toast.makeText(context, "Login failed: UID not found", Toast.LENGTH_SHORT).show()
+                                        }
+                                        isLoading = false
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(context, "Login failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        isLoading = false
+                                    }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32A7EE)),
-                            shape = RoundedCornerShape(20.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(70.dp)
-                                .padding(horizontal = 15.dp)
-                                .padding(top = 15.dp)
+                                .padding(top = 15.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32A7EE))
                         ) {
                             if (isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
                             } else {
-                                Text("Log in", style = TextStyle(fontSize = 20.sp), fontWeight = FontWeight.Bold)
+                                Text("Log in", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                             }
                         }
 
-                        // Forgot password link
+                        // Forgot password
                         Text(
                             "Forget Password?",
                             color = Color.Gray,
-                            style = TextStyle(fontSize = 16.sp),
                             textDecoration = TextDecoration.Underline,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 10.dp)
-                                .clickable { showForgotDialog = true })
+                                .clickable { showForgotDialog = true }
+                        )
                     }
                 }
             }
         }
 
-        // Optional: Forgot password dialog UI (can be implemented similarly)
+        // Forgot password dialog
         if (showForgotDialog) {
-            androidx.compose.material3.AlertDialog(
+            AlertDialog(
                 onDismissRequest = { showForgotDialog = false },
                 title = { Text("Forgot Password") },
                 text = {
-                    Column {
-                        OutlinedTextField(
-                            value = forgotEmail,
-                            onValueChange = { forgotEmail = it },
-                            label = { Text("Enter your email") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                    OutlinedTextField(
+                        value = forgotEmail,
+                        onValueChange = { forgotEmail = it },
+                        label = { Text("Enter your email") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 },
                 confirmButton = {
                     Button(onClick = {
@@ -266,14 +247,10 @@ class LoginActivity : ComponentActivity() {
                                     Toast.makeText(context, "Failed to send reset link", Toast.LENGTH_SHORT).show()
                                 }
                             }
-                    }) {
-                        Text("Send Reset Link")
-                    }
+                    }) { Text("Send Reset Link") }
                 },
                 dismissButton = {
-                    Button(onClick = { showForgotDialog = false }) {
-                        Text("Cancel")
-                    }
+                    Button(onClick = { showForgotDialog = false }) { Text("Cancel") }
                 }
             )
         }

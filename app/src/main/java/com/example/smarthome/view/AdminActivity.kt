@@ -26,6 +26,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
 import com.example.smarthome.model.AdminModel
 import com.example.smarthome.viewmodel.AdminViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class AdminActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,17 +44,25 @@ class AdminActivity : ComponentActivity() {
 fun AdminScreen(viewModel: AdminViewModel) {
     val users by viewModel.users.collectAsState()
     val focusManager = LocalFocusManager.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var searchQuery by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
     var newEmail by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
 
+    var showEditPasswordDialog by remember { mutableStateOf(false) }
+    var editingUserId by remember { mutableStateOf("") }
+    var editingUserEmail by remember { mutableStateOf("") }
+    var editingPassword by remember { mutableStateOf("") }
+
     val filteredUsers = if (searchQuery.isBlank()) users else users.filter {
         it.id.contains(searchQuery, true) || it.email.contains(searchQuery, true)
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -115,7 +125,13 @@ fun AdminScreen(viewModel: AdminViewModel) {
                 items(filteredUsers) { user ->
                     UserRow(
                         user = user,
-                        onToggle = { viewModel.updateUserStatus(user.id, it) }
+                        onToggle = { viewModel.updateUserStatus(user.id, it) },
+                        onEditPassword = {
+                            editingUserId = user.id
+                            editingUserEmail = user.email
+                            editingPassword = ""
+                            showEditPasswordDialog = true
+                        }
                     )
                 }
             }
@@ -150,14 +166,41 @@ fun AdminScreen(viewModel: AdminViewModel) {
                             showAddDialog = false
                         }
                     }
-                ) {
-                    Text("Add")
-                }
+                ) { Text("Add") }
             },
             dismissButton = {
-                Button(onClick = { showAddDialog = false }) {
-                    Text("Cancel")
-                }
+                Button(onClick = { showAddDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    // Edit Password Dialog
+    if (showEditPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditPasswordDialog = false },
+            title = { Text("Edit Password") },
+            text = {
+                OutlinedTextField(
+                    value = editingPassword,
+                    onValueChange = { editingPassword = it },
+                    label = { Text("New Password") }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (editingPassword.isNotBlank()) {
+                            viewModel.updateModule(editingUserId, "password", editingPassword)
+                            showEditPasswordDialog = false
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Password updated for $editingUserEmail")
+                            }
+                        }
+                    }
+                ) { Text("Update") }
+            },
+            dismissButton = {
+                Button(onClick = { showEditPasswordDialog = false }) { Text("Cancel") }
             }
         )
     }
@@ -166,7 +209,8 @@ fun AdminScreen(viewModel: AdminViewModel) {
 @Composable
 fun UserRow(
     user: AdminModel,
-    onToggle: (Boolean) -> Unit
+    onToggle: (Boolean) -> Unit,
+    onEditPassword: () -> Unit
 ) {
     var isActive by remember { mutableStateOf(user.isActive) }
 
@@ -206,8 +250,8 @@ fun UserRow(
         Switch(
             checked = isActive,
             onCheckedChange = { checked ->
-                isActive = checked      // immediate UI update
-                onToggle(checked)       // backend / Firebase update
+                isActive = checked
+                onToggle(checked)
             },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.Green,
@@ -216,5 +260,16 @@ fun UserRow(
                 uncheckedTrackColor = Color.DarkGray
             )
         )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Small Edit Password Button
+        Button(
+            onClick = onEditPassword,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+        ) {
+            Text("Edit", fontSize = 12.sp)
+        }
     }
 }

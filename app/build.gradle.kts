@@ -42,7 +42,6 @@ android {
     }
 
     composeOptions {
-        // ✅ MATCHES COMPOSE BOM
         kotlinCompilerExtensionVersion = "1.6.8"
     }
 }
@@ -71,9 +70,11 @@ dependencies {
     implementation("com.cloudinary:cloudinary-android:2.1.0")
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
 
-    // Firebase
-    implementation("com.google.firebase:firebase-database-ktx:20.3.1")
-    implementation(libs.firebase.auth)
+    // Firebase (using BOM)
+    implementation(platform("com.google.firebase:firebase-bom:32.2.0"))
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-functions") // stable, no ktx
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
