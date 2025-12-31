@@ -9,10 +9,15 @@ class AdminRepoImpl : AdminRepo {
     private val auth = FirebaseAuth.getInstance()
     private val ref = FirebaseDatabase.getInstance().getReference("users")
 
-    override fun addUser(email: String, password: String, callback: (Boolean, String) -> Unit) {
+    // ====== ADD USER ======
+    override fun addUser(
+        email: String,
+        password: String,
+        callback: (Boolean, String) -> Unit
+    ) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
-                val uid = result.user!!.uid
+                val uid = result.user?.uid ?: return@addOnSuccessListener
 
                 val user = AdminModel(
                     id = uid,
@@ -25,8 +30,7 @@ class AdminRepoImpl : AdminRepo {
 
                 ref.child(uid).setValue(user)
                     .addOnSuccessListener {
-                        // VERY IMPORTANT
-                        FirebaseAuth.getInstance().signOut()
+                        auth.signOut() // keep admin logged out of new user
                         callback(true, "User created successfully")
                     }
                     .addOnFailureListener {
@@ -38,28 +42,89 @@ class AdminRepoImpl : AdminRepo {
             }
     }
 
-    override fun getAllUsers(callback: (Boolean, String, List<AdminModel>?) -> Unit) {
-        ref.get()
-            .addOnSuccessListener { snapshot ->
-                val users = snapshot.children.mapNotNull {
-                    it.getValue(AdminModel::class.java)
+    // ====== FETCH ALL USERS (SAFE) ======
+    override fun getAllUsers(
+        callback: (Boolean, String, List<AdminModel>?) -> Unit
+    ) {
+        ref.get().addOnSuccessListener { snapshot ->
+            val users = mutableListOf<AdminModel>()
+
+            for (userSnap in snapshot.children) {
+                val id = userSnap.key ?: continue
+                val email = userSnap.child("email").getValue(String::class.java) ?: ""
+
+                // Safe parsing for isActive
+                val isActive = try {
+                    val raw = userSnap.child("isActive").value
+                    when (raw) {
+                        is Boolean -> raw
+                        is String -> raw.toBoolean()
+                        else -> false
+                    }
+                } catch (e: Exception) {
+                    false
                 }
-                callback(true, "Fetched", users)
+
+                val lights = try { userSnap.child("lights").getValue(Boolean::class.java) ?: false } catch(e: Exception){ false }
+                val fan = try { userSnap.child("fan").getValue(Boolean::class.java) ?: false } catch(e: Exception){ false }
+                val door = try { userSnap.child("door").getValue(Boolean::class.java) ?: false } catch(e: Exception){ false }
+
+                users.add(AdminModel(id, email, isActive, lights, fan, door))
             }
-            .addOnFailureListener {
-                callback(false, it.message ?: "Error", null)
-            }
+
+            callback(true, "Fetched users safely", users)
+        }.addOnFailureListener {
+            callback(false, it.message ?: "Error fetching users", null)
+        }
     }
 
-    override fun updateUserStatus(userId: String, isActive: Boolean, callback: (Boolean, String) -> Unit) {
-        ref.child(userId).child("isActive").setValue(isActive)
+
+    // ====== UPDATE USER STATUS ======
+    override fun updateUserStatus(
+        userId: String,
+        isActive: Boolean,
+        callback: (Boolean, String) -> Unit
+    ) {
+        ref.child(userId)
+            .child("isActive")
+            .setValue(isActive)
             .addOnSuccessListener { callback(true, "Status updated") }
-            .addOnFailureListener { callback(false, it.message ?: "Error") }
+            .addOnFailureListener { callback(false, it.message ?: "Status update failed") }
+    }
+    override fun updateUserPassword(
+        userId: String,
+        newPassword: String,
+        callback: (Boolean, String) -> Unit
+    ) {
+        // You must call your Cloud Function or Admin SDK here
+        // Example: call Firebase HTTPS Callable function
+        val functions = com.google.firebase.functions.FirebaseFunctions.getInstance()
+        val data = hashMapOf(
+            "userId" to userId,
+            "newPassword" to newPassword
+        )
+
+        functions.getHttpsCallable("updateUserPassword")
+            .call(data)
+            .addOnSuccessListener {
+                callback(true, "Password updated successfully")
+            }
+            .addOnFailureListener { e ->
+                callback(false, e.message ?: "Failed to update password")
+            }
     }
 
-    override fun updateModule(userId: String, moduleName: String, moduleData: Any, callback: (Boolean, String) -> Unit) {
-        ref.child(userId).child(moduleName).setValue(moduleData)
+    // ====== UPDATE MODULE ======
+    override fun updateModule(
+        userId: String,
+        moduleName: String,
+        moduleData: Any,
+        callback: (Boolean, String) -> Unit
+    ) {
+        ref.child(userId)
+            .child(moduleName)
+            .setValue(moduleData)
             .addOnSuccessListener { callback(true, "Module updated") }
-            .addOnFailureListener { callback(false, it.message ?: "Update failed") }
+            .addOnFailureListener { callback(false, it.message ?: "Module update failed") }
     }
 }

@@ -3,6 +3,7 @@ package com.example.smarthome.view
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -26,28 +27,82 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
+import com.example.smarthome.repo.PLightRepoImpl
 import com.example.smarthome.util.CurrentUser
 import com.example.smarthome.viewmodel.PLightsViewModel
 import com.example.smarthome.viewmodel.PLightsViewModelFactory
-import com.example.smarthome.repo.PLightRepoImpl
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 class HomeDashboardActivity : ComponentActivity() {
+
+    private var isActiveListener: ValueEventListener? = null
+    private lateinit var isActiveRef: DatabaseReference
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            finish()
+            return
+        }
+
+        //REAL-TIME SUBSCRIPTION CHECK
+        isActiveRef = FirebaseDatabase.getInstance()
+            .getReference("users")
+            .child(uid)
+            .child("isActive")
+
+        isActiveListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val isActive = snapshot.getValue(Boolean::class.java) ?: true
+
+                if (!isActive) {
+                    FirebaseAuth.getInstance().signOut()
+
+                    Toast.makeText(
+                        this@HomeDashboardActivity,
+                        "Your subscription has expired. Please contact admin.",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    startActivity(
+                        Intent(this@HomeDashboardActivity, LoginActivity::class.java)
+                            .addFlags(
+                                Intent.FLAG_ACTIVITY_NEW_TASK or
+                                        Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            )
+                    )
+                    finish()
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        }
+
+        isActiveRef.addValueEventListener(isActiveListener!!)
+
         setContent {
             HomeDashboardBody()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        isActiveListener?.let {
+            isActiveRef.removeEventListener(it)
         }
     }
 }
 
 @Composable
 fun HomeDashboardBody() {
-    val context = LocalContext.current
     var selectedIndex by remember { mutableStateOf(0) }
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(selectedIndex) { index -> selectedIndex = index } },
+        bottomBar = { BottomNavigationBar(selectedIndex) { selectedIndex = it } },
         containerColor = Color(0xFF0B1225)
     ) { padding ->
         Box(
@@ -81,7 +136,7 @@ fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
         navItems.forEachIndexed { index, item ->
             NavigationBarItem(
                 icon = { Icon(painterResource(item.icon), contentDescription = item.label) },
-                label = { Text(item.label, fontSize = 12.sp, color = Color.White) },
+                label = { Text(item.label, fontSize = 12.sp) },
                 selected = selectedIndex == index,
                 onClick = { onItemSelected(index) },
                 alwaysShowLabel = true
@@ -97,7 +152,6 @@ fun DashboardScreen() {
     val context = LocalContext.current
     val userId = CurrentUser.userId ?: return
 
-    // Lights ViewModel
     val lightsViewModel: PLightsViewModel = viewModel(
         factory = PLightsViewModelFactory(
             repo = PLightRepoImpl(),
@@ -106,7 +160,8 @@ fun DashboardScreen() {
     )
 
     val lightsState by lightsViewModel.lights.collectAsState()
-    val activeLightsCount = listOf(lightsState.light1On, lightsState.light2On).count { it }
+    val activeLightsCount =
+        listOf(lightsState.light1On, lightsState.light2On).count { it }
 
     Box(
         modifier = Modifier
@@ -121,9 +176,8 @@ fun DashboardScreen() {
         ) {
             HeaderSection()
             Spacer(modifier = Modifier.height(24.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
-                // Lights and Water
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 DeviceRow(
                     context,
                     CardData(
@@ -135,22 +189,21 @@ fun DashboardScreen() {
                     ),
                     CardData(
                         "Water",
-                        "Pump Off",  // placeholder
+                        "Pump Off",
                         R.drawable.baseline_water_drop_24,
                         Color.Cyan,
                         null
                     )
                 )
 
-                // Door and Fan
                 DeviceRow(
                     context,
                     CardData(
                         "Fan",
                         "24°C",
-                        R.drawable.baseline_air_24,
+                        R.drawable.ic_refresh,
                         Color(0xFF1FB7FF),
-                        ClimateControlActivity::class.java // open this on click
+                        ClimateControlActivity::class.java
                     ),
                     CardData(
                         "Door",
@@ -161,8 +214,6 @@ fun DashboardScreen() {
                     )
                 )
 
-
-                // Security and Analytics
                 DeviceRow(
                     context,
                     CardData(
@@ -199,8 +250,8 @@ fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        DeviceCard(modifier = Modifier.weight(1f), card = card1, context = context)
-        DeviceCard(modifier = Modifier.weight(1f), card = card2, context = context)
+        DeviceCard(Modifier.weight(1f), card1, context)
+        DeviceCard(Modifier.weight(1f), card2, context)
     }
 }
 
@@ -213,13 +264,14 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
             .let {
                 if (card.activity != null)
                     it.clickable {
-                        context.startActivity(Intent(context, card.activity).apply {
-                            putExtra("USER_ID", CurrentUser.userId)
-                        })
-                    }
-                else it
+                        context.startActivity(
+                            Intent(context, card.activity).apply {
+                                putExtra("USER_ID", CurrentUser.userId)
+                            }
+                        )
+                    } else it
             }
-            .padding(16.dp),
+            .padding(16.dp)
     ) {
         Image(
             painter = painterResource(card.icon),
