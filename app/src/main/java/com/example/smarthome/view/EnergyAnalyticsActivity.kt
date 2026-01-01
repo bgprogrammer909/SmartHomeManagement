@@ -3,6 +3,7 @@ package com.example.smarthome.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,25 +19,27 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.smarthome.R
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.smarthome.viewmodel.EnergyViewModel
 
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
-            EnergyAnalyticsScreen(onBack = { finish() })
+            val viewModel: EnergyViewModel = viewModel()
+            EnergyAnalyticsScreen(viewModel = viewModel, onBack = { finish() })
         }
     }
 }
-@Composable
-fun EnergyAnalyticsScreen(onBack: () -> Unit) {
 
-    // ADD THIS → Controls the selected tab
+@Composable
+fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
+    val state by viewModel.state
     var selectedTab by remember { mutableStateOf("Week") }
 
     LazyColumn(
@@ -50,24 +53,17 @@ fun EnergyAnalyticsScreen(onBack: () -> Unit) {
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-
         // BACK BUTTON
         item {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { onBack() }
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.outline_arrow_back_24),
-                    tint = Color.White,
-                    contentDescription = "Back"
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("Back", color = Color.White, fontSize = 16.sp)
+                Text("← Back", color = Color.White, fontSize = 16.sp)
             }
         }
 
-        // TITLE
+        // TITLE & SUBTITLE
         item {
             Column {
                 Text(
@@ -85,43 +81,34 @@ fun EnergyAnalyticsScreen(onBack: () -> Unit) {
         }
 
         // TOTAL USAGE CARD
-        item {
-            TotalUsageCard()
-        }
+        item { TotalUsageCard(state) }
 
-        // FIXED → Pass state into the TabRow
-        item {
-            TabRowSection(
-                selectedTab = selectedTab,
-                onTabChange = { selectedTab = it }
-            )
-        }
+        // TABS
+        item { TabRowSection(selectedTab = selectedTab, onTabChange = { selectedTab = it }) }
 
-        // FIXED → Graph receives selectedTab
-        item {
-            GraphCardWithChart(selectedTab)
-        }
+        // GRAPH
+        item { GraphCardWithChart(selectedTab, state) }
 
         // USAGE ITEMS
-        item { UsageItem("Lights", 28, Color(0xFFFFD740)) }
-        item { UsageItem("AC", 42, Color(0xFF4CC3FF)) }
-        item { UsageItem("Water Pump", 78, Color(0xFF3C6DFF)) }
-        item { UsageItem("Others", 18, Color(0xFFCE93D8)) }
+        item { UsageItem("Lights", state.lightsUsage, Color(0xFFFFD740)) }
+        item { UsageItem("AC", state.acUsage, Color(0xFF4CC3FF)) }
+        item { UsageItem("Water Pump", state.waterPumpUsage, Color(0xFF3C6DFF)) }
+        item { UsageItem("Others", state.othersUsage, Color(0xFFCE93D8)) }
 
         // BILL + TIPS
-        item { EstimatedBillCard() }
+        item { EstimatedBillCard(state) }
         item { TipsCard() }
 
+        // SPACER
         item { Spacer(modifier = Modifier.height(50.dp)) }
     }
 }
-
 
 /////////////////////////////////////////////////////////////////
 // TOTAL USAGE CARD
 ////////////////////////////////////////////////////////////////
 @Composable
-fun TotalUsageCard() {
+fun TotalUsageCard(state: com.example.smarthome.model.EnergyModel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
@@ -129,17 +116,19 @@ fun TotalUsageCard() {
     ) {
         Column(Modifier.padding(20.dp)) {
 
-            // Small subtitle
             Text("Total Usage", color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
 
-            // Main number
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("120 kWh", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "${state.totalUsage.toInt()} kWh",
+                    color = Color.White,
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold
+                )
 
-                // Lightning icon card
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -147,29 +136,27 @@ fun TotalUsageCard() {
                         .background(Color(0xFF7A4FFF)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painterResource(id = R.drawable.baseline_bolt_24),
-                        contentDescription = "Bolt",
-                        tint = Color.White
-                    )
+                    Text("⚡", fontSize = 24.sp)
                 }
             }
 
             Spacer(Modifier.height(8.dp))
 
             Text(
-                "12% less than week",
+                "${state.percentageDiff}% less than week",
                 color = Color(0xFF76FF7A),
                 fontSize = 14.sp
             )
 
             Spacer(Modifier.height(18.dp))
 
-            // MINI CARDS
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                MiniUsageBox("Today", "18 kWh")
-                MiniUsageBox("This Week", "120 kWh")
-                MiniUsageBox("This Month", "485 kWh")
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                MiniUsageBox("Today", "${state.todayUsage.toInt()} kWh")
+                MiniUsageBox("This Week", "${state.weekUsage.toInt()} kWh")
+                MiniUsageBox("This Month", "${state.monthUsage.toInt()} kWh")
             }
         }
     }
@@ -192,7 +179,6 @@ fun MiniUsageBox(title: String, value: String) {
 /////////////////////////////////////////////////////////////////
 // TABS
 ////////////////////////////////////////////////////////////////
-
 @Composable
 fun TabRowSection(selectedTab: String, onTabChange: (String) -> Unit) {
     Row(
@@ -224,19 +210,17 @@ fun TabChip(text: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-
 /////////////////////////////////////////////////////////////////
 // GRAPH + TITLE + CALENDAR ICON
 ////////////////////////////////////////////////////////////////
 @Composable
-fun GraphCardWithChart(selectedTab: String) {
+fun GraphCardWithChart(selectedTab: String, state: com.example.smarthome.model.EnergyModel) {
 
-    // Values based on selected tab
     val data = when (selectedTab) {
-        "Day" -> listOf(20f, 40f, 35f, 50f, 45f, 30f, 60f)
-        "Week" -> listOf(90f, 95f, 80f, 88f, 92f, 100f, 97f)
-        "Month" -> listOf(60f, 65f, 70f, 80f, 75f, 85f, 95f)
-        else -> listOf(90f, 95f, 80f)
+        "Day" -> state.dayData
+        "Week" -> state.weekData
+        "Month" -> state.monthData
+        else -> state.weekData
     }
 
     Card(
@@ -244,7 +228,6 @@ fun GraphCardWithChart(selectedTab: String) {
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF14203D))
     ) {
-
         Column(Modifier.padding(20.dp)) {
 
             Row(
@@ -259,11 +242,7 @@ fun GraphCardWithChart(selectedTab: String) {
                     fontWeight = FontWeight.SemiBold
                 )
 
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_calendar_today_24),
-                    contentDescription = null,
-                    tint = Color.White
-                )
+                Text("📅", fontSize = 20.sp)
             }
 
             Spacer(Modifier.height(16.dp))
@@ -273,9 +252,8 @@ fun GraphCardWithChart(selectedTab: String) {
     }
 }
 
-
 /////////////////////////////////////////////////////////////////
-// FAKE GRAPH USING CANVAS (Matches look of screenshot)
+// FAKE GRAPH USING CANVAS
 ////////////////////////////////////////////////////////////////
 @Composable
 fun FakeLineGraph(data: List<Float>) {
@@ -297,7 +275,6 @@ fun FakeLineGraph(data: List<Float>) {
         val xGap = width / data.size
         val maxY = 120f
 
-        // Convert values to graph points
         val points = data.mapIndexed { index, value ->
             Offset(
                 x = xGap * index + xGap / 2,
@@ -326,7 +303,6 @@ fun FakeLineGraph(data: List<Float>) {
         }
     }
 }
-
 
 /////////////////////////////////////////////////////////////////
 // USAGE ITEM
@@ -374,7 +350,7 @@ fun UsageItem(label: String, percent: Int, color: Color) {
 // ESTIMATED BILL
 ////////////////////////////////////////////////////////////////
 @Composable
-fun EstimatedBillCard() {
+fun EstimatedBillCard(state: com.example.smarthome.model.EnergyModel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
@@ -382,10 +358,15 @@ fun EstimatedBillCard() {
     ) {
         Column(Modifier.padding(20.dp)) {
             Text("Estimated Bill", color = Color.White, fontSize = 14.sp)
-            Text("\$24.50", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "$${String.format("%.2f", state.estimatedBill)}",
+                color = Color.White,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(Modifier.height(10.dp))
             Text(
-                "You're saving \$3.20 this month compared to your average usage.",
+                "You're saving $${String.format("%.2f", state.savings)} this month compared to your average usage.",
                 color = Color.White.copy(alpha = 0.6f),
                 fontSize = 14.sp
             )
@@ -430,9 +411,9 @@ fun TipItem(text: String) {
 /////////////////////////////////////////////////////////////////
 // PREVIEW
 ////////////////////////////////////////////////////////////////
-@Preview(showBackground = true, showSystemUi = true)
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PreviewEnergyAnalytics() {
-    EnergyAnalyticsScreen(onBack = {})
+    val previewViewModel = EnergyViewModel()
+    EnergyAnalyticsScreen(viewModel = previewViewModel, onBack = {})
 }
-//whatsupp suchit broo

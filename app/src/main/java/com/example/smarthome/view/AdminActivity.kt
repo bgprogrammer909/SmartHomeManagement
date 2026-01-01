@@ -1,188 +1,260 @@
 package com.example.smarthome.view
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.smarthome.R
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.smarthome.model.AdminModel
+import com.example.smarthome.viewmodel.AdminViewModel
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 class AdminActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AdminBody()
-
+            val viewModel: AdminViewModel = viewModel()
+            AdminScreen(viewModel)
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminBody() {
-    Scaffold { padding->
-        Column (
+fun AdminScreen(viewModel: AdminViewModel) {
+    val context = LocalContext.current
+    val users by viewModel.users.collectAsState()
+    val focusManager = LocalFocusManager.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var searchQuery by remember { mutableStateOf("") }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var newEmail by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+
+    val filteredUsers = if (searchQuery.isBlank()) users else users.filter {
+        it.id.contains(searchQuery, true) || it.email.contains(searchQuery, true)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Admin Panel", color = Color.White) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF0D152F)
+                ),
+                actions = {
+                    IconButton(onClick = { viewModel.fetchAllUsers() }) {
+                        Icon(
+                            imageVector = Icons.Filled.Refresh,
+                            contentDescription = "Refresh",
+                            tint = Color.White
+                        )
+                    }
+                }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    showAddDialog = true
+                    newEmail = ""
+                    newPassword = ""
+                },
+                containerColor = Color.Blue
+            ) {
+                Icon(
+                    painter = androidx.compose.ui.res.painterResource(id = com.example.smarthome.R.drawable.baseline_edit_24),
+                    contentDescription = "Add User",
+                    tint = Color.White
+                )
+            }
+        }
+    ) { padding ->
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .background(Color.Black)
-        ){
-            Row (
-                modifier = Modifier.fillMaxWidth()
-                    .padding(10.dp)
-            ){
-                Icon(
-                    painter = painterResource(R.drawable.outline_arrow_back_24),
-                    contentDescription = null,
-                    modifier = Modifier, tint = Color.White
-                )
-                Text("Admin", style = TextStyle(Color.White), fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth())
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            OutlinedTextField(
-                value = "",
-                onValueChange = {},
-                leadingIcon = {
-                    IconButton(
-                        onClick = {}
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.baseline_search_24),
-                            contentDescription = null,
-                            modifier = Modifier.size(30.dp), tint = Color.Gray
-
-                        )
-                    }
-                },
-                shape = RoundedCornerShape(18.dp),
-                placeholder = {Text("Search", color = Color.White)},
-                modifier = Modifier.padding(horizontal = 18.dp)
-                    .fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = colorResource(R.color.search),
-                    focusedContainerColor = Color.White,
-                    focusedTextColor = Color.Black
-
-                )
-
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { focusManager.clearFocus() }
+        ) {
+            Text(
+                text = "Admin",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(20.dp))
-            Button(
-                onClick = {},
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue.copy(0.8f)
-                ),
-                shape =RoundedCornerShape(18.dp),
-                modifier = Modifier.fillMaxWidth()
-                    .height(45.dp)
+
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Search by ID or Email", color = Color.Gray) },
+                singleLine = true,
+                modifier = Modifier
                     .padding(horizontal = 18.dp)
-            ) {
-                Text("Add User", color = Color.White, fontSize = 16.sp)
-            }
+                    .fillMaxWidth()
+                    .background(Color.DarkGray, RoundedCornerShape(18.dp))
+            )
+
             Spacer(modifier = Modifier.height(20.dp))
 
-            LazyColumn (modifier = Modifier.fillMaxSize()){
-                item {
-                    Users("Ethan Carter", "12345", true)
-                }
-
-                item {
-                    Users("Olivia Bennett", "67890", true)
-                }
-
-                item {
-                    Users("Noah Thompson", "24680", false)
-                }
-
-                item {
-                    Users("Ava Harper", "13579", true)
+            LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
+                items(filteredUsers) { user ->
+                    UserRow(
+                        user = user,
+                        onToggle = { viewModel.updateUserStatus(user.id, it) },
+                        onSendResetLink = { email ->
+                            FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                                .addOnSuccessListener {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Reset link sent to $email")
+                                    }
+                                }
+                                .addOnFailureListener { e ->
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Failed to send link: ${e.message}")
+                                    }
+                                }
+                        }
+                    )
                 }
             }
         }
     }
 
-}
-@Composable
-fun Users(
-    name:String,
-    id:String,
-    isActive: Boolean
-){
-    Row (modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 18.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically){
-        Icon(
-            painter = painterResource(R.drawable.baseline_person_24),
-            contentDescription = null,
-            modifier = Modifier.size(48.dp),
-            tint = Color.White
+    // Add User Dialog
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            title = { Text("Add New User") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = newEmail,
+                        onValueChange = { newEmail = it },
+                        label = { Text("Email") }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
+                        label = { Text("Password") }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newEmail.isNotBlank() && newPassword.isNotBlank()) {
+                            viewModel.addUser(newEmail, newPassword)
+                            showAddDialog = false
+                        }
+                    }
+                ) { Text("Add") }
+            },
+            dismissButton = {
+                Button(onClick = { showAddDialog = false }) { Text("Cancel") }
+            }
         )
+    }
+}
+
+@Composable
+fun UserRow(
+    user: AdminModel,
+    onToggle: (Boolean) -> Unit,
+    onSendResetLink: (String) -> Unit
+) {
+    var isActive by remember { mutableStateOf(user.isActive) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp, vertical = 8.dp)
+            .background(
+                if (isActive) Color.DarkGray else Color.Black,
+                RoundedCornerShape(12.dp)
+            )
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = androidx.compose.ui.res.painterResource(id = com.example.smarthome.R.drawable.baseline_person_24),
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(40.dp)
+        )
+
         Spacer(modifier = Modifier.width(12.dp))
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
+
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = name,
+                text = "ID: ${user.id}",
                 color = Color.White,
-                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
-
             Text(
-                text = "ID: $id",
+                text = "Email: ${user.email}",
                 color = Color.Gray,
                 fontSize = 12.sp
             )
         }
 
-        Text(
-            text = if (isActive) "• Active" else "• Inactive",
-            color = if (isActive) Color.Green else Color.Red,
-            fontSize = 14.sp
+        Switch(
+            checked = isActive,
+            onCheckedChange = { checked ->
+                isActive = checked
+                onToggle(checked)
+            },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.Green,
+                uncheckedThumbColor = Color.Red,
+                checkedTrackColor = Color.LightGray,
+                uncheckedTrackColor = Color.DarkGray
+            )
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            painter = painterResource(R.drawable.baseline_edit_24),
-            contentDescription = null,
-            tint = Color.White)
-    }
-}
 
-@Preview
-@Composable
-fun AdminPreview() {
-AdminBody()
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Edit button now sends password reset email
+        Button(
+            onClick = { onSendResetLink(user.email) },
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
+        ) {
+            Text("Edit", fontSize = 12.sp)
+        }
+    }
 }

@@ -15,84 +15,105 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.smarthome.R   // <-- FIXED R IMPORT
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.smarthome.R
+import com.example.smarthome.viewmodel.ClimateViewModel
+import com.example.smarthome.viewmodel.ClimateViewModelFactory
 
 class ClimateControlActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val userId = intent.getStringExtra("USER_ID") ?: return
+
         setContent {
-            ClimateControlScreen()
+            val viewModel: ClimateViewModel = viewModel(factory = ClimateViewModelFactory(userId))
+            ClimateControlScreen(viewModel)
         }
     }
 }
 
 @Composable
-fun ClimateControlScreen() {
+fun ClimateControlScreen(viewModel: ClimateViewModel) {
+    val state by viewModel.state.collectAsState()
+    val fan = state.fanSpeed.toFloat()
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
 
-    var fan by remember { mutableFloatStateOf(0f) }
-    var powerOn by remember { mutableStateOf(true) }
-    var autoMode by remember { mutableStateOf(false) }
-
-    val bg = Brush.verticalGradient(listOf(Color(0xFF05060A), Color(0xFF051225)))
+    val bg = Brush.verticalGradient(
+        listOf(Color(0xFF0B132B), Color(0xFF1C1C2E))
+    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(bg)
             .padding(20.dp)
+            .statusBarsPadding()
     ) {
 
+        // Top Back Row
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                painter = painterResource(id = R.drawable.outline_arrow_back_24),
+                painter = painterResource(R.drawable.outline_arrow_back_24),
                 contentDescription = null,
                 tint = Color(0xFF9DB9D0),
-                modifier = Modifier
-                    .size(20.dp)
-                    .clickable { }
+                modifier = Modifier.size(20.dp)
+                    .clickable { activity?.finish() }
             )
             Spacer(Modifier.width(8.dp))
-            Text("Back", color = Color(0xFF9DB9D0), fontSize = 16.sp)
+            Text(
+                "Back",
+                color = Color(0xFF9DB9D0),
+                modifier = Modifier.clickable { activity?.finish() }
+            )
         }
 
         Spacer(Modifier.height(16.dp))
 
-        Text("Climate Control", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
-        Text("Adjust temperature and fan settings", color = Color(0xFF9AB3C8), fontSize = 14.sp)
+        Text(
+            "Climate Control",
+            color = Color.White,
+            fontSize = 30.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Text(
+            "Adjust temperature and fan settings",
+            color = Color(0xFF9AB3C8),
+            fontSize = 14.sp
+        )
 
         Spacer(Modifier.height(20.dp))
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
                 .clip(RoundedCornerShape(22.dp))
                 .background(
                     Brush.linearGradient(
-                        listOf(Color(0xFF113A5B), Color(0xFF0E2B4C), Color(0xFF112B4C))
+                        listOf(Color(0xFF113A5B), Color(0xFF0E2B4C))
                     )
                 )
                 .padding(18.dp)
         ) {
 
-            Column(modifier = Modifier.fillMaxSize()) {
-
+            Column {
                 Row(modifier = Modifier.fillMaxWidth()) {
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Fan Speed", color = Color(0xFFBFD9E6), fontSize = 16.sp)
+                        Text("Fan Speed", color = Color(0xFFBFD9E6))
                         Text(
-                            text = when (fan.toInt()) {
-                                0 -> "Low"
-                                1 -> "Medium"
-                                2 -> "High"
-                                else -> "Turbo"
+                            when (fan.toInt()) {
+                                0 -> "LOW"
+                                1 -> "MEDIUM"
+                                2 -> "HIGH"
+                                else -> "TURBO"
                             },
                             color = Color.White,
                             fontSize = 34.sp,
@@ -100,19 +121,20 @@ fun ClimateControlScreen() {
                         )
                     }
 
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text("Current", color = Color(0xFF9AB3C8), fontSize = 12.sp)
-                        Spacer(Modifier.height(4.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_thermostat_24),
-                                contentDescription = null,
-                                tint = Color(0xFFFF9800),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text("28°C", color = Color(0xFFFF9800), fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                        }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_thermostat_24),
+                            contentDescription = null,
+                            tint = Color(0xFFFF9800),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "${state.temperature}°C",
+                            color = Color(0xFFFF9800),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
 
@@ -120,176 +142,130 @@ fun ClimateControlScreen() {
 
                 Slider(
                     value = fan,
-                    onValueChange = { fan = it },
+                    onValueChange = { viewModel.setFanSpeed(it.toInt()) },
                     valueRange = 0f..3f,
-                    steps = 2,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color.White.copy(alpha = 0.95f),
-                        inactiveTrackColor = Color.White.copy(alpha = 0.12f)
-                    )
+                    steps = 2
                 )
 
                 Spacer(Modifier.height(12.dp))
 
                 Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    StyledChip("Low", fan == 0f) { fan = 0f }
-                    StyledChip("Medium", fan == 1f) { fan = 1f }
-                    StyledChip("High", fan == 2f) { fan = 2f }
-                    StyledChip("Turbo", fan == 3f) { fan = 3f }
+                    StyledChip("Low", fan == 0f) { viewModel.setFanSpeed(0) }
+                    StyledChip("Medium", fan == 1f) { viewModel.setFanSpeed(1) }
+                    StyledChip("High", fan == 2f) { viewModel.setFanSpeed(2) }
+                    StyledChip("Turbo", fan == 3f) { viewModel.setFanSpeed(3) }
                 }
             }
         }
 
         Spacer(Modifier.height(16.dp))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(84.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0E2433))
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_air_24),
-                    contentDescription = null,
-                    tint = Color(0xFF00C1FF),
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text("Power", color = Color.White, fontSize = 16.sp)
-                    Text(
-                        if (powerOn) "System on" else "System off",
-                        color = Color(0xFF9AB3C8),
-                        fontSize = 12.sp
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                Switch(checked = powerOn, onCheckedChange = { powerOn = it })
-            }
-        }
+        FeatureCard(
+            icon = R.drawable.ic_refresh,
+            title = "Power",
+            subtitle = "System on",
+            checked = state.powerOn,
+            onCheckedChange = { viewModel.setPower(it) }
+        )
 
         Spacer(Modifier.height(16.dp))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(84.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0E2433))
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_thermostat_24),
-                    contentDescription = null,
-                    tint = Color(0xFF6AA6FF),
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text("Auto Mode", color = Color.White, fontSize = 16.sp)
-                    Text(
-                        "Adjust temp automatically",
-                        color = Color(0xFF9AB3C8),
-                        fontSize = 12.sp
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                Switch(checked = autoMode, onCheckedChange = { autoMode = it })
-            }
-        }
+        FeatureCard(
+            icon = R.drawable.baseline_thermostat_24,
+            title = "Auto Mode",
+            subtitle = "Adjust temp automatically",
+            checked = state.autoMode,
+            onCheckedChange = { viewModel.setAutoMode(it) }
+        )
 
         Spacer(Modifier.height(16.dp))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(Color(0xFF0B3B25), Color(0xFF063026))
-                        )
-                    )
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Energy Efficiency", color = Color(0xFFB8E9D0), fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            "Current settings are energy efficient. You're saving 15% compared to average usage.",
-                            color = Color(0xFFBFDCD0),
-                            fontSize = 13.sp
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF0EA96F).copy(alpha = 0.12f))
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Text("Optimal", color = Color(0xFF3CE387), fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(6.dp))
+        EnergyCard()
     }
 }
 
 @Composable
 fun StyledChip(text: String, active: Boolean, onClick: () -> Unit) {
-    val bg = if (active) {
-        Brush.linearGradient(listOf(Color(0xFF1FB7FF), Color(0xFF00C7D9)))
-    } else {
-        Brush.linearGradient(listOf(Color(0xFF0F2A3D), Color(0xFF0E2636)))
-    }
-
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(bg)
+            .background(if (active) Color(0xFF1FB7FF) else Color(0xFF0F2A3D))
             .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
-        Text(text, color = if (active) Color.White else Color(0xFF8AA2B5))
+        Text(text, color = Color.White)
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun ClimatePreview() {
-    ClimateControlScreen()
+fun FeatureCard(
+    icon: Int,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0E2433)),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = Color(0xFF1FB7FF),
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, color = Color.White)
+                Text(subtitle, color = Color(0xFF9AB3C8), fontSize = 13.sp)
+            }
+            Switch(checked = checked, onCheckedChange = onCheckedChange)
+        }
+    }
+}
+
+@Composable
+fun EnergyCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    Brush.linearGradient(
+                        listOf(Color(0xFF0F3D2E), Color(0xFF0A2A22))
+                    )
+                )
+                .padding(16.dp)
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Spacer(Modifier.width(1.dp))
+                    Text(
+                        "Energy Efficiency",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text("Optimal", color = Color(0xFF2EFFA3))
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Current settings are energy efficient. You're saving 15% compared to average usage.",
+                    color = Color(0xFFB7E8D8),
+                    fontSize = 13.sp
+                )
+            }
+        }
+    }
 }
