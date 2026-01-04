@@ -70,6 +70,8 @@ fun ProfileBody(
 ) {
     val context = LocalContext.current
     var isLoggingOut by remember { mutableStateOf(false) }
+
+    // Handle logout with delay
     LaunchedEffect(isLoggingOut) {
         if (isLoggingOut) {
             Toast.makeText(context, "Logging out", Toast.LENGTH_SHORT).show()
@@ -83,7 +85,7 @@ fun ProfileBody(
             .fillMaxSize()
             .background(Color(0xFF1E293B))
     ) {
-
+        // Top background box
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -92,6 +94,7 @@ fun ProfileBody(
         )
 
         Column(modifier = Modifier.fillMaxSize()) {
+            // Top bar with back icon
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,7 +102,6 @@ fun ProfileBody(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Icon(
                     painter = painterResource(R.drawable.baseline_arrow_back_ios_new_24),
                     contentDescription = "Back",
@@ -120,6 +122,8 @@ fun ProfileBody(
             }
 
             Spacer(modifier = Modifier.height(90.dp))
+
+            // Profile avatar
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -142,6 +146,7 @@ fun ProfileBody(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Name and Email
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
@@ -161,6 +166,7 @@ fun ProfileBody(
 
             Spacer(modifier = Modifier.height(40.dp))
 
+            // Options and Logout button
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
 
                 ProfileOptionBox("Edit Profile", onEditClick)
@@ -171,9 +177,9 @@ fun ProfileBody(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
+                // Logout Button
                 Button(
                     onClick = { isLoggingOut = true },
-                    enabled = !isLoggingOut,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -182,26 +188,33 @@ fun ProfileBody(
                         containerColor = Color(0xFFEF4444)
                     )
                 ) {
-                    if (isLoggingOut) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Logout",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (isLoggingOut) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .padding(end = 8.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "Logout",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-
 
 @Composable
 fun ProfileOptionBox(
@@ -230,8 +243,6 @@ fun ProfileOptionBox(
         )
     }
 }
-
-
 
 @Preview(showSystemUi = true, showBackground = true)
 @Composable
