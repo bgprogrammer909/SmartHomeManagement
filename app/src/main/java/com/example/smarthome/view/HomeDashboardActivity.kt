@@ -27,10 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
+import com.example.smarthome.repo.LoginRepo
+import com.example.smarthome.repo.LoginRepoImpl
 import com.example.smarthome.repo.PLightRepoImpl
 import com.example.smarthome.util.CurrentUser
+import com.example.smarthome.viewmodel.EnergyViewModel
 import com.example.smarthome.viewmodel.PLightsViewModel
 import com.example.smarthome.viewmodel.PLightsViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
@@ -105,20 +109,30 @@ fun HomeDashboardBody() {
         bottomBar = { BottomNavigationBar(selectedIndex) { selectedIndex = it } },
         containerColor = Color(0xFF0B1225)
     ) { padding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
             when (selectedIndex) {
-                0 -> DashboardScreen()
-                1 -> ScreenBox("Analytics")
-                2 -> ScreenBox("Security")
-                3 -> ScreenBox("Profile Page")
+                0 -> DashboardScreen(
+                    onProfileClick = {
+                        selectedIndex = 3 // ✅ OPEN PROFILE
+                    }
+                )
+                1 -> EnergyAnalyticsActivityScreen()
+                2 -> SecurityScreen()
+                3 -> ProfileActivityScreen(
+                    onBackClick = {
+                        selectedIndex = 0 // ✅ BACK TO DASHBOARD
+                    }
+                )
             }
         }
     }
 }
+
 
 @Composable
 fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
@@ -148,7 +162,10 @@ fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
 data class NavItem(val icon: Int, val label: String)
 
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(
+    onProfileClick: () -> Unit
+) {
+
     val context = LocalContext.current
     val userId = CurrentUser.userId ?: return
 
@@ -174,7 +191,8 @@ fun DashboardScreen() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 90.dp)
         ) {
-            HeaderSection()
+            val loginRepo = remember { LoginRepoImpl() }
+            HeaderSection(onProfileClick, loginRepo)
             Spacer(modifier = Modifier.height(24.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -192,7 +210,7 @@ fun DashboardScreen() {
                         "Pump Off",
                         R.drawable.baseline_water_drop_24,
                         Color.Cyan,
-                        null
+                        WaterActivity::class.java
                     )
                 )
 
@@ -210,7 +228,7 @@ fun DashboardScreen() {
                         "Main Entrance",
                         R.drawable.baseline_sensor_door_24,
                         Color(0xFF4CAF50),
-                        null
+                        DoorlockActivity::class.java
                     )
                 )
 
@@ -221,14 +239,14 @@ fun DashboardScreen() {
                         "Away Mode",
                         R.drawable.baseline_security_24,
                         Color(0xFFFF9800),
-                        null
+                        SecurityActivity::class.java
                     ),
                     CardData(
                         "Analytics",
                         "120 kWh",
                         R.drawable.baseline_query_stats_24,
                         Color(0xFF7A4FFF),
-                        null
+                        EnergyAnalyticsActivity::class.java
                     )
                 )
             }
@@ -286,7 +304,20 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
 }
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(
+    onProfileClick: () -> Unit,
+    loginRepo: LoginRepo
+) {
+    var userName by remember { mutableStateOf("User") }
+    val email = loginRepo.getCurrentUser()?.email
+
+    LaunchedEffect(email) {
+        email?.let {
+            val namePart = it.substringBefore("@") // sarina@gmail.com -> sarina
+            userName = namePart.replaceFirstChar { c -> c.uppercaseChar() } // capitalize first letter
+        }
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -294,14 +325,15 @@ fun HeaderSection() {
     ) {
         Column {
             Text("Welcome Home,", color = Color.White.copy(0.7f), fontSize = 15.sp)
-            Text("Alex", color = Color.White, fontSize = 20.sp)
+            Text(userName, color = Color.White, fontSize = 20.sp)
         }
 
         Box(
             modifier = Modifier
                 .size(50.dp)
                 .clip(CircleShape)
-                .background(Color.Gray),
+                .background(Color.Gray)
+                .clickable { onProfileClick() },
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -314,20 +346,58 @@ fun HeaderSection() {
     }
 }
 
+
 @Composable
-fun ScreenBox(title: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF111A32)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(title, color = Color.White, fontSize = 20.sp)
-    }
+fun EnergyAnalyticsActivityScreen() {
+    val viewModel: EnergyViewModel = viewModel()
+
+    EnergyAnalyticsScreen(
+        viewModel = viewModel,
+        onBack = {}
+    )
+}
+
+
+
+@Composable
+fun SecurityScreen() {
+    val viewModel: SecurityViewModel = viewModel()
+
+    SecurityScreen(
+        viewModel = viewModel,
+        onBack = {}
+    )
+}
+
+
+
+@Composable
+fun ProfileActivityScreen(onBackClick: () -> Unit) {
+    val context = LocalContext.current
+
+    ProfileBody(
+        onBackClick = onBackClick,
+        onEditClick = {
+            context.startActivity(Intent(context, UserEditProfileActivity::class.java))
+        },
+
+        onSettingsClick = {},
+        onLogoutClick = {
+            FirebaseAuth.getInstance().signOut()
+            context.startActivity(
+                Intent(context, LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+            )
+        }
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewDashboard() {
-    DashboardScreen()
+    DashboardScreen(
+        onProfileClick = {}
+    )
 }
+
