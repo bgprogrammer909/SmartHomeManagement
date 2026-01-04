@@ -71,7 +71,14 @@ fun ProfileBody(
     val context = LocalContext.current
     var isLoggingOut by remember { mutableStateOf(false) }
 
-    // Handle logout with delay
+    // 🔹 Firebase user
+    val user = FirebaseAuth.getInstance().currentUser
+    val email = user?.email ?: "No email"
+    val username = user?.displayName
+        ?: email.substringBefore("@")
+            .replaceFirstChar { it.uppercase() }
+
+    // Logout delay
     LaunchedEffect(isLoggingOut) {
         if (isLoggingOut) {
             Toast.makeText(context, "Logging out", Toast.LENGTH_SHORT).show()
@@ -85,7 +92,7 @@ fun ProfileBody(
             .fillMaxSize()
             .background(Color(0xFF1E293B))
     ) {
-        // Top background box
+        // Top background
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -94,7 +101,8 @@ fun ProfileBody(
         )
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // Top bar with back icon
+
+            // Top bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -123,7 +131,7 @@ fun ProfileBody(
 
             Spacer(modifier = Modifier.height(90.dp))
 
-            // Profile avatar
+            // Profile Avatar
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -146,19 +154,19 @@ fun ProfileBody(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Name and Email
+            // 🔹 Dynamic Name & Email
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "ABC",
+                    text = username,
                     color = Color.White,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "abc@gmail.com",
+                    text = email,
                     color = Color.Gray,
                     fontSize = 14.sp
                 )
@@ -166,7 +174,7 @@ fun ProfileBody(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Options and Logout button
+            // Options + Logout
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
 
                 ProfileOptionBox("Edit Profile", onEditClick)
@@ -177,7 +185,6 @@ fun ProfileBody(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // Logout Button
                 Button(
                     onClick = { isLoggingOut = true },
                     modifier = Modifier
@@ -188,27 +195,19 @@ fun ProfileBody(
                         containerColor = Color(0xFFEF4444)
                     )
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        if (isLoggingOut) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                strokeWidth = 2.dp,
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .padding(end = 8.dp)
-                            )
-                        } else {
-                            Text(
-                                text = "Logout",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                    if (isLoggingOut) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Logout",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
