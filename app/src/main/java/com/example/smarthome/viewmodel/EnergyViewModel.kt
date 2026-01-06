@@ -1,7 +1,7 @@
 package com.example.smarthome.viewmodel
 
-import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
 import com.example.smarthome.model.EnergyModel
 import com.example.smarthome.repo.EnergyRepo
 import com.example.smarthome.repo.EnergyRepoImpl
@@ -18,36 +18,28 @@ class EnergyViewModel(
         }
     }
 
-    fun updateTotalUsage(value: Double) {
-        update(state.value.copy(totalUsage = value))
+    fun addDayValue(value: Float) {
+        val updated = state.value.dayData
+            .takeLast(6)
+            .plus(value)
+
+        update(state.value.copy(dayData = updated))
     }
 
-    fun updateTodayUsage(value: Double) {
-        update(state.value.copy(todayUsage = value))
+    fun addWeekValue(value: Float) {
+        val updated = state.value.weekData
+            .takeLast(6)
+            .plus(value)
+
+        update(state.value.copy(weekData = updated))
     }
 
-    fun updateWeekUsage(value: Double) {
-        update(state.value.copy(weekUsage = value))
-    }
+    fun addMonthValue(value: Float) {
+        val updated = state.value.monthData
+            .takeLast(6)
+            .plus(value)
 
-    fun updateMonthUsage(value: Double) {
-        update(state.value.copy(monthUsage = value))
-    }
-
-    fun updateLightsUsage(value: Int) {
-        update(state.value.copy(lightsUsage = value))
-    }
-
-    fun updateAcUsage(value: Int) {
-        update(state.value.copy(acUsage = value))
-    }
-
-    fun updateWaterPumpUsage(value: Int) {
-        update(state.value.copy(waterPumpUsage = value))
-    }
-
-    fun updateOthersUsage(value: Int) {
-        update(state.value.copy(othersUsage = value))
+        update(state.value.copy(monthData = updated))
     }
 
     private fun update(model: EnergyModel) {
