@@ -21,17 +21,29 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.smarthome.viewmodel.WaterViewModel
-import com.example.smarthome.view.ui.theme.SmartHomeTheme
 import com.example.smarthome.model.WaterModel
+import com.example.smarthome.view.ui.theme.SmartHomeTheme
+import com.example.smarthome.viewmodel.WaterViewModel
+import com.example.smarthome.viewmodel.WaterViewModelFactory
 
 class WaterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Get userId from intent
+        val userId = intent.getStringExtra("USER_ID")
+        if (userId.isNullOrEmpty()) {
+            finish() // terminate if no userId
+            return
+        }
+
         setContent {
             SmartHomeTheme {
-                val viewModel: WaterViewModel = viewModel()
+                // Create ViewModel using factory
+                val viewModel: WaterViewModel = viewModel(
+                    factory = WaterViewModelFactory(userId)
+                )
                 val state by viewModel.state.collectAsState()
                 WaterBody(state = state, viewModel = viewModel)
             }
@@ -236,7 +248,7 @@ fun PumpInfoBox(title: String, value: String) {
 @Composable
 fun WaterBodyPreview() {
     SmartHomeTheme {
-        val viewModel: WaterViewModel = viewModel()
+        val viewModel: WaterViewModel = viewModel(factory = WaterViewModelFactory("dummyUserId"))
         val state by viewModel.state.collectAsState()
         WaterBody(state = state, viewModel = viewModel)
     }

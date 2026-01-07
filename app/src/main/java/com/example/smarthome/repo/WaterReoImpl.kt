@@ -5,10 +5,19 @@ import com.google.firebase.database.*
 
 class WaterRepoImpl : WaterRepo {
 
-    private val ref = FirebaseDatabase.getInstance().getReference("waterControl")
+    private var listener: ValueEventListener? = null
 
-    override fun observeWater(onChange: (WaterModel) -> Unit) {
-        ref.addValueEventListener(object : ValueEventListener {
+    private fun waterRef(userId: String) =
+        FirebaseDatabase.getInstance()
+            .getReference("users")
+            .child(userId)
+            .child("water")
+
+    override fun getWaterRealtime(userId: String, callback: (success: Boolean, data: WaterModel?) -> Unit) {
+        val ref = waterRef(userId)
+        listener?.let { ref.removeEventListener(it) }
+
+        listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 try {
                     val isPumpOn = snapshot.child("isPumpOn").getValue(Boolean::class.java) ?: false
@@ -51,19 +60,24 @@ class WaterRepoImpl : WaterRepo {
                         energySavings = energySavings
                     )
 
-                    onChange(model)
+                    callback(true, model)
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    callback(false, null)
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                error.toException().printStackTrace()
+                callback(false, null)
             }
-        })
+        }
+
+        ref.addValueEventListener(listener!!)
     }
 
-    override fun updateWater(model: WaterModel) {
-        ref.setValue(model)
+    override fun updateWater(userId: String, model: WaterModel, callback: (success: Boolean, error: String?) -> Unit) {
+        waterRef(userId).setValue(model)
+            .addOnSuccessListener { callback(true, null) }
+            .addOnFailureListener { callback(false, it.message) }
     }
 }
