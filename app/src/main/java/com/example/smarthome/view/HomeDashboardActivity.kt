@@ -171,7 +171,7 @@ fun DashboardScreen(onProfileClick: () -> Unit) {
 
             DeviceRow(
                 context,
-                CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecuritySystemActivity::class.java, userId),
+                CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java, userId),
                 CardData("Analytics", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java, userId)
             )
         }
@@ -260,7 +260,7 @@ fun EnergyAnalyticsActivityScreen() {
 fun SecurityActivityScreen() {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
-        context.startActivity(Intent(context, SecuritySystemActivity::class.java))
+        context.startActivity(Intent(context, SecurityActivity::class.java))
     }
 }
 
