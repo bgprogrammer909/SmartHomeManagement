@@ -22,5 +22,16 @@ class LoginScreenTest {
             .onNodeWithText("Sign in")
             .assertIsDisplayed()
     }
+    @Test
+    fun forgotPassword_dialog_opens() {
+        // Click on "Forget Password?"
+        composeTestRule
+            .onNodeWithText("Forget Password?")
+            .performClick()
 
+        // Check dialog title appears
+        composeTestRule
+            .onNodeWithText("Forgot Password")
+            .assertIsDisplayed()
+    }
 }
