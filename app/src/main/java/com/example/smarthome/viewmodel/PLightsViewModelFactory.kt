@@ -8,11 +8,10 @@ class PLightsViewModelFactory(
     private val repo: PLightRepo,
     private val userId: String
 ) : ViewModelProvider.Factory {
-
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(PLightsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return PLightsViewModel(repo, userId) as T
+            return PLightsViewModel(repo = repo, userId = userId) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

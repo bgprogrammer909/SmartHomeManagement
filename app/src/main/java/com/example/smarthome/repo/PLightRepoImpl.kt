@@ -1,6 +1,5 @@
 package com.example.smarthome.repo
 
-import android.util.Log
 import com.example.smarthome.model.LightModel
 import com.google.firebase.database.*
 
@@ -14,62 +13,36 @@ class PLightRepoImpl : PLightRepo {
             .child(userId)
             .child("lights")
 
-    override fun getLightsRealtime(
-        userId: String,
-        callback: (success: Boolean, data: LightModel?) -> Unit
-    ) {
-        val dbRef = lightsRef(userId)
-
-        listener?.let { dbRef.removeEventListener(it) }
+    override fun getLightsRealtime(userId: String, callback: (success: Boolean, data: LightModel?) -> Unit) {
+        val ref = lightsRef(userId)
+        listener?.let { ref.removeEventListener(it) }
 
         listener = object : ValueEventListener {
-
             override fun onDataChange(snapshot: DataSnapshot) {
                 try {
-                    val light1 = snapshot.child("light1")
-                    val light2 = snapshot.child("light2")
+                    val light1On = snapshot.child("light1On").getValue(Boolean::class.java) ?: false
+                    val light2On = snapshot.child("light2On").getValue(Boolean::class.java) ?: false
+                    val light1Brightness = snapshot.child("light1Brightness").getValue(Float::class.java) ?: 50f
+                    val light2Brightness = snapshot.child("light2Brightness").getValue(Float::class.java) ?: 50f
+                    val isOn = snapshot.child("isOn").getValue(Boolean::class.java) ?: true
 
-                    val model = LightModel(
-                        light1On = light1.child("isOn").getValue(Boolean::class.java) ?: true,
-                        light2On = light2.child("isOn").getValue(Boolean::class.java) ?: true,
-                        light1Brightness = light1.child("brightness").getValue(Number::class.java)?.toFloat() ?: 50f,
-                        light2Brightness = light2.child("brightness").getValue(Number::class.java)?.toFloat() ?: 50f
-                    )
-
-                    callback(true, model)
-
+                    callback(true, LightModel(light1On, light2On, light1Brightness, light2Brightness, isOn))
                 } catch (e: Exception) {
-                    Log.e("Firebase", "Parse error: ${e.message}")
+                    e.printStackTrace()
                     callback(false, null)
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.e("Firebase", error.message)
                 callback(false, null)
             }
         }
 
-        dbRef.addValueEventListener(listener!!)
+        ref.addValueEventListener(listener!!)
     }
 
-    override fun updateLight(
-        userId: String,
-        lightNumber: Int,
-        isOn: Boolean,
-        brightness: Float,
-        callback: (Boolean, String?) -> Unit
-    ) {
-        val lightKey = "light$lightNumber"
-
-        val updates = mapOf(
-            "isOn" to isOn,
-            "brightness" to brightness
-        )
-
-        lightsRef(userId)
-            .child(lightKey)
-            .updateChildren(updates)
+    override fun updateLights(userId: String, model: LightModel, callback: (success: Boolean, error: String?) -> Unit) {
+        lightsRef(userId).setValue(model)
             .addOnSuccessListener { callback(true, null) }
             .addOnFailureListener { callback(false, it.message) }
     }
