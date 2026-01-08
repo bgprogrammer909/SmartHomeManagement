@@ -30,7 +30,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
 import com.example.smarthome.util.CurrentUser
 import com.example.smarthome.viewmodel.*
-import com.example.smarthome.repo.SecurityRepoImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
