@@ -1,6 +1,7 @@
 package com.example.smarthome.view
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -74,7 +75,7 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                 .statusBarsPadding()
         ) {
 
-            // Top Back Row
+            // FIXED: Top Back Row - removed setPumpOn(false) which was causing issues
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { activity?.finish() }
@@ -168,8 +169,15 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
 
                     Spacer(Modifier.height(20.dp))
 
+                    // FIXED: Button now properly toggles pump state
                     Button(
-                        onClick = { viewModel.togglePump() },
+                        onClick = {
+                            if (!state.autoMode){
+                            viewModel.togglePump()
+                            }else{
+                                Toast.makeText(context,"Automatic mode is on", Toast.LENGTH_SHORT).show()
+                            }
+                                  },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),

@@ -20,6 +20,15 @@ class WaterRepoImpl : WaterRepo {
         listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 try {
+                    // FIXED: Check if data exists first
+                    if (!snapshot.exists()) {
+                        val defaultModel = WaterModel()
+                        ref.setValue(defaultModel)
+                        callback(true, defaultModel)
+                        return
+                    }
+
+                    // CRITICAL FIX: Read actual Boolean values, default to false not true
                     val isPumpOn = snapshot.child("isPumpOn").getValue(Boolean::class.java) ?: false
                     val autoMode = snapshot.child("autoMode").getValue(Boolean::class.java) ?: false
                     val todayUsage = snapshot.child("todayUsage").getValue(Double::class.java) ?: 0.0
@@ -42,7 +51,16 @@ class WaterRepoImpl : WaterRepo {
     }
 
     override fun updateWater(userId: String, model: WaterModel, callback: (success: Boolean, error: String?) -> Unit) {
-        waterRef(userId).setValue(model)
+        // FIXED: Use hashMap to ensure all fields are written properly
+        val dataMap = hashMapOf(
+            "isPumpOn" to model.isPumpOn,
+            "autoMode" to model.autoMode,
+            "todayUsage" to model.todayUsage,
+            "flowRate" to model.flowRate,
+            "energySavings" to model.energySavings
+        )
+
+        waterRef(userId).setValue(dataMap)
             .addOnSuccessListener { callback(true, null) }
             .addOnFailureListener { callback(false, it.message) }
     }
