@@ -2,17 +2,22 @@ package com.example.smarthome.repo
 
 import com.example.smarthome.model.ActivityLog
 import com.example.smarthome.model.SecurityModel
+import com.example.smarthome.util.CurrentUser
 import com.google.firebase.database.*
 
 class SecurityRepoImpl : SecurityRepo {
 
-    private val ref = FirebaseDatabase.getInstance().getReference("securitySystem")
+    private val ref: DatabaseReference
+        get() = FirebaseDatabase.getInstance()
+            .getReference("users")
+            .child(CurrentUser.userId ?: "")
+            .child("security")
 
     override fun observeSecurity(onChange: (SecurityModel) -> Unit) {
         ref.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 try {
-                    val activeMode = snapshot.child("activeMode").getValue(String::class.java) ?: "HOME"
+                    val activeMode = snapshot.child("activeMode").getValue(Boolean::class.java) ?: true
                     val motionDetection = snapshot.child("motionDetection").getValue(Boolean::class.java) ?: true
                     val doorSensors = snapshot.child("doorSensors").getValue(Boolean::class.java) ?: true
                     val pushNotifications = snapshot.child("pushNotifications").getValue(Boolean::class.java) ?: true
@@ -24,12 +29,6 @@ class SecurityRepoImpl : SecurityRepo {
                         if (description.isNotEmpty()) {
                             activities.add(ActivityLog(description, timestamp))
                         }
-                    }
-
-                    if (activities.isEmpty()) {
-                        activities.add(ActivityLog("Motion detected – Front door", "2 min ago"))
-                        activities.add(ActivityLog("Door opened – Main entrance", "15 min ago"))
-                        activities.add(ActivityLog("Camera triggered – Backyard", "1 hour ago"))
                     }
 
                     val model = SecurityModel(

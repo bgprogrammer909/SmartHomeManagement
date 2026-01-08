@@ -1,7 +1,7 @@
 package com.example.smarthome.model
 
 data class SecurityModel(
-    val activeMode: String = "HOME",  // HOME, AWAY, NIGHT
+    val activeMode: Boolean = true,
     val motionDetection: Boolean = true,
     val doorSensors: Boolean = true,
     val pushNotifications: Boolean = true,

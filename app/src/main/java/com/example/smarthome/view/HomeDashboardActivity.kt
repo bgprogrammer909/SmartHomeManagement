@@ -1,5 +1,6 @@
 package com.example.smarthome.view
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -29,9 +30,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
 import com.example.smarthome.util.CurrentUser
 import com.example.smarthome.viewmodel.*
+import com.example.smarthome.repo.SecurityRepoImpl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
+/* ---------------- HOME DASHBOARD ACTIVITY ---------------- */
 class HomeDashboardActivity : ComponentActivity() {
 
     private var isActiveListener: ValueEventListener? = null
@@ -91,7 +94,6 @@ class HomeDashboardActivity : ComponentActivity() {
 }
 
 /* ---------------- DASHBOARD BODY ---------------- */
-
 @Composable
 fun HomeDashboardBody() {
     var selectedIndex by remember { mutableStateOf(0) }
@@ -108,7 +110,7 @@ fun HomeDashboardBody() {
             when (selectedIndex) {
                 0 -> DashboardScreen(onProfileClick = { selectedIndex = 3 })
                 1 -> EnergyAnalyticsActivityScreen()
-                2 -> SecurityScreen()
+                2 -> SecurityActivityScreen()
                 3 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 })
             }
         }
@@ -116,7 +118,6 @@ fun HomeDashboardBody() {
 }
 
 /* ---------------- BOTTOM NAV ---------------- */
-
 @Composable
 fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val navItems = listOf(
@@ -141,7 +142,6 @@ fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
 data class NavItem(val icon: Int, val label: String)
 
 /* ---------------- DASHBOARD SCREEN ---------------- */
-
 @Composable
 fun DashboardScreen(onProfileClick: () -> Unit) {
     val context = LocalContext.current
@@ -172,7 +172,7 @@ fun DashboardScreen(onProfileClick: () -> Unit) {
 
             DeviceRow(
                 context,
-                CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java, userId),
+                CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecuritySystemActivity::class.java, userId),
                 CardData("Analytics", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java, userId)
             )
         }
@@ -180,12 +180,11 @@ fun DashboardScreen(onProfileClick: () -> Unit) {
 }
 
 /* ---------------- CARD / ROW ---------------- */
-
 data class CardData(
     val title: String,
     val icon: Int,
     val color: Color,
-    val activity: Class<*>?,
+    val activity: Class<out Activity>,
     val userId: String
 )
 
@@ -204,11 +203,9 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
             .height(150.dp)
             .background(Color(0xFF111A32), RoundedCornerShape(20.dp))
             .clickable {
-                card.activity?.let {
-                    context.startActivity(
-                        Intent(context, it).putExtra("USER_ID", card.userId)
-                    )
-                }
+                context.startActivity(
+                    Intent(context, card.activity).putExtra("USER_ID", card.userId)
+                )
             }
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -226,7 +223,6 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
 }
 
 /* ---------------- HEADER ---------------- */
-
 @Composable
 fun HeaderSection(onProfileClick: () -> Unit) {
     Row(
@@ -255,7 +251,6 @@ fun HeaderSection(onProfileClick: () -> Unit) {
 }
 
 /* ---------------- OTHER SCREENS ---------------- */
-
 @Composable
 fun EnergyAnalyticsActivityScreen() {
     val vm: EnergyViewModel = viewModel()
@@ -263,9 +258,11 @@ fun EnergyAnalyticsActivityScreen() {
 }
 
 @Composable
-fun SecurityScreen() {
-    val vm: SecurityViewModel = viewModel()
-    SecurityScreen(vm, onBack = {})
+fun SecurityActivityScreen() {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        context.startActivity(Intent(context, SecuritySystemActivity::class.java))
+    }
 }
 
 @Composable
@@ -286,7 +283,6 @@ fun ProfileActivityScreen(onBackClick: () -> Unit) {
 }
 
 /* ---------------- PREVIEW ---------------- */
-
 @Preview(showBackground = true)
 @Composable
 fun PreviewDashboard() {
