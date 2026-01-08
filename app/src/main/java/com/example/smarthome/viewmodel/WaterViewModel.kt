@@ -3,52 +3,70 @@ package com.example.smarthome.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smarthome.model.WaterModel
+import com.example.smarthome.repo.WaterRepo
 import com.example.smarthome.repo.WaterRepoImpl
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class WaterViewModel(
-    private val repo: WaterRepo = WaterRepoImpl()
+    private val repo: WaterRepo = WaterRepoImpl(),
+    private val userId: String
 ) : ViewModel() {
 
-    // Full state holding WaterModel
     private val _state = MutableStateFlow(WaterModel())
-    val state: StateFlow<WaterModel> get() = _state
+    val state = _state.asStateFlow()
 
     init {
-        // Observe Firebase updates
-        repo.observeWater { model ->
-            _state.value = model
+        // Fetch initial data and listen for realtime updates
+        repo.getWaterRealtime(userId) { success, data ->
+            if (success && data != null) {
+                _state.value = data
+            }
         }
     }
 
-    // Toggle pump
     fun togglePump() {
-        val current = _state.value
-        val updated = current.copy(isPumpOn = !current.isPumpOn)
-        _state.value = updated
-        repo.updateWater(updated)
+        val updated = _state.value.copy(isPumpOn = !_state.value.isPumpOn)
+        update(updated)
     }
 
-    // Toggle auto mode
     fun toggleAutoMode() {
-        val current = _state.value
-        val updated = current.copy(autoMode = !current.autoMode)
-        _state.value = updated
-        repo.updateWater(updated)
+        val updated = _state.value.copy(autoMode = !_state.value.autoMode)
+        update(updated)
     }
 
-    // Optional: directly turn on/off
-    fun turnOn() {
-        val updated = _state.value.copy(isPumpOn = true)
-        _state.value = updated
-        repo.updateWater(updated)
+    fun setPumpOn(value: Boolean) {
+        val updated = _state.value.copy(isPumpOn = value)
+        update(updated)
     }
 
-    fun turnOff() {
-        val updated = _state.value.copy(isPumpOn = false)
-        _state.value = updated
-        repo.updateWater(updated)
+    fun setAutoMode(value: Boolean) {
+        val updated = _state.value.copy(autoMode = value)
+        update(updated)
+    }
+
+    fun setTodayUsage(value: Double) {
+        val updated = _state.value.copy(todayUsage = value)
+        update(updated)
+    }
+
+    fun setFlowRate(value: Double) {
+        val updated = _state.value.copy(flowRate = value)
+        update(updated)
+    }
+
+    private fun update(model: WaterModel) {
+        // Update local state immediately
+        _state.value = model
+
+        // Persist to Firebase asynchronously
+        viewModelScope.launch {
+            repo.updateWater(userId, model) { success, _ ->
+                if (!success) {
+                    // Optional: handle failure (retry, show Toast, etc.)
+                }
+            }
+        }
     }
 }
