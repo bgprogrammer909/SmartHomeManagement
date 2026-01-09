@@ -18,7 +18,7 @@ class WaterViewModel(
     val state = _state.asStateFlow()
 
     init {
-        // Fetch initial data and listen for realtime updates
+        // FIXED: Simplified realtime listener
         repo.getWaterRealtime(userId) { success, data ->
             if (success && data != null) {
                 _state.value = data
@@ -57,7 +57,7 @@ class WaterViewModel(
     }
 
     private fun update(model: WaterModel) {
-        // Update local state immediately
+        // Update local state immediately for instant UI response
         _state.value = model
 
         // Persist to Firebase asynchronously
