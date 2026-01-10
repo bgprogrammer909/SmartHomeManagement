@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,19 +42,18 @@ class ClimateControlActivity : ComponentActivity() {
             val viewModel2: SecurityViewModel = viewModel(
                 factory = SecurityViewModelFactory(userId)
             )
-            ClimateControlScreen(viewModel,viewModel2)
+            ClimateControlScreen(viewModel, viewModel2)
         }
     }
 }
 
 @Composable
-fun ClimateControlScreen(viewModel: ClimateViewModel,viewModel2: SecurityViewModel) {
+fun ClimateControlScreen(viewModel: ClimateViewModel, viewModel2: SecurityViewModel) {
     val state by viewModel.state.collectAsState()
     val fan = state.fanSpeed.toFloat()
     val context = LocalContext.current
     val activity = context as? ComponentActivity
     val showMotionAlert by viewModel2.showMotionAlert
-
 
     // State for dialogs
     var showPowerOffDialog by remember { mutableStateOf(false) }
@@ -71,8 +69,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel,viewModel2: SecurityViewMod
             .background(bg)
             .padding(20.dp)
             .statusBarsPadding()
-    )
-    {
+    ) {
 
         // Top Back Row
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -80,7 +77,8 @@ fun ClimateControlScreen(viewModel: ClimateViewModel,viewModel2: SecurityViewMod
                 painter = painterResource(R.drawable.outline_arrow_back_24),
                 contentDescription = null,
                 tint = Color(0xFF9DB9D0),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier
+                    .size(20.dp)
                     .clickable { activity?.finish() }
             )
             Spacer(Modifier.width(8.dp))
@@ -174,7 +172,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel,viewModel2: SecurityViewMod
                     StyledChip("High", fan == 2f) { viewModel.setFanSpeed(2) }
                     StyledChip("Turbo", fan == 3f) {
                         viewModel.setFanSpeed(3)
-                        showSuccessDialog = true // Example: show success dialog
+                        showSuccessDialog = true
                     }
                 }
             }
@@ -192,6 +190,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel,viewModel2: SecurityViewMod
                     // Show confirmation before turning off
                     showPowerOffDialog = true
                 } else {
+                    // Turn on immediately without confirmation
                     viewModel.setPower(true)
                 }
             }
@@ -212,6 +211,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel,viewModel2: SecurityViewMod
         EnergyCard()
     }
 
+    // Security Motion Alert Dialog
     if (showMotionAlert) {
         AlertDialog(
             onDismissRequest = { /* Don't allow dismiss by clicking outside */ },
@@ -235,9 +235,206 @@ fun ClimateControlScreen(viewModel: ClimateViewModel,viewModel2: SecurityViewMod
         )
     }
 
+    // Power Off Confirmation Dialog
+    ConfirmationDialog(
+        showDialog = showPowerOffDialog,
+        onDismiss = { showPowerOffDialog = false },
+        title = "Turn Off Power?",
+        message = "This will disable the climate control system. Are you sure?",
+        confirmText = "Yes, Turn Off",
+        dismissText = "Cancel",
+        onConfirm = {
+            viewModel.setPower(false)
+        }
+    )
+
+    // Success Dialog
+    SuccessDialog(
+        showDialog = showSuccessDialog,
+        onDismiss = { showSuccessDialog = false },
+        title = "Turbo Mode Activated!",
+        message = "Maximum fan speed enabled for optimal cooling."
+    )
 }
 
+// Dialog functions - at file level
+@Composable
+fun CustomDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    title: String,
+    message: String,
+    confirmText: String = "OK",
+    dismissText: String? = null,
+    onConfirm: () -> Unit
+) {
+    if (showDialog) {
+        Dialog(
+            onDismissRequest = onDismiss,
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.Transparent
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color(0xFF0E2433),
+                                    Color(0xFF0B1924)
+                                )
+                            )
+                        )
+                        .padding(24.dp)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Title
+                        Text(
+                            text = title,
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
 
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Message
+                        Text(
+                            text = message,
+                            color = Color(0xFF9AB3C8),
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = if (dismissText != null) {
+                                Arrangement.spacedBy(12.dp)
+                            } else {
+                                Arrangement.Center
+                            }
+                        ) {
+                            // Dismiss button (optional)
+                            dismissText?.let {
+                                Button(
+                                    onClick = onDismiss,
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF1C2836)
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(
+                                        text = it,
+                                        color = Color(0xFF9AB3C8),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+
+                            // Confirm button
+                            Button(
+                                onClick = {
+                                    onConfirm()
+                                    onDismiss()
+                                },
+                                modifier = if (dismissText != null) {
+                                    Modifier.weight(1f)
+                                } else {
+                                    Modifier.widthIn(min = 120.dp)
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF1FB7FF)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = confirmText,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SuccessDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    title: String = "Success!",
+    message: String,
+    confirmText: String = "OK"
+) {
+    CustomDialog(
+        showDialog = showDialog,
+        onDismiss = onDismiss,
+        title = title,
+        message = message,
+        confirmText = confirmText,
+        onConfirm = { }
+    )
+}
+
+@Composable
+fun ErrorDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    title: String = "Error",
+    message: String,
+    confirmText: String = "OK"
+) {
+    CustomDialog(
+        showDialog = showDialog,
+        onDismiss = onDismiss,
+        title = title,
+        message = message,
+        confirmText = confirmText,
+        onConfirm = { }
+    )
+}
+
+@Composable
+fun ConfirmationDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    title: String,
+    message: String,
+    confirmText: String = "Yes",
+    dismissText: String = "No",
+    onConfirm: () -> Unit
+) {
+    CustomDialog(
+        showDialog = showDialog,
+        onDismiss = onDismiss,
+        title = title,
+        message = message,
+        confirmText = confirmText,
+        dismissText = dismissText,
+        onConfirm = onConfirm
+    )
+}
 
 @Composable
 fun StyledChip(text: String, active: Boolean, onClick: () -> Unit) {
