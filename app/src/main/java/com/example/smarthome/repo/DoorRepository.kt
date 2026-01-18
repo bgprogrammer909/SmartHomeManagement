@@ -4,11 +4,7 @@ import com.example.smarthome.model.DoorModel
 import kotlinx.coroutines.flow.StateFlow
 
 interface DoorRepository {
-
-    // Observe doors in real-time
-    fun getDoorsRealtime(): StateFlow<DoorModel>
-
-    // Toggle doors
+    fun observeDoors(): StateFlow<DoorModel>
     fun toggleMainDoor()
     fun toggleHomeDoor()
     fun lockAll()

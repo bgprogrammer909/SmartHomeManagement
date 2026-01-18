@@ -4,9 +4,12 @@ import com.example.smarthome.model.ActivityLog
 import com.example.smarthome.model.SecurityModel
 import com.google.firebase.database.*
 
-class SecurityRepoImpl : SecurityRepo {
+class SecurityRepoImpl(private val userId: String) : SecurityRepo {
 
-    private val ref = FirebaseDatabase.getInstance().getReference("securitySystem")
+    private val ref = FirebaseDatabase.getInstance()
+        .getReference("users")
+        .child(userId)
+        .child("securitySystem")
 
     override fun observeSecurity(onChange: (SecurityModel) -> Unit) {
         ref.addValueEventListener(object : ValueEventListener {
@@ -21,9 +24,7 @@ class SecurityRepoImpl : SecurityRepo {
                     snapshot.child("recentActivities").children.forEach { activitySnapshot ->
                         val description = activitySnapshot.child("description").getValue(String::class.java) ?: ""
                         val timestamp = activitySnapshot.child("timestamp").getValue(String::class.java) ?: ""
-                        if (description.isNotEmpty()) {
-                            activities.add(ActivityLog(description, timestamp))
-                        }
+                        if (description.isNotEmpty()) activities.add(ActivityLog(description, timestamp))
                     }
 
                     if (activities.isEmpty()) {
@@ -39,7 +40,6 @@ class SecurityRepoImpl : SecurityRepo {
                         pushNotifications = pushNotifications,
                         recentActivities = activities
                     )
-
                     onChange(model)
                 } catch (e: Exception) {
                     e.printStackTrace()

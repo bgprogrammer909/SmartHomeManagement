@@ -60,6 +60,7 @@ class LoginActivity : ComponentActivity() {
 
         Box(modifier = Modifier.fillMaxSize()) {
 
+            // Background image
             Image(
                 painter = painterResource(R.drawable.computer),
                 contentDescription = null,
@@ -67,6 +68,7 @@ class LoginActivity : ComponentActivity() {
                 contentScale = ContentScale.Crop
             )
 
+            // Gradient overlay
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -164,51 +166,62 @@ class LoginActivity : ComponentActivity() {
                                     return@Button
                                 }
 
-                                isLoading = true
+                                if (!isLoading) {
+                                    isLoading = true
 
-                                auth.signInWithEmailAndPassword(email, password)
-                                    .addOnSuccessListener { result ->
-                                        val uid = result.user?.uid ?: return@addOnSuccessListener
-
-                                        FirebaseDatabase.getInstance()
-                                            .getReference("users")
-                                            .child(uid)
-                                            .child("isActive")
-                                            .get()
-                                            .addOnSuccessListener { snapshot ->
-                                                val isActive = snapshot.getValue(Boolean::class.java) ?: false
-
-                                                if (!isActive) {
-                                                    auth.signOut()
-                                                    Toast.makeText(
-                                                        context,
-                                                        "Subscription expired. Please contact admin.",
-                                                        Toast.LENGTH_LONG
-                                                    ).show()
-                                                    isLoading = false
-                                                    return@addOnSuccessListener
-                                                }
-
-
-                                                CurrentUser.userId = uid
-                                                context.startActivity(
-                                                    Intent(context, HomeDashboardActivity::class.java)
-                                                )
-                                                activity?.finish()
+                                    auth.signInWithEmailAndPassword(email, password)
+                                        .addOnSuccessListener { result ->
+                                            val uid = result.user?.uid
+                                            if (uid == null) {
+                                                Toast.makeText(context, "Login failed", Toast.LENGTH_SHORT).show()
                                                 isLoading = false
+                                                return@addOnSuccessListener
                                             }
-                                    }
-                                    .addOnFailureListener {
-                                        Toast.makeText(context, "Login failed", Toast.LENGTH_SHORT).show()
-                                        isLoading = false
-                                    }
+
+                                            FirebaseDatabase.getInstance()
+                                                .getReference("users")
+                                                .child(uid)
+                                                .child("isActive")
+                                                .get()
+                                                .addOnSuccessListener { snapshot ->
+                                                    val isActive = snapshot.getValue(Boolean::class.java) ?: false
+
+                                                    if (!isActive) {
+                                                        auth.signOut()
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Subscription expired. Please contact admin.",
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
+                                                        isLoading = false
+                                                        return@addOnSuccessListener
+                                                    }
+
+                                                    CurrentUser.userId = uid
+                                                    context.startActivity(
+                                                        Intent(context, HomeDashboardActivity::class.java)
+                                                    )
+                                                    activity?.finish()
+                                                    isLoading = false
+                                                }
+                                                .addOnFailureListener {
+                                                    Toast.makeText(context, "Failed to verify account", Toast.LENGTH_SHORT).show()
+                                                    isLoading = false
+                                                }
+                                        }
+                                        .addOnFailureListener {
+                                            Toast.makeText(context, "Login failed: ${it.message}", Toast.LENGTH_SHORT).show()
+                                            isLoading = false
+                                        }
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(70.dp)
                                 .padding(top = 15.dp),
                             shape = RoundedCornerShape(20.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32A7EE))
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32A7EE)),
+                            enabled = !isLoading
                         ) {
                             if (isLoading) {
                                 CircularProgressIndicator(
@@ -222,7 +235,7 @@ class LoginActivity : ComponentActivity() {
                         }
 
                         Text(
-                            "Forget Password?",
+                            "Forgot Password?",
                             color = Color.Gray,
                             textDecoration = TextDecoration.Underline,
                             textAlign = TextAlign.Center,
@@ -244,15 +257,28 @@ class LoginActivity : ComponentActivity() {
                         value = forgotEmail,
                         onValueChange = { forgotEmail = it },
                         label = { Text("Enter your email") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
                 },
                 confirmButton = {
                     Button(onClick = {
+                        if (forgotEmail.isBlank()) {
+                            Toast.makeText(context, "Please enter an email", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
                         auth.sendPasswordResetEmail(forgotEmail)
-                        Toast.makeText(context, "Reset link sent", Toast.LENGTH_SHORT).show()
-                        showForgotDialog = false
-                    }) { Text("Send Reset Link") }
+                            .addOnSuccessListener {
+                                Toast.makeText(context, "Reset link sent", Toast.LENGTH_SHORT).show()
+                                showForgotDialog = false
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(context, "Failed to send reset link: ${it.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }) {
+                        Text("Send Reset Link")
+                    }
                 },
                 dismissButton = {
                     Button(onClick = { showForgotDialog = false }) { Text("Cancel") }

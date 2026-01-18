@@ -3,6 +3,6 @@ package com.example.smarthome.repo
 import com.example.smarthome.model.WaterModel
 
 interface WaterRepo {
-    fun observeWater(onChange: (WaterModel) -> Unit)
-    fun updateWater(model: WaterModel)
+    fun getWaterRealtime(userId: String, callback: (success: Boolean, data: WaterModel?) -> Unit)
+    fun updateWater(userId: String, model: WaterModel, callback: (success: Boolean, error: String?) -> Unit)
 }
