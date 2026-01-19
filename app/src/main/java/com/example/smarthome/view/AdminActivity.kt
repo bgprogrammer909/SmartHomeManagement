@@ -113,13 +113,23 @@ fun AdminScreen(viewModel: AdminViewModel) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Search by ID or Email", color = Color.Gray) },
+                placeholder = { Text("Search by ID or Email", color = Color.LightGray) },
                 singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color(0xFFB0B0B0),
+                    focusedContainerColor = Color(0xFF4A4A4A),
+                    unfocusedContainerColor = Color(0xFF4A4A4A),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White
+                ),
                 modifier = Modifier
                     .padding(horizontal = 18.dp)
                     .fillMaxWidth()
-                    .background(Color.DarkGray, RoundedCornerShape(18.dp))
             )
+
 
             Spacer(modifier = Modifier.height(20.dp))
 

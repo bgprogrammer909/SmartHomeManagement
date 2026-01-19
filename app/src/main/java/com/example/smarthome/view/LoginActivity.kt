@@ -221,7 +221,6 @@ class LoginActivity : ComponentActivity() {
                                 .padding(top = 15.dp),
                             shape = RoundedCornerShape(20.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32A7EE)),
-                            enabled = !isLoading
                         ) {
                             if (isLoading) {
                                 CircularProgressIndicator(
