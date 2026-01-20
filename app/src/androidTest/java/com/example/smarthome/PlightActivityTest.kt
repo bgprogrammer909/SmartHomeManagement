@@ -36,7 +36,7 @@ class PLightComposeTest {
         composeRule.onNodeWithTag("masterlightButton")
             .assertIsDisplayed()
     }
-    
+
     @Test
     fun master_light_button_is_clickable() {
         launchActivity()
@@ -45,4 +45,12 @@ class PLightComposeTest {
             .performClick()
     }
 
+
+    @Test
+    fun light1_switch_toggles_successfully() {
+        launchActivity()
+
+        composeRule.onNodeWithTag("Light 1 - switch")
+            .performClick()
+    }
 }
