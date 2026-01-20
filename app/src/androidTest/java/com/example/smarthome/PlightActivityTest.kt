@@ -36,5 +36,13 @@ class PLightComposeTest {
         composeRule.onNodeWithTag("masterlightButton")
             .assertIsDisplayed()
     }
+    
+    @Test
+    fun master_light_button_is_clickable() {
+        launchActivity()
+
+        composeRule.onNodeWithTag("masterlightButton")
+            .performClick()
+    }
 
 }
