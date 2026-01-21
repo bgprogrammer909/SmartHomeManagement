@@ -75,4 +75,14 @@ class DoorLockComposeTest {
             .assertCountEquals(2)
     }
 
+    //  UNLOCK ALL BUTTON
+    @Test
+    fun unlock_all_button_unlocks_all_doors() {
+        launchActivity()
+
+        composeRule.onNodeWithTag("unlockAllButton")
+            .performClick()
+    }
+
+
 }
