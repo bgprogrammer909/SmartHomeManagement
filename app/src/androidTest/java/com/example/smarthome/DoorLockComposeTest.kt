@@ -33,6 +33,7 @@ class DoorLockComposeTest {
         }
         ActivityScenario.launch<DoorLockActivity>(intent)
     }
+
     //  UI LOAD TEST
     @Test
     fun door_screen_opens_successfully() {
@@ -41,12 +42,22 @@ class DoorLockComposeTest {
         composeRule.onNodeWithText("Door Lock")
             .assertIsDisplayed()
     }
+
     // MAIN DOOR TOGGLE
     @Test
     fun main_door_toggle_button_works() {
         launchActivity()
 
         composeRule.onNodeWithTag("Main Door-toggle")
+            .performClick()
+    }
+
+    //  HOME DOOR TOGGLE
+    @Test
+    fun home_door_toggle_button_works() {
+        launchActivity()
+
+        composeRule.onNodeWithTag("Home Door-toggle")
             .performClick()
     }
 }
