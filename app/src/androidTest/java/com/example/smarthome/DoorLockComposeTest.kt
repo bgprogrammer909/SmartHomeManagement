@@ -60,4 +60,19 @@ class DoorLockComposeTest {
         composeRule.onNodeWithTag("Home Door-toggle")
             .performClick()
     }
+    //  LOCK ALL BUTTON
+    @Test
+    fun lock_all_button_locks_all_doors() {
+        launchActivity()
+
+        composeRule.onNodeWithText("Lock All")
+            .performClick()
+
+        composeRule.waitForIdle()
+
+        composeRule
+            .onAllNodesWithText("Locked")
+            .assertCountEquals(2)
+    }
+
 }
