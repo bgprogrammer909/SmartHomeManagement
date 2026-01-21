@@ -75,17 +75,14 @@ class PLightComposeTest {
     fun brightness_slider_appears_after_light1_is_turned_on() {
         launchActivity()
 
-        // Slider should NOT exist initially
         composeRule.onNodeWithTag("Light 1-brightness")
             .assertDoesNotExist()
 
-        // Turn ON light
         composeRule.onNodeWithTag("Light 1 - switch")
             .performClick()
 
         composeRule.waitForIdle()
 
-        // Now slider should appear
         composeRule.onNodeWithTag("Light 1-brightness")
             .assertIsDisplayed()
     }
