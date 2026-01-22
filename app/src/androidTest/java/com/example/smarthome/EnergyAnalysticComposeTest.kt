@@ -41,4 +41,38 @@ class EnergyAnalyticsComposeTest {
         composeRule.onNodeWithTag("WeekTab").performClick()
         composeRule.onNodeWithTag("MonthTab").performClick()
     }
+
+    @Test
+    fun energy_graph_is_displayed() {
+        composeRule.onNodeWithTag("energyGraph")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun usage_items_are_displayed() {
+
+        composeRule.onNodeWithTag("energyLazyColumn")
+            .performScrollToNode(hasTestTag("LightsUsageItem"))
+
+        composeRule.onNodeWithTag("LightsUsageItem")
+            .assertIsDisplayed()
+
+        composeRule.onNodeWithTag("energyLazyColumn")
+            .performScrollToNode(hasTestTag("ACUsageItem"))
+
+        composeRule.onNodeWithTag("ACUsageItem")
+            .assertIsDisplayed()
+
+        composeRule.onNodeWithTag("energyLazyColumn")
+            .performScrollToNode(hasTestTag("WaterPumpUsageItem"))
+
+        composeRule.onNodeWithTag("WaterPumpUsageItem")
+            .assertIsDisplayed()
+
+        composeRule.onNodeWithTag("energyLazyColumn")
+            .performScrollToNode(hasTestTag("OthersUsageItem"))
+
+        composeRule.onNodeWithTag("OthersUsageItem")
+
+    }
 }
