@@ -52,6 +52,7 @@ fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
                     listOf(Color(0xFF0A1A2F), Color(0xFF05101F))
                 )
             )
+            .statusBarsPadding()
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {

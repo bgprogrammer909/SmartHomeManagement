@@ -2,16 +2,14 @@ package com.example.smarthome.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.smarthome.repo.PLightRepo
 
-class PLightsViewModelFactory(
-    private val repo: PLightRepo,
+class WaterViewModelFactory(
     private val userId: String
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(PLightsViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(WaterViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return PLightsViewModel(repo = repo, userId = userId) as T
+            return WaterViewModel(userId = userId) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -5,17 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import com.example.smarthome.model.ActivityLog
 import com.example.smarthome.model.SecurityModel
 import com.example.smarthome.repo.SecurityRepo
-import com.example.smarthome.repo.SecurityRepoImpl
 
-class SecurityViewModel(
-    private val repo: SecurityRepo = SecurityRepoImpl()
-) : ViewModel() {
+class SecurityViewModel(private val repo: SecurityRepo) : ViewModel() {
 
     val state = mutableStateOf(SecurityModel())
 
     init {
-        repo.observeSecurity {
-            state.value = it
+        repo.observeSecurity { model ->
+            state.value = model
         }
     }
 

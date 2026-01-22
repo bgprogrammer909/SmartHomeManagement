@@ -170,3 +170,6 @@ fun customTextFieldColors() = TextFieldDefaults.colors(
 fun EditUserPreview() {
     EditUserScreen()
 }
+
+class SecuritySystemActivity {
+}
