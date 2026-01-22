@@ -75,4 +75,32 @@ class EnergyAnalyticsComposeTest {
         composeRule.onNodeWithTag("OthersUsageItem")
 
     }
+
+    @Test
+    fun estimated_bill_is_displayed() {
+        composeRule
+            .onNodeWithTag("energyLazyColumn")
+            .performScrollToNode(hasTestTag("estimatedBillCard"))
+
+        composeRule.onNodeWithTag("estimatedBillCard")
+            .assertIsDisplayed()
+    }
+
+
+    @Test
+    fun energy_saving_tips_are_displayed() {
+        composeRule
+            .onNodeWithTag("energyLazyColumn")
+            .performScrollToNode(hasTestTag("energyTipsCard"))
+
+        composeRule.onNodeWithTag("energyTipsCard")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun back_button_is_clickable() {
+        composeRule.onNodeWithTag("backButton")
+            .performClick()
+    }
+
 }
