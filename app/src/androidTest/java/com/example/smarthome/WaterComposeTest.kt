@@ -73,4 +73,31 @@ class WaterComposeTest {
             .performClick()
     }
 
+    // USAGE INFO
+    @Test
+    fun usage_info_is_displayed() {
+        launchWaterScreen()
+
+        composeRule.onNodeWithTag("Today's Usage_info")
+            .assertIsDisplayed()
+    }
+
+    //  FLOW RATE INFO
+    @Test
+    fun flow_rate_info_is_displayed() {
+        launchWaterScreen()
+
+        composeRule.onNodeWithTag("Flow Rate_info")
+            .assertIsDisplayed()
+    }
+
+    //  ENERGY EFFICIENCY CARD
+    @Test
+    fun energy_efficiency_card_is_displayed() {
+        launchWaterScreen()
+
+        composeRule.onNodeWithTag("energyEfficiencyCard")
+            .assertIsDisplayed()
+    }
+
 }
