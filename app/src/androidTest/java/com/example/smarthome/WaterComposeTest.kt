@@ -44,3 +44,33 @@ class WaterComposeTest {
         composeRule.onNodeWithTag("backButton")
             .performClick()
     }
+
+
+    //  PUMP TOGGLE BUTTON
+    @Test
+    fun pump_toggle_button_works() {
+        launchWaterScreen()
+
+        composeRule.onNodeWithTag("pumpToggleButton")
+            .performClick()
+    }
+
+    //  PUMP STATUS TEXT
+    @Test
+    fun pump_status_is_displayed() {
+        launchWaterScreen()
+
+        composeRule.onNodeWithTag("pumpStatusText")
+            .assertIsDisplayed()
+    }
+
+    // AUTO MODE SWITCH
+    @Test
+    fun auto_mode_switch_is_clickable() {
+        launchWaterScreen()
+
+        composeRule.onNodeWithTag("autoModeSwitch")
+            .performClick()
+    }
+
+}
