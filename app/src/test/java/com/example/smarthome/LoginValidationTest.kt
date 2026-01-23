@@ -1,7 +1,6 @@
 package com.example.smarthome
 
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert
 import org.junit.Test
 
 class LoginValidationTest {
@@ -13,12 +12,12 @@ class LoginValidationTest {
     @Test
     fun login_with_empty_email_fails() {
         val result = isLoginInputValid("", "password123")
-        assertFalse(result)
+        Assert.assertFalse(result)
     }
 
     @Test
     fun login_with_valid_inputs_passes() {
         val result = isLoginInputValid("test@email.com", "password123")
-        assertTrue(result)
+        Assert.assertTrue(result)
     }
 }
