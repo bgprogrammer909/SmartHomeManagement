@@ -58,4 +58,31 @@ class ClimateControlComposeTest {
         composeRule.onNodeWithText("Turbo").performClick()
     }
 
+    //  POWER SWITCH DISPLAY TEST
+    @Test
+    fun power_card_is_displayed() {
+        launchActivity()
+
+        composeRule.onNodeWithText("Power")
+            .assertIsDisplayed()
+    }
+
+    //  AUTO MODE SWITCH DISPLAY TEST
+    @Test
+    fun auto_mode_card_is_displayed() {
+        launchActivity()
+
+        composeRule.onNodeWithText("Auto Mode")
+            .assertIsDisplayed()
+    }
+
+    //  ENERGY EFFICIENCY CARD TEST
+    @Test
+    fun energy_efficiency_card_is_displayed() {
+        launchActivity()
+
+        composeRule.onNodeWithText("Energy Efficiency")
+            .assertIsDisplayed()
+    }
 }
+
