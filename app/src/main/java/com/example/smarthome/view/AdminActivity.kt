@@ -164,14 +164,20 @@ fun AdminScreen(viewModel: AdminViewModel) {
                         value = newEmail,
                         onValueChange = { newEmail = it },
                         label = { Text("Email") },
-                        singleLine = true
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp), // 👈 rounded
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     OutlinedTextField(
                         value = newPassword,
                         onValueChange = { newPassword = it },
                         label = { Text("Password") },
-                        singleLine = true
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp), // 👈 rounded
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             },
@@ -182,11 +188,25 @@ fun AdminScreen(viewModel: AdminViewModel) {
                             viewModel.addUser(newEmail, newPassword)
                             showAddDialog = false
                         }
-                    }
-                ) { Text("Add") }
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF32A7EE) // 👈 login color
+                    )
+                ) {
+                    Text("Add", color = Color.White)
+                }
             },
             dismissButton = {
-                Button(onClick = { showAddDialog = false }) { Text("Cancel") }
+                Button(
+                    onClick = { showAddDialog = false },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF32A7EE) // 👈 login color
+                    )
+                ) {
+                    Text("Cancel", color = Color.White)
+                }
             }
         )
     }

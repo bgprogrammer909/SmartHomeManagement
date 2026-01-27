@@ -66,7 +66,7 @@ class PLightActivity : ComponentActivity() {
                         .background(bgGradient)
                         .padding(padding)
                         .padding(16.dp)
-                        .statusBarsPadding()
+
                 ) {
                     // Top Bar
                     Row(
