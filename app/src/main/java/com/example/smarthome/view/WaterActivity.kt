@@ -28,6 +28,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
 import com.example.smarthome.viewmodel.WaterViewModel
 import com.example.smarthome.viewmodel.WaterViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.viewmodel.SecurityViewModelFactory
+
 
 class WaterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,13 +41,22 @@ class WaterActivity : ComponentActivity() {
 
         setContent {
             val viewModel: WaterViewModel = viewModel(factory = WaterViewModelFactory(userId))
-            WaterControlScreen(viewModel)
+            val securityViewModel: SecurityViewModel = viewModel(
+                factory = SecurityViewModelFactory(userId)
+            )
+
+            WaterControlScreen(viewModel, securityViewModel)
+
         }
     }
 }
 
 @Composable
-fun WaterControlScreen(viewModel: WaterViewModel) {
+fun WaterControlScreen(
+    viewModel: WaterViewModel,
+    securityViewModel: SecurityViewModel
+) {
+    val showMotionAlert by securityViewModel.showMotionAlert
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val activity = context as? ComponentActivity
@@ -274,6 +286,31 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
             // Energy Efficiency Card
             EnergyEfficiencyCard(energySavings = state.energySavings)
         }
+        if (showMotionAlert) {
+            AlertDialog(
+                onDismissRequest = { },
+                confirmButton = {
+                    TextButton(onClick = { securityViewModel.dismissMotionAlert() }) {
+                        Text("OK", color = Color(0xFF1FB7FF))
+                    }
+                },
+                title = {
+                    Text(
+                        "⚠️ Motion Detected!",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        "Motion has been detected in your home. Please check your security cameras."
+                    )
+                },
+                containerColor = Color(0xFF1C1C2E),
+                titleContentColor = Color.White,
+                textContentColor = Color(0xFF9AB3C8)
+            )
+        }
+
     }
 }
 
@@ -357,6 +394,7 @@ fun EnergyEfficiencyCard(energySavings: Int) {
                     fontSize = 13.sp
                 )
             }
+
         }
     }
 }
