@@ -17,6 +17,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -135,7 +136,7 @@ fun DoorScreen(viewModel: DoorViewModel) {
             ) {
                 Button(
                     onClick = { viewModel.lockAll() },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f) .testTag("LoclAllButton"),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF29354E))
                 ) {
                     Text("Lock All", color = Orange)
@@ -143,7 +144,7 @@ fun DoorScreen(viewModel: DoorViewModel) {
 
                 Button(
                     onClick = { viewModel.unlockAll() },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f) .testTag("unlockAllButton"),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF29354E))
                 ) {
                     Text("Unlock All", color = Orange)
