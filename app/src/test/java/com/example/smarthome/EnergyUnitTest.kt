@@ -78,4 +78,38 @@ class EnergyViewModelTest {
         assert(viewModel.state.value.lightsUsage == 5)
         verify(mockRepo).updateEnergy(argThat { lightsUsage == 5 })
     }
+
+    @Test
+    fun `updateAcUsage should update state and call repository`() {
+        viewModel.updateAcUsage(2)
+
+        assert(viewModel.state.value.acUsage == 2)
+        verify(mockRepo).updateEnergy(argThat { acUsage == 2 })
+    }
+
+    @Test
+    fun `updateWaterPumpUsage should update state and call repository`() {
+        viewModel.updateWaterPumpUsage(1)
+
+        assert(viewModel.state.value.waterPumpUsage == 1)
+        verify(mockRepo).updateEnergy(argThat { waterPumpUsage == 1 })
+    }
+
+    @Test
+    fun `updateOthersUsage should update state and call repository`() {
+        viewModel.updateOthersUsage(4)
+
+        assert(viewModel.state.value.othersUsage == 4)
+        verify(mockRepo).updateEnergy(argThat { othersUsage == 4 })
+    }
+
+    @Test
+    fun `multiple updates should preserve previous values`() {
+        viewModel.updateTotalUsage(100.0)
+        viewModel.updateLightsUsage(3)
+
+        val state = viewModel.state.value
+        assert(state.totalUsage == 100.0)
+        assert(state.lightsUsage == 3)
+    }
 }
