@@ -113,13 +113,23 @@ fun AdminScreen(viewModel: AdminViewModel) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Search by ID or Email", color = Color.Gray) },
+                placeholder = { Text("Search by ID or Email", color = Color.LightGray) },
                 singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color(0xFFB0B0B0),
+                    focusedContainerColor = Color(0xFF4A4A4A),
+                    unfocusedContainerColor = Color(0xFF4A4A4A),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White
+                ),
                 modifier = Modifier
                     .padding(horizontal = 18.dp)
                     .fillMaxWidth()
-                    .background(Color.DarkGray, RoundedCornerShape(18.dp))
             )
+
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -154,14 +164,20 @@ fun AdminScreen(viewModel: AdminViewModel) {
                         value = newEmail,
                         onValueChange = { newEmail = it },
                         label = { Text("Email") },
-                        singleLine = true
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp), // 👈 rounded
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     OutlinedTextField(
                         value = newPassword,
                         onValueChange = { newPassword = it },
                         label = { Text("Password") },
-                        singleLine = true
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp), // 👈 rounded
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             },
@@ -172,11 +188,25 @@ fun AdminScreen(viewModel: AdminViewModel) {
                             viewModel.addUser(newEmail, newPassword)
                             showAddDialog = false
                         }
-                    }
-                ) { Text("Add") }
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF32A7EE) // 👈 login color
+                    )
+                ) {
+                    Text("Add", color = Color.White)
+                }
             },
             dismissButton = {
-                Button(onClick = { showAddDialog = false }) { Text("Cancel") }
+                Button(
+                    onClick = { showAddDialog = false },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF32A7EE) // 👈 login color
+                    )
+                ) {
+                    Text("Cancel", color = Color.White)
+                }
             }
         )
     }

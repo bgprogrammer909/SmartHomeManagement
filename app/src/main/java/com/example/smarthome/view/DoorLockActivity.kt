@@ -160,42 +160,98 @@ fun DoorCard(
     locked: Boolean,
     onToggle: () -> Unit
 ) {
+    val cardGradient = Brush.horizontalGradient(
+        listOf(
+            Color(0xFF1B5E20), // darker green
+            Color(0xFF2E7D32)
+        )
+    )
+
+    val buttonGradient = Brush.horizontalGradient(
+        listOf(
+            Color(0xFFE53935),
+            Color(0xFFF57C00)
+        )
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 15.dp, vertical = 8.dp)
-            .height(150.dp)
-            .border(1.dp, Color(0xFF175F86), RoundedCornerShape(18.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F2B44)),
-        shape = RoundedCornerShape(18.dp)
+            .padding(horizontal = 15.dp, vertical = 10.dp),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .background(cardGradient, RoundedCornerShape(22.dp))
+                .padding(18.dp)
         ) {
-            Text(title, color = Color.White, fontSize = 18.sp)
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
 
-            Text(
-                if (locked) "Locked" else "Unlocked",
-                modifier = Modifier.testTag("$title-status"),
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+                // 🔹 Top row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(title, color = Color.White, fontSize = 14.sp)
+                        Text(
+                            text = if (locked) "Locked" else "Unlocked",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
 
-            Button(
-                onClick = onToggle,
-                colors = ButtonDefaults.buttonColors(containerColor = Orange),
-                modifier = Modifier.fillMaxWidth() .testTag("$title-toggle")
+                    // 🔒 / 🔓 icon (only one shows)
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(
+                                Color(0xFFE53935),
+                                RoundedCornerShape(14.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (locked)
+                                    R.drawable.outline_lock_24
+                                else
+                                    R.drawable.baseline_lock_open_24
+                            ),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
 
-            ) {
-                Text(if (locked) "Unlock" else "Lock")
+                // 🔘 Button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .background(buttonGradient, RoundedCornerShape(26.dp))
+                        .clickable { onToggle() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (locked) "Unlock Door" else "Lock Door",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
+
+
+
 
 @Preview(showBackground = true)
 @Composable

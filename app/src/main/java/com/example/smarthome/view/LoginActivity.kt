@@ -107,7 +107,12 @@ class LoginActivity : ComponentActivity() {
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
 
-                        Text("Email", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Text(
+                            "Email",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it },
@@ -125,7 +130,12 @@ class LoginActivity : ComponentActivity() {
                             )
                         )
 
-                        Text("Password", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Text(
+                            "Password",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
@@ -162,7 +172,11 @@ class LoginActivity : ComponentActivity() {
                         Button(
                             onClick = {
                                 if (email.isBlank() || password.isBlank()) {
-                                    Toast.makeText(context, "Enter email & password", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        "Enter email & password",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                     return@Button
                                 }
 
@@ -173,7 +187,11 @@ class LoginActivity : ComponentActivity() {
                                         .addOnSuccessListener { result ->
                                             val uid = result.user?.uid
                                             if (uid == null) {
-                                                Toast.makeText(context, "Login failed", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Login failed",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                                 isLoading = false
                                                 return@addOnSuccessListener
                                             }
@@ -184,7 +202,9 @@ class LoginActivity : ComponentActivity() {
                                                 .child("isActive")
                                                 .get()
                                                 .addOnSuccessListener { snapshot ->
-                                                    val isActive = snapshot.getValue(Boolean::class.java) ?: false
+                                                    val isActive =
+                                                        snapshot.getValue(Boolean::class.java)
+                                                            ?: false
 
                                                     if (!isActive) {
                                                         auth.signOut()
@@ -199,18 +219,29 @@ class LoginActivity : ComponentActivity() {
 
                                                     CurrentUser.userId = uid
                                                     context.startActivity(
-                                                        Intent(context, HomeDashboardActivity::class.java)
+                                                        Intent(
+                                                            context,
+                                                            HomeDashboardActivity::class.java
+                                                        )
                                                     )
                                                     activity?.finish()
                                                     isLoading = false
                                                 }
                                                 .addOnFailureListener {
-                                                    Toast.makeText(context, "Failed to verify account", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Failed to verify account",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                     isLoading = false
                                                 }
                                         }
                                         .addOnFailureListener {
-                                            Toast.makeText(context, "Login failed: ${it.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                context,
+                                                "Login failed: ${it.message}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                             isLoading = false
                                         }
                                 }
@@ -221,7 +252,6 @@ class LoginActivity : ComponentActivity() {
                                 .padding(top = 15.dp),
                             shape = RoundedCornerShape(20.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32A7EE)),
-                            enabled = !isLoading
                         ) {
                             if (isLoading) {
                                 CircularProgressIndicator(
@@ -258,32 +288,54 @@ class LoginActivity : ComponentActivity() {
                         onValueChange = { forgotEmail = it },
                         label = { Text("Enter your email") },
                         modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        shape = RoundedCornerShape(16.dp)   // 👈 circular text box
                     )
                 },
                 confirmButton = {
-                    Button(onClick = {
-                        if (forgotEmail.isBlank()) {
-                            Toast.makeText(context, "Please enter an email", Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
+                    Button(
+                        onClick = {
+                            if (forgotEmail.isBlank()) {
+                                Toast.makeText(context, "Please enter an email", Toast.LENGTH_SHORT)
+                                    .show()
+                                return@Button
+                            }
 
-                        auth.sendPasswordResetEmail(forgotEmail)
-                            .addOnSuccessListener {
-                                Toast.makeText(context, "Reset link sent", Toast.LENGTH_SHORT).show()
-                                showForgotDialog = false
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(context, "Failed to send reset link: ${it.message}", Toast.LENGTH_SHORT).show()
-                            }
-                    }) {
-                        Text("Send Reset Link")
+                            auth.sendPasswordResetEmail(forgotEmail)
+                                .addOnSuccessListener {
+                                    Toast.makeText(context, "Reset link sent", Toast.LENGTH_SHORT)
+                                        .show()
+                                    showForgotDialog = false
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to send reset link: ${it.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF32A7EE) // 👈 same as login
+                        )
+                    ) {
+                        Text("Send Reset Link", color = Color.White)
                     }
                 },
                 dismissButton = {
-                    Button(onClick = { showForgotDialog = false }) { Text("Cancel") }
+                    Button(
+                        onClick = { showForgotDialog = false },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF32A7EE) // 👈 same as login
+                        )
+                    ) {
+                        Text("Cancel", color = Color.White)
+                    }
                 }
             )
         }
     }
 }
+
