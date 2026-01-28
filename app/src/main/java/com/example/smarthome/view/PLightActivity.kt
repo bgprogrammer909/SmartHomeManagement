@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
 import com.example.smarthome.repo.PLightRepoImpl
@@ -35,7 +36,10 @@ class PLightActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val userId = intent.getStringExtra("USER_ID")
-        if (userId.isNullOrEmpty()) finish()
+        if (userId.isNullOrEmpty()) {
+            finish()
+            return
+        }
 
         setContent {
             val ctx = LocalContext.current
@@ -43,7 +47,7 @@ class PLightActivity : ComponentActivity() {
             val vm: PLightsViewModel = viewModel(
                 factory = PLightsViewModelFactory(
                     repo = PLightRepoImpl(),
-                    userId = userId!!
+                    userId = userId
                 )
             )
 
@@ -53,24 +57,29 @@ class PLightActivity : ComponentActivity() {
                 colors = listOf(Color(0xFF0D1B2A), Color(0xFF0A1320))
             )
 
-            Scaffold { padding ->
+            Scaffold(
+                containerColor = Color.Transparent
+            ) { padding ->
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(bgGradient)
                         .padding(padding)
                         .padding(16.dp)
+                        .statusBarsPadding()
                 ) {
                     // Top Bar
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { finish() }
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White,
-                            modifier = Modifier.clickable { finish() }
+                            tint = Color(0xFF9DB9D0)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Lights", color = Color.White)
+                        Text("Back", color = Color(0xFF9DB9D0))
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -78,13 +87,19 @@ class PLightActivity : ComponentActivity() {
                     Text(
                         "My Lights",
                         color = Color.White,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        "Control your smart lights",
+                        color = Color(0xFF9AB3C8),
+                        fontSize = 14.sp
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     TopStatusCard(
-                        activeCount = listOf(state.light1On, state.light2On).count { it },
+                        activeCount = state.lightsOnCount,
                         masterSwitch = state.light1On && state.light2On,
                         onToggleAll = {
                             if (state.light1On && state.light2On) {
@@ -132,11 +147,12 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column {
-                    Text("Total Lights", color = Color.White.copy(alpha = 0.6f))
+                    Text("Total Lights", color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp)
                     Text(
                         "$activeCount On",
                         color = Color.White,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -164,14 +180,19 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
                     .fillMaxWidth()
                     .height(50.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Brush.horizontalGradient(listOf(Color(0xFFFFC107), Color(0xFFFFA000))))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(Color(0xFFFFC107), Color(0xFFFFA000))
+                        )
+                    )
                     .clickable { onToggleAll() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     if (masterSwitch) "Turn All Off" else "Turn All On",
-                    color = Color.Black,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    color = Color(0xFF1A1A1A),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -197,13 +218,15 @@ fun LightControlCard(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0x33FBC02D)),
+                        .background(
+                            if (lightStatus) Color(0x55FBC02D) else Color(0x22FBC02D)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.outline_lightbulb_24),
                         contentDescription = null,
-                        tint = Color(0xFFFBC02D)
+                        tint = if (lightStatus) Color(0xFFFBC02D) else Color(0xFF7D7D7D)
                     )
                 }
 
@@ -213,9 +236,14 @@ fun LightControlCard(
                     Text(
                         label,
                         color = Color.White,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    Text("${brightness.toInt()}%", color = Color.White.copy(alpha = 0.6f))
+                    Text(
+                        if (lightStatus) "${brightness.toInt()}%" else "Off",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 14.sp
+                    )
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -223,18 +251,35 @@ fun LightControlCard(
                 Switch(checked = lightStatus, onCheckedChange = onSwitchToggle)
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            if (lightStatus) {
+                Spacer(modifier = Modifier.height(14.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Slider(
-                    value = brightness,
-                    onValueChange = onBrightnessChange,
-                    valueRange = 0f..100f,
-                    steps = 98,
-                    modifier = Modifier.weight(1f),
-                    enabled = lightStatus
-                )
-                Text("${brightness.toInt()}%", color = Color.White.copy(alpha = 0.7f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.outline_lightbulb_24),
+                        contentDescription = null,
+                        tint = Color(0xFF9AB3C8),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Slider(
+                        value = brightness,
+                        onValueChange = onBrightnessChange,
+                        valueRange = 0f..100f,
+                        steps = 98,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        "${brightness.toInt()}%",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        modifier = Modifier.width(40.dp)
+                    )
+                }
             }
         }
     }

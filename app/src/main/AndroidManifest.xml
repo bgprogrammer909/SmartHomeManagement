@@ -72,15 +72,13 @@
 <!--            </intent-filter>-->
         </activity>
         <activity
-            android:name=".view.DoorlockActivity"
+            android:name=".view.DoorLockActivity"
             android:exported="true"
             android:label="DoorLockActivity"
             android:theme="@style/Theme.SmartHome">
 
             <!-- <intent-filter> -->
             <!-- <action android:name="android.intent.action.MAIN" /> -->
-
-
             <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
             <!-- </intent-filter> -->
         </activity>
@@ -150,6 +148,18 @@
 <!--                <category android:name="android.intent.category.LAUNCHER" />-->
 <!--            </intent-filter>-->
 <!--           i -->
+        </activity>
+        <activity
+            android:name=".view.UserEditProfileActivity"
+            android:exported="true"
+            android:label="UserEditProfileActivity"
+            android:theme="@style/Theme.SmartHome">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+            <!--           i -->
         </activity>
         <activity
             android:name=".view.RandomActivity"

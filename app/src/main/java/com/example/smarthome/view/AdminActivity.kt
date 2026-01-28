@@ -1,7 +1,6 @@
 package com.example.smarthome.view
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -64,16 +63,10 @@ fun AdminScreen(viewModel: AdminViewModel) {
         topBar = {
             TopAppBar(
                 title = { Text("Admin Panel", color = Color.White) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0D152F)
-                ),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0D152F)),
                 actions = {
                     IconButton(onClick = { viewModel.fetchAllUsers() }) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Refresh",
-                            tint = Color.White
-                        )
+                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh", tint = Color.White)
                     }
                 }
             )
@@ -134,18 +127,14 @@ fun AdminScreen(viewModel: AdminViewModel) {
                 items(filteredUsers) { user ->
                     UserRow(
                         user = user,
-                        onToggle = { viewModel.updateUserStatus(user.id, it) },
+                        onToggleStatus = { viewModel.updateUserStatus(user.id, it) },
                         onSendResetLink = { email ->
                             FirebaseAuth.getInstance().sendPasswordResetEmail(email)
                                 .addOnSuccessListener {
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("Reset link sent to $email")
-                                    }
+                                    scope.launch { snackbarHostState.showSnackbar("Reset link sent to $email") }
                                 }
                                 .addOnFailureListener { e ->
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("Failed to send link: ${e.message}")
-                                    }
+                                    scope.launch { snackbarHostState.showSnackbar("Failed to send link: ${e.message}") }
                                 }
                         }
                     )
@@ -164,13 +153,15 @@ fun AdminScreen(viewModel: AdminViewModel) {
                     OutlinedTextField(
                         value = newEmail,
                         onValueChange = { newEmail = it },
-                        label = { Text("Email") }
+                        label = { Text("Email") },
+                        singleLine = true
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = newPassword,
                         onValueChange = { newPassword = it },
-                        label = { Text("Password") }
+                        label = { Text("Password") },
+                        singleLine = true
                     )
                 }
             },
@@ -194,7 +185,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
 @Composable
 fun UserRow(
     user: AdminModel,
-    onToggle: (Boolean) -> Unit,
+    onToggleStatus: (Boolean) -> Unit,
     onSendResetLink: (String) -> Unit
 ) {
     var isActive by remember { mutableStateOf(user.isActive) }
@@ -203,10 +194,7 @@ fun UserRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 8.dp)
-            .background(
-                if (isActive) Color.DarkGray else Color.Black,
-                RoundedCornerShape(12.dp)
-            )
+            .background(if (isActive) Color.DarkGray else Color.Black, RoundedCornerShape(12.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -220,23 +208,15 @@ fun UserRow(
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "ID: ${user.id}",
-                color = Color.White,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = "Email: ${user.email}",
-                color = Color.Gray,
-                fontSize = 12.sp
-            )
+            Text("ID: ${user.id}", color = Color.White, fontWeight = FontWeight.Medium)
+            Text("Email: ${user.email}", color = Color.Gray, fontSize = 12.sp)
         }
 
         Switch(
             checked = isActive,
-            onCheckedChange = { checked ->
-                isActive = checked
-                onToggle(checked)
+            onCheckedChange = {
+                isActive = it
+                onToggleStatus(it)
             },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.Green,
@@ -248,13 +228,10 @@ fun UserRow(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Edit button now sends password reset email
         Button(
             onClick = { onSendResetLink(user.email) },
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-        ) {
-            Text("Edit", fontSize = 12.sp)
-        }
+        ) { Text("Reset Password", fontSize = 12.sp) }
     }
 }
