@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.smarthome.R
 import com.example.smarthome.viewmodel.WaterViewModel
 import com.example.smarthome.viewmodel.WaterViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.viewmodel.SecurityViewModelFactory
+
 
 class WaterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,13 +41,22 @@ class WaterActivity : ComponentActivity() {
 
         setContent {
             val viewModel: WaterViewModel = viewModel(factory = WaterViewModelFactory(userId))
-            WaterControlScreen(viewModel)
+            val securityViewModel: SecurityViewModel = viewModel(
+                factory = SecurityViewModelFactory(userId)
+            )
+
+            WaterControlScreen(viewModel, securityViewModel)
+
         }
     }
 }
 
 @Composable
-fun WaterControlScreen(viewModel: WaterViewModel) {
+fun WaterControlScreen(
+    viewModel: WaterViewModel,
+    securityViewModel: SecurityViewModel
+) {
+    val showMotionAlert by securityViewModel.showMotionAlert
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val activity = context as? ComponentActivity
@@ -79,6 +92,7 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { activity?.finish() }
+                    .testTag("backButton")
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -135,6 +149,7 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                             )
                             Text(
                                 if (state.isPumpOn) "RUNNING" else "STOPPED",
+                                modifier = Modifier.testTag("pumpStatusText"),
                                 color = Color.White,
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold
@@ -180,7 +195,8 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                                   },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
+                            .height(50.dp)
+                            .testTag("pumpToggleButton"),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (state.isPumpOn) Color(0xFFE53935) else Color(0xFF2196F3)
                         ),
@@ -234,7 +250,8 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                         onCheckedChange = {
                             viewModel.setAutoMode(it)
                             if (it) showAutoModeAlert = true
-                        }
+                        },
+                        modifier = Modifier.testTag("autoModeSwitch")
                     )
                 }
             }
@@ -269,6 +286,31 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
             // Energy Efficiency Card
             EnergyEfficiencyCard(energySavings = state.energySavings)
         }
+        if (showMotionAlert) {
+            AlertDialog(
+                onDismissRequest = { },
+                confirmButton = {
+                    TextButton(onClick = { securityViewModel.dismissMotionAlert() }) {
+                        Text("OK", color = Color(0xFF1FB7FF))
+                    }
+                },
+                title = {
+                    Text(
+                        "⚠️ Motion Detected!",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        "Motion has been detected in your home. Please check your security cameras."
+                    )
+                },
+                containerColor = Color(0xFF1C1C2E),
+                titleContentColor = Color.White,
+                textContentColor = Color(0xFF9AB3C8)
+            )
+        }
+
     }
 }
 
@@ -277,6 +319,7 @@ fun PumpInfoBox(title: String, value: String, icon: Int) {
     Box(
         modifier = Modifier
             .width(155.dp)
+            .testTag("${title}_info")
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFF0D1B2A))
             .padding(14.dp)
@@ -310,7 +353,8 @@ fun PumpInfoBox(title: String, value: String, icon: Int) {
 @Composable
 fun EnergyEfficiencyCard(energySavings: Int) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth()
+                            .testTag("energyEfficiencyCard"),
         shape = RoundedCornerShape(18.dp)
     ) {
         Box(
@@ -350,6 +394,7 @@ fun EnergyEfficiencyCard(energySavings: Int) {
                     fontSize = 13.sp
                 )
             }
+
         }
     }
 }

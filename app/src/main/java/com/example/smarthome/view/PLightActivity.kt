@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,9 @@ import com.example.smarthome.R
 import com.example.smarthome.repo.PLightRepoImpl
 import com.example.smarthome.viewmodel.PLightsViewModel
 import com.example.smarthome.viewmodel.PLightsViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.viewmodel.SecurityViewModelFactory
+
 
 class PLightActivity : ComponentActivity() {
 
@@ -56,6 +60,12 @@ class PLightActivity : ComponentActivity() {
             val bgGradient = Brush.verticalGradient(
                 colors = listOf(Color(0xFF0D1B2A), Color(0xFF0A1320))
             )
+            val securityViewModel: SecurityViewModel = viewModel(
+                factory = SecurityViewModelFactory(userId)
+            )
+            val showMotionAlert by securityViewModel.showMotionAlert
+
+
 
             Scaffold(
                 containerColor = Color.Transparent
@@ -66,7 +76,7 @@ class PLightActivity : ComponentActivity() {
                         .background(bgGradient)
                         .padding(padding)
                         .padding(16.dp)
-                        .statusBarsPadding()
+
                 ) {
                     // Top Bar
                     Row(
@@ -131,6 +141,32 @@ class PLightActivity : ComponentActivity() {
                         onSwitchToggle = { vm.toggleLight(2, it) },
                         onBrightnessChange = { vm.changeBrightness(2, it) }
                     )
+                    // 🔔 Security Motion Alert Dialog (same as Door / Energy)
+                    if (showMotionAlert) {
+                        AlertDialog(
+                            onDismissRequest = { },
+                            confirmButton = {
+                                TextButton(onClick = { securityViewModel.dismissMotionAlert() }) {
+                                    Text("OK", color = Color(0xFF1FB7FF))
+                                }
+                            },
+                            title = {
+                                Text(
+                                    "⚠️ Motion Detected!",
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
+                            text = {
+                                Text(
+                                    "Motion has been detected in your home. Please check your security cameras."
+                                )
+                            },
+                            containerColor = Color(0xFF1C1C2E),
+                            titleContentColor = Color.White,
+                            textContentColor = Color(0xFF9AB3C8)
+                        )
+                    }
+
                 }
             }
         }
@@ -179,6 +215,7 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
+                    .testTag("masterlightButton")
                     .clip(RoundedCornerShape(16.dp))
                     .background(
                         Brush.horizontalGradient(
@@ -248,7 +285,10 @@ fun LightControlCard(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                Switch(checked = lightStatus, onCheckedChange = onSwitchToggle)
+                Switch(checked = lightStatus,
+                    onCheckedChange = onSwitchToggle,
+                    modifier = Modifier.testTag("$label - switch"))
+
             }
 
             if (lightStatus) {
@@ -268,7 +308,7 @@ fun LightControlCard(
                         onValueChange = onBrightnessChange,
                         valueRange = 0f..100f,
                         steps = 98,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f) .testTag("$label-brightness")
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))

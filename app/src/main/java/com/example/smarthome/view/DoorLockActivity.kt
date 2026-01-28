@@ -17,6 +17,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,8 @@ import com.example.smarthome.R
 import com.example.smarthome.ui.theme.Orange
 import com.example.smarthome.viewmodel.DoorViewModel
 import com.example.smarthome.viewmodel.DoorViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.viewmodel.SecurityViewModelFactory
 
 class DoorLockActivity : ComponentActivity() {
 
@@ -41,16 +44,21 @@ class DoorLockActivity : ComponentActivity() {
             val viewModel: DoorViewModel = viewModel(
                 factory = DoorViewModelFactory(userId)
             )
-            DoorScreen(viewModel)
+            val viewModel2: SecurityViewModel = viewModel(
+                factory = SecurityViewModelFactory(userId)
+            )
+            DoorScreen(viewModel,viewModel2)
         }
     }
 }
 
 @Composable
-fun DoorScreen(viewModel: DoorViewModel) {
+fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
 
     // ✅ CORRECT: collect DoorModel
     val doors by viewModel.doors.collectAsState()
+
+    val showMotionAlert by viewModel2.showMotionAlert
 
     val context = LocalContext.current
     val activity = context as ComponentActivity
@@ -135,7 +143,7 @@ fun DoorScreen(viewModel: DoorViewModel) {
             ) {
                 Button(
                     onClick = { viewModel.lockAll() },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f) .testTag("LoclAllButton"),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF29354E))
                 ) {
                     Text("Lock All", color = Orange)
@@ -143,11 +151,34 @@ fun DoorScreen(viewModel: DoorViewModel) {
 
                 Button(
                     onClick = { viewModel.unlockAll() },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f) .testTag("unlockAllButton"),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF29354E))
                 ) {
                     Text("Unlock All", color = Orange)
                 }
+            }
+            // Security Motion Alert Dialog
+            if (showMotionAlert) {
+                AlertDialog(
+                    onDismissRequest = { /* Don't allow dismiss by clicking outside */ },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel2.dismissMotionAlert() }) {
+                            Text("OK", color = Color(0xFF1FB7FF))
+                        }
+                    },
+                    title = {
+                        Text(
+                            "⚠️ Motion Detected!",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Text("Motion has been detected in your home. Please check your security cameras.")
+                    },
+                    containerColor = Color(0xFF1C1C2E),
+                    titleContentColor = Color.White,
+                    textContentColor = Color(0xFF9AB3C8)
+                )
             }
         }
     }
@@ -159,40 +190,98 @@ fun DoorCard(
     locked: Boolean,
     onToggle: () -> Unit
 ) {
+    val cardGradient = Brush.horizontalGradient(
+        listOf(
+            Color(0xFF1B5E20), // darker green
+            Color(0xFF2E7D32)
+        )
+    )
+
+    val buttonGradient = Brush.horizontalGradient(
+        listOf(
+            Color(0xFFE53935),
+            Color(0xFFF57C00)
+        )
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 15.dp, vertical = 8.dp)
-            .height(150.dp)
-            .border(1.dp, Color(0xFF175F86), RoundedCornerShape(18.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F2B44)),
-        shape = RoundedCornerShape(18.dp)
+            .padding(horizontal = 15.dp, vertical = 10.dp),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .background(cardGradient, RoundedCornerShape(22.dp))
+                .padding(18.dp)
         ) {
-            Text(title, color = Color.White, fontSize = 18.sp)
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
 
-            Text(
-                if (locked) "Locked" else "Unlocked",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+                // 🔹 Top row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(title, color = Color.White, fontSize = 14.sp)
+                        Text(
+                            text = if (locked) "Locked" else "Unlocked",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
 
-            Button(
-                onClick = onToggle,
-                colors = ButtonDefaults.buttonColors(containerColor = Orange),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (locked) "Unlock" else "Lock")
+                    // 🔒 / 🔓 icon (only one shows)
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(
+                                Color(0xFFE53935),
+                                RoundedCornerShape(14.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (locked)
+                                    R.drawable.outline_lock_24
+                                else
+                                    R.drawable.baseline_lock_open_24
+                            ),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                // 🔘 Button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .background(buttonGradient, RoundedCornerShape(26.dp))
+                        .clickable { onToggle() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (locked) "Unlock Door" else "Lock Door",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
+
+
+
 
 @Preview(showBackground = true)
 @Composable
