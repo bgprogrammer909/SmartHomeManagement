@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -79,6 +80,7 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { activity?.finish() }
+                    .testTag("backButton")
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -135,6 +137,7 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                             )
                             Text(
                                 if (state.isPumpOn) "RUNNING" else "STOPPED",
+                                modifier = Modifier.testTag("pumpStatusText"),
                                 color = Color.White,
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold
@@ -180,7 +183,8 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                                   },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
+                            .height(50.dp)
+                            .testTag("pumpToggleButton"),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (state.isPumpOn) Color(0xFFE53935) else Color(0xFF2196F3)
                         ),
@@ -234,7 +238,8 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                         onCheckedChange = {
                             viewModel.setAutoMode(it)
                             if (it) showAutoModeAlert = true
-                        }
+                        },
+                        modifier = Modifier.testTag("autoModeSwitch")
                     )
                 }
             }
@@ -277,6 +282,7 @@ fun PumpInfoBox(title: String, value: String, icon: Int) {
     Box(
         modifier = Modifier
             .width(155.dp)
+            .testTag("${title}_info")
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFF0D1B2A))
             .padding(14.dp)
@@ -310,7 +316,8 @@ fun PumpInfoBox(title: String, value: String, icon: Int) {
 @Composable
 fun EnergyEfficiencyCard(energySavings: Int) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth()
+                            .testTag("energyEfficiencyCard"),
         shape = RoundedCornerShape(18.dp)
     ) {
         Box(

@@ -48,11 +48,36 @@ class SecurityActivity : ComponentActivity() {
 @Composable
 fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
     val state by viewModel.state
+    val showMotionAlert by viewModel.showMotionAlert
 
     val activeMode = when (state.activeMode) {
         "AWAY" -> SecurityMode.AWAY
         "NIGHT" -> SecurityMode.NIGHT
         else -> SecurityMode.HOME
+    }
+
+    // Motion Detection Alert Dialog
+    if (showMotionAlert) {
+        AlertDialog(
+            onDismissRequest = { /* Don't allow dismiss by clicking outside */ },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissMotionAlert() }) {
+                    Text("OK", color = Color(0xFF1FB7FF))
+                }
+            },
+            title = {
+                Text(
+                    "⚠️ Motion Detected!",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Motion has been detected in your home. Please check your security cameras.")
+            },
+            containerColor = Color(0xFF1C1C2E),
+            titleContentColor = Color.White,
+            textContentColor = Color(0xFF9AB3C8)
+        )
     }
 
     LazyColumn(
