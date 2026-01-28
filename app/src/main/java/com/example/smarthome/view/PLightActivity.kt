@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -75,7 +76,7 @@ class PLightActivity : ComponentActivity() {
                         .background(bgGradient)
                         .padding(padding)
                         .padding(16.dp)
-                        .statusBarsPadding()
+
                 ) {
                     // Top Bar
                     Row(
@@ -214,6 +215,7 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
+                    .testTag("masterlightButton")
                     .clip(RoundedCornerShape(16.dp))
                     .background(
                         Brush.horizontalGradient(
@@ -283,7 +285,10 @@ fun LightControlCard(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                Switch(checked = lightStatus, onCheckedChange = onSwitchToggle)
+                Switch(checked = lightStatus,
+                    onCheckedChange = onSwitchToggle,
+                    modifier = Modifier.testTag("$label - switch"))
+
             }
 
             if (lightStatus) {
@@ -303,7 +308,7 @@ fun LightControlCard(
                         onValueChange = onBrightnessChange,
                         valueRange = 0f..100f,
                         steps = 98,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f) .testTag("$label-brightness")
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))

@@ -1,5 +1,6 @@
 package com.example.smarthome.view
 
+import android.R.attr.name
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,11 +28,8 @@ import com.example.smarthome.R
 import com.example.smarthome.model.EnergyModel
 import com.example.smarthome.model.EnergyPoint
 import com.example.smarthome.viewmodel.EnergyViewModel
-import com.example.smarthome.viewmodel.EnergyViewModelFactory
-import androidx.compose.ui.graphics.StrokeCap
-import com.example.smarthome.util.CurrentUser.userId
-import com.example.smarthome.viewmodel.SecurityViewModel
-import com.example.smarthome.viewmodel.SecurityViewModelFactory
+import androidx.compose.ui.platform.testTag
+
 
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,6 +84,7 @@ fun EnergyAnalyticsScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
+            .testTag("energyLazyColumn")
             .background(
                 Brush.verticalGradient(
                     listOf(Color(0xFF0A1A2F), Color(0xFF05101F))
@@ -97,11 +96,12 @@ fun EnergyAnalyticsScreen(
     ) {
 
         item {
-            Text(
-                "← Back",
-                color = Color.White,
-                modifier = Modifier.clickable { onBack() }
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier .testTag("backButton").clickable { onBack() }
+            ) {
+                Text("← Back", color = Color.White, fontSize = 16.sp)
+            }
         }
 
         item {
@@ -186,9 +186,9 @@ fun TotalUsageCard(state: EnergyModel, selectedTab: String) {
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(Color(0xFF2E1A5F))
+        modifier = Modifier.fillMaxWidth() .testTag("totalUsageCard"),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2C1A5A))
     ) {
         Column(Modifier.padding(20.dp)) {
 
@@ -289,6 +289,7 @@ fun TabChip(
 ) {
     Box(
         modifier = Modifier
+            .testTag("${text}Tab")
             .clip(RoundedCornerShape(20.dp))
             .background(
                 if (selected) Color(0xFF764CFF)
@@ -318,7 +319,7 @@ fun GraphCardWithChart(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth() .testTag("energyGraph"),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF14203D)
@@ -398,15 +399,12 @@ fun RealLineGraph(data: List<EnergyPoint>) {
     }
 }
 @Composable
-fun UsageItem(
-    label: String,
-    percent: Int,
-    color: Color
-) {
-    val safePercent = percent.coerceIn(0, 100)
+fun UsageItem(label: String, percent: Int, color: Color) {
+
+    val tag = label.replace(" ", "") + "UsageItem"
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth() .testTag(tag),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF0F1F33)
@@ -436,7 +434,7 @@ fun UsageItem(
 @Composable
 fun EstimatedBillCard(state: EnergyModel) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth() .testTag("estimatedBillCard"),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF0C3B2E)
@@ -456,7 +454,7 @@ fun EstimatedBillCard(state: EnergyModel) {
 @Composable
 fun TipsCard() {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth() .testTag("energyTipsCard"),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF1A2538)
