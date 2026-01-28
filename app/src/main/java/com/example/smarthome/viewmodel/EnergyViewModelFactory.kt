@@ -2,13 +2,15 @@ package com.example.smarthome.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.smarthome.repo.EnergyRepoImpl
 
-class EnergyViewModelFactory : ViewModelProvider.Factory {
+class EnergyViewModelFactory(
+    private val userId: String
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(EnergyViewModel::class.java)) {
-            return EnergyViewModel(EnergyRepoImpl()) as T
+            @Suppress("UNCHECKED_CAST")
+            return EnergyViewModel(userId = userId) as T
         }
-        throw IllegalArgumentException("Unknown ViewModel")
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

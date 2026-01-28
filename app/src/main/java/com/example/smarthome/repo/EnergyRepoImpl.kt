@@ -1,93 +1,56 @@
 package com.example.smarthome.repo
 
-import com.example.smarthome.model.EnergyModel
-import com.example.smarthome.model.EnergyPoint
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
 class EnergyRepoImpl : EnergyRepo {
 
-    private fun getEnergyRef(): DatabaseReference {
-        val user = FirebaseAuth.getInstance().currentUser
-            ?: throw IllegalStateException("User not logged in")
+    private var listener: ValueEventListener? = null
 
-        return FirebaseDatabase.getInstance()
+    private fun energyRef(userId: String) =
+        FirebaseDatabase.getInstance()
             .getReference("users")
-            .child(user.uid)
-            .child("energyAnalytics")
-    }
+            .child(userId)
+            .child("energyAnalysis")
 
-    override fun observeEnergy(onChange: (EnergyModel) -> Unit) {
+    override fun getEnergyHistoryRealtime(
+        userId: String,
+        callback: (success: Boolean, history: Map<String, Float>?) -> Unit
+    ) {
+        val ref = energyRef(userId)
+        listener?.let { ref.removeEventListener(it) }
 
-        getEnergyRef().addValueEventListener(object : ValueEventListener {
-
+        listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                try {
+                    val historyMap = mutableMapOf<String, Float>()
 
-                if (!snapshot.exists()) {
-                    onChange(EnergyModel())
-                    return
+                    // Read all date:kwh pairs
+                    snapshot.children.forEach { dateSnapshot ->
+                        val date = dateSnapshot.key ?: return@forEach
+                        val kwh = dateSnapshot.getValue(Float::class.java) ?:
+                        dateSnapshot.getValue(Double::class.java)?.toFloat() ?: 0f
+                        historyMap[date] = kwh
+                    }
+
+                    callback(true, historyMap)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    callback(false, null)
                 }
-
-                val totalUsage =
-                    snapshot.child("totalUsage").getValue(Double::class.java)
-                        ?.toFloat() ?: 0f
-
-                val lightsUsage =
-                    snapshot.child("lightsUsage").getValue(Int::class.java) ?: 0
-                val acUsage =
-                    snapshot.child("acUsage").getValue(Int::class.java) ?: 0
-                val waterPumpUsage =
-                    snapshot.child("waterPumpUsage").getValue(Int::class.java) ?: 0
-                val othersUsage =
-                    snapshot.child("othersUsage").getValue(Int::class.java) ?: 0
-
-                val estimatedBill =
-                    snapshot.child("estimatedBill").getValue(Double::class.java) ?: 0.0
-
-                val savings =
-                    snapshot.child("savings").getValue(Double::class.java) ?: 0.0
-
-                val dayData = snapshot.child("dayData").children.mapNotNull {
-                    val label = it.key ?: return@mapNotNull null
-                    val kw = it.getValue(Double::class.java)?.toFloat() ?: 0f
-                    EnergyPoint(label, kw)
-                }
-
-                val weekData = snapshot.child("weekData").children.mapNotNull {
-                    val label = it.key ?: return@mapNotNull null
-                    val kw = it.getValue(Double::class.java)?.toFloat() ?: 0f
-                    EnergyPoint(label, kw)
-                }
-
-                val monthData = snapshot.child("monthData").children.mapNotNull {
-                    val label = it.key ?: return@mapNotNull null
-                    val kw = it.getValue(Double::class.java)?.toFloat() ?: 0f
-                    EnergyPoint(label, kw)
-                }
-
-                onChange(
-                    EnergyModel(
-                        totalUsage = totalUsage,
-                        lightsUsage = lightsUsage,
-                        acUsage = acUsage,
-                        waterPumpUsage = waterPumpUsage,
-                        othersUsage = othersUsage,
-                        estimatedBill = estimatedBill,
-                        savings = savings,
-                        dayData = dayData,
-                        weekData = weekData,
-                        monthData = monthData
-                    )
-                )
             }
 
             override fun onCancelled(error: DatabaseError) {
-                error.toException().printStackTrace()
+                callback(false, null)
             }
-        })
+        }
+
+        ref.addValueEventListener(listener!!)
     }
 
-    override fun updateEnergy(model: EnergyModel) {
-        getEnergyRef().setValue(model)
+    fun removeListener(userId: String) {
+        listener?.let {
+            energyRef(userId).removeEventListener(it)
+            listener = null
+        }
     }
 }
