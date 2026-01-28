@@ -109,7 +109,7 @@ fun HomeDashboardBody() {
             when (selectedIndex) {
                 0 -> DashboardScreen(onProfileClick = { selectedIndex = 3 })
                 1 -> EnergyAnalyticsActivityScreen()
-                2 -> SecurityActivityScreen()
+                2 -> SecurityScreen()
                 3 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 })
             }
         }
@@ -257,7 +257,7 @@ fun EnergyAnalyticsActivityScreen() {
 }
 
 @Composable
-fun SecurityActivityScreen() {
+fun SecurityScreen() {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         context.startActivity(Intent(context, SecurityActivity::class.java))
