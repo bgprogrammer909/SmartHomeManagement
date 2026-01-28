@@ -29,6 +29,9 @@ import com.example.smarthome.model.EnergyPoint
 import com.example.smarthome.viewmodel.EnergyViewModel
 import com.example.smarthome.viewmodel.EnergyViewModelFactory
 import androidx.compose.ui.graphics.StrokeCap
+import com.example.smarthome.util.CurrentUser.userId
+import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.viewmodel.SecurityViewModelFactory
 
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,21 +43,45 @@ class EnergyAnalyticsActivity : ComponentActivity() {
                 factory = EnergyViewModelFactory()
             )
 
+            val securityViewModel: SecurityViewModel = viewModel(
+                factory = SecurityViewModelFactory(userId ?: "")
+
+            )
+
             EnergyAnalyticsScreen(
                 viewModel = viewModel,
+                securityViewModel = securityViewModel,
                 onBack = { finish() }
             )
         }
+
     }
 }
+
+
 
 @Composable
 fun EnergyAnalyticsScreen(
     viewModel: EnergyViewModel,
+    securityViewModel: SecurityViewModel? = null,
     onBack: () -> Unit
-) {
-    val state by viewModel.state
-    var selectedTab by remember { mutableStateOf("Week") }
+)
+ {
+     val state by viewModel.state
+     val showMotionAlert by remember {
+         derivedStateOf { securityViewModel?.showMotionAlert?.value == true }
+     }
+
+     var showDialog by remember { mutableStateOf(false) }
+
+     LaunchedEffect(showMotionAlert) {
+         if (showMotionAlert) {
+             showDialog = true
+         }
+     }
+
+     var selectedTab by remember { mutableStateOf("Week") }
+
 
     LazyColumn(
         modifier = Modifier
@@ -115,7 +142,38 @@ fun EnergyAnalyticsScreen(
 
         item { Spacer(Modifier.height(50.dp)) }
     }
-}
+     if (showDialog) {
+         AlertDialog(
+             onDismissRequest = {
+                 showDialog = false
+                 securityViewModel?.dismissMotionAlert()
+
+             },
+             confirmButton = {
+                 TextButton(
+                     onClick = {
+                         showDialog = false
+                         securityViewModel?.dismissMotionAlert()
+
+                     }
+                 ) {
+                     Text("OK", color = Color(0xFF1FB7FF))
+                 }
+             },
+             title = {
+                 Text("⚠️ Motion Detected!", fontWeight = FontWeight.Bold)
+             },
+             text = {
+                 Text("Motion has been detected in your home. Please check your security cameras.")
+             },
+             containerColor = Color(0xFF1C1C2E),
+             titleContentColor = Color.White,
+             textContentColor = Color(0xFF9AB3C8)
+         )
+     }
+
+
+ }
 
 @Composable
 fun TotalUsageCard(state: EnergyModel, selectedTab: String) {
