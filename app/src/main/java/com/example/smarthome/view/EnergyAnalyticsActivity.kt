@@ -4,8 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,30 +15,44 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.smarthome.R
 import com.example.smarthome.model.EnergyModel
+import com.example.smarthome.model.EnergyPoint
 import com.example.smarthome.viewmodel.EnergyViewModel
+import com.example.smarthome.viewmodel.EnergyViewModelFactory
+import androidx.compose.ui.graphics.StrokeCap
 
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
-            val viewModel: EnergyViewModel = viewModel()
-            EnergyAnalyticsScreen(viewModel) { finish() }
+            val viewModel: EnergyViewModel = viewModel(
+                factory = EnergyViewModelFactory()
+            )
+
+            EnergyAnalyticsScreen(
+                viewModel = viewModel,
+                onBack = { finish() }
+            )
         }
     }
 }
 
 @Composable
-fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
+fun EnergyAnalyticsScreen(
+    viewModel: EnergyViewModel,
+    onBack: () -> Unit
+) {
     val state by viewModel.state
     var selectedTab by remember { mutableStateOf("Week") }
 
@@ -66,36 +78,180 @@ fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
         }
 
         item {
+            Column {
+                Text(
+                    "Energy Analytics",
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Track your power consumption",
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 14.sp
+                )
+            }
+        }
+
+        item {
+            TotalUsageCard(state, selectedTab)
+        }
+
+        item {
+            TabRowSection(selectedTab) { selectedTab = it }
+        }
+
+        item {
+            GraphCardWithChart(selectedTab, state)
+        }
+
+        item { UsageItem("Lights", state.lightsUsage, Color(0xFFFFD740)) }
+        item { UsageItem("AC", state.acUsage, Color(0xFF4CC3FF)) }
+        item { UsageItem("Water Pump", state.waterPumpUsage, Color(0xFF3C6DFF)) }
+        item { UsageItem("Others", state.othersUsage, Color(0xFFCE93D8)) }
+
+        item { EstimatedBillCard(state) }
+        item { TipsCard() }
+
+        item { Spacer(Modifier.height(50.dp)) }
+    }
+}
+
+@Composable
+fun TotalUsageCard(state: EnergyModel, selectedTab: String) {
+
+    val graphData = when (selectedTab) {
+        "Day" -> state.dayData
+        "Week" -> state.weekData
+        "Month" -> state.monthData
+        else -> state.weekData
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(Color(0xFF2E1A5F))
+    ) {
+        Column(Modifier.padding(20.dp)) {
+
             Text(
-                "Energy Analytics",
+                "${state.totalUsage.toInt()} kWh",
                 color = Color.White,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
             )
+
+            Spacer(Modifier.height(16.dp))
+
+            MiniUsageGraph(graphData)
         }
+    }
+}
 
-        item { GraphCardWithChart(selectedTab, state) }
+@Composable
+fun MiniUsageGraph(data: List<EnergyPoint>) {
+    if (data.size < 2) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(90.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFF3A2E63)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = Color.White,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(90.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFF3A2E63))
+                .padding(12.dp)
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val maxY = data.maxOf { it.kw }.coerceAtLeast(1f)
+                val xGap = size.width / (data.size - 1)
 
-        item {
-            Button(
-                onClick = {
-                    when (selectedTab) {
-                        "Day" -> viewModel.addDayValue((20..100).random().toFloat())
-                        "Week" -> viewModel.addWeekValue((80..120).random().toFloat())
-                        "Month" -> viewModel.addMonthValue((60..110).random().toFloat())
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Add Random Value (Live Update)")
+                val points = data.mapIndexed { index, point ->
+                    Offset(
+                        x = xGap * index,
+                        y = size.height - (point.kw / maxY * size.height)
+                    )
+                }
+
+                val path = Path()
+                points.forEachIndexed { i, p ->
+                    if (i == 0) path.moveTo(p.x, p.y)
+                    else path.lineTo(p.x, p.y)
+                }
+
+                drawPath(
+                    path = path,
+                    color = Color(0xFFB388FF),
+                    style = Stroke(width = 4f, cap = StrokeCap.Round)
+                )
+
+                points.forEach {
+                    drawCircle(
+                        color = Color(0xFFB388FF),
+                        radius = 6f,
+                        center = it
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun GraphCardWithChart(selectedTab: String, state: EnergyModel) {
-
+fun TabRowSection(
+    selectedTab: String,
+    onTabChange: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        TabChip("Day", selectedTab == "Day") { onTabChange("Day") }
+        TabChip("Week", selectedTab == "Week") { onTabChange("Week") }
+        TabChip("Month", selectedTab == "Month") { onTabChange("Month") }
+    }
+}
+@Composable
+fun TabChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                if (selected) Color(0xFF764CFF)
+                else Color(0xFF1B2945)
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 24.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text,
+            color = if (selected) Color.White
+            else Color.White.copy(alpha = 0.7f),
+            fontSize = 16.sp
+        )
+    }
+}
+@Composable
+fun GraphCardWithChart(
+    selectedTab: String,
+    state: EnergyModel
+) {
     val data = when (selectedTab) {
         "Day" -> state.dayData
         "Week" -> state.weekData
@@ -106,28 +262,45 @@ fun GraphCardWithChart(selectedTab: String, state: EnergyModel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF14203D))
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF14203D)
+        )
     ) {
         Column(Modifier.padding(20.dp)) {
-            Text(
-                "Energy Consumption",
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold
-            )
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Energy Consumption",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text("📅", fontSize = 20.sp)
+            }
+
             Spacer(Modifier.height(16.dp))
-            AnimatedLineGraph(data)
+
+            RealLineGraph(data)
         }
     }
 }
-
 @Composable
-fun AnimatedLineGraph(data: List<Float>) {
+fun RealLineGraph(data: List<EnergyPoint>) {
 
-    val animatedData = data.map {
-        animateFloatAsState(
-            targetValue = it,
-            animationSpec = tween(600)
-        ).value
+    if (data.size < 2) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = Color.White)
+        }
+        return
     }
 
     Canvas(
@@ -135,22 +308,13 @@ fun AnimatedLineGraph(data: List<Float>) {
             .fillMaxWidth()
             .height(180.dp)
     ) {
+        val maxY = data.maxOf { it.kw }.coerceAtLeast(1f)
+        val xGap = size.width / (data.size - 1)
 
-        val width = size.width
-        val height = size.height
-        val maxY = (animatedData.maxOrNull() ?: 1f) * 1.2f
-        val xGap = width / animatedData.size
-
-        drawRoundRect(
-            color = Color(0xFF20304D),
-            size = size,
-            cornerRadius = CornerRadius(20f)
-        )
-
-        val points = animatedData.mapIndexed { index, value ->
+        val points = data.mapIndexed { index, point ->
             Offset(
-                x = xGap * index + xGap / 2,
-                y = height - (value / maxY * height)
+                x = xGap * index,
+                y = size.height - (point.kw / maxY * size.height)
             )
         }
 
@@ -169,9 +333,91 @@ fun AnimatedLineGraph(data: List<Float>) {
         points.forEach {
             drawCircle(
                 color = Color(0xFFB388FF),
-                radius = 9f,
+                radius = 8f,
                 center = it
             )
         }
     }
+}
+@Composable
+fun UsageItem(
+    label: String,
+    percent: Int,
+    color: Color
+) {
+    val safePercent = percent.coerceIn(0, 100)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF0F1F33)
+        )
+    ) {
+        Column(Modifier.padding(18.dp)) {
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(label, color = Color.White)
+                Text("$safePercent%", color = Color.White)
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            LinearProgressIndicator(
+                progress = safePercent / 100f,
+                color = color,
+                trackColor = Color(0xFF3A4A63),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+@Composable
+fun EstimatedBillCard(state: EnergyModel) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF0C3B2E)
+        )
+    ) {
+        Column(Modifier.padding(20.dp)) {
+            Text("Estimated Bill", color = Color.White)
+            Text(
+                "$${String.format("%.2f", state.estimatedBill)}",
+                color = Color.White,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+@Composable
+fun TipsCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1A2538)
+        )
+    ) {
+        Column(Modifier.padding(20.dp)) {
+            Text("Energy Saving Tips", color = Color.White)
+            Spacer(Modifier.height(8.dp))
+            TipItem("Reduce AC usage during off-peak hours")
+            TipItem("Turn off lights when not in use")
+            TipItem("Schedule water pump during optimal times")
+        }
+    }
+}
+@Composable
+fun TipItem(text: String) {
+    Text(
+        "• $text",
+        color = Color.White.copy(alpha = 0.8f),
+        fontSize = 14.sp
+    )
 }

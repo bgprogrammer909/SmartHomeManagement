@@ -17,33 +17,4 @@ class EnergyViewModel(
             state.value = it
         }
     }
-
-    fun addDayValue(value: Float) {
-        val updated = state.value.dayData
-            .takeLast(6)
-            .plus(value)
-
-        update(state.value.copy(dayData = updated))
-    }
-
-    fun addWeekValue(value: Float) {
-        val updated = state.value.weekData
-            .takeLast(6)
-            .plus(value)
-
-        update(state.value.copy(weekData = updated))
-    }
-
-    fun addMonthValue(value: Float) {
-        val updated = state.value.monthData
-            .takeLast(6)
-            .plus(value)
-
-        update(state.value.copy(monthData = updated))
-    }
-
-    private fun update(model: EnergyModel) {
-        state.value = model
-        repo.updateEnergy(model)
-    }
 }
