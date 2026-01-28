@@ -29,6 +29,8 @@ import com.example.smarthome.R
 import com.example.smarthome.ui.theme.Orange
 import com.example.smarthome.viewmodel.DoorViewModel
 import com.example.smarthome.viewmodel.DoorViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.viewmodel.SecurityViewModelFactory
 
 class DoorLockActivity : ComponentActivity() {
 
@@ -42,16 +44,21 @@ class DoorLockActivity : ComponentActivity() {
             val viewModel: DoorViewModel = viewModel(
                 factory = DoorViewModelFactory(userId)
             )
-            DoorScreen(viewModel)
+            val viewModel2: SecurityViewModel = viewModel(
+                factory = SecurityViewModelFactory(userId)
+            )
+            DoorScreen(viewModel,viewModel2)
         }
     }
 }
 
 @Composable
-fun DoorScreen(viewModel: DoorViewModel) {
+fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
 
     // ✅ CORRECT: collect DoorModel
     val doors by viewModel.doors.collectAsState()
+
+    val showMotionAlert by viewModel2.showMotionAlert
 
     val context = LocalContext.current
     val activity = context as ComponentActivity
@@ -149,6 +156,29 @@ fun DoorScreen(viewModel: DoorViewModel) {
                 ) {
                     Text("Unlock All", color = Orange)
                 }
+            }
+            // Security Motion Alert Dialog
+            if (showMotionAlert) {
+                AlertDialog(
+                    onDismissRequest = { /* Don't allow dismiss by clicking outside */ },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel2.dismissMotionAlert() }) {
+                            Text("OK", color = Color(0xFF1FB7FF))
+                        }
+                    },
+                    title = {
+                        Text(
+                            "⚠️ Motion Detected!",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Text("Motion has been detected in your home. Please check your security cameras.")
+                    },
+                    containerColor = Color(0xFF1C1C2E),
+                    titleContentColor = Color.White,
+                    textContentColor = Color(0xFF9AB3C8)
+                )
             }
         }
     }

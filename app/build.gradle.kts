@@ -104,7 +104,9 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Testing dependencies
+    testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
 // Coroutines testing
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 // Architecture Components testing

@@ -9,11 +9,23 @@ import com.example.smarthome.repo.SecurityRepo
 class SecurityViewModel(private val repo: SecurityRepo) : ViewModel() {
 
     val state = mutableStateOf(SecurityModel())
+    val showMotionAlert = mutableStateOf(false)
 
     init {
         repo.observeSecurity { model ->
             state.value = model
+
+            // Show alert when motion is detected
+            if (model.motionDetection) {
+                showMotionAlert.value = true
+            }
         }
+    }
+
+    fun dismissMotionAlert() {
+        showMotionAlert.value = false
+        // Turn off motion detection flag in database
+        update(state.value.copy(motionDetection = false))
     }
 
     fun setActiveMode(mode: String) {
