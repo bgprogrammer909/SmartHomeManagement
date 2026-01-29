@@ -27,6 +27,9 @@ import com.example.smarthome.R
 import com.example.smarthome.repo.PLightRepoImpl
 import com.example.smarthome.viewmodel.PLightsViewModel
 import com.example.smarthome.viewmodel.PLightsViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.viewmodel.SecurityViewModelFactory
+
 
 class PLightActivity : ComponentActivity() {
 
@@ -55,6 +58,12 @@ class PLightActivity : ComponentActivity() {
             val bgGradient = Brush.verticalGradient(
                 colors = listOf(Color(0xFF0D1B2A), Color(0xFF0A1320))
             )
+            val securityViewModel: SecurityViewModel = viewModel(
+                factory = SecurityViewModelFactory(userId)
+            )
+            val showMotionAlert by securityViewModel.showMotionAlert
+
+
 
             Scaffold(containerColor = Color.Transparent) { padding ->
                 Column(
