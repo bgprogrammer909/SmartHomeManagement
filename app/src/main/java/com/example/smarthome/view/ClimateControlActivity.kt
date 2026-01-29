@@ -54,7 +54,8 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
     )
 
     val scope = rememberCoroutineScope()
-    // Auto Mode fan cycle every 4 seconds
+
+    // Auto Mode cycles fan speed every 4 seconds
     LaunchedEffect(state.autoMode, state.powerOn) {
         if (state.autoMode && state.powerOn) {
             while (true) {
@@ -117,7 +118,6 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
                         listOf(Color(0xFF113A5B), Color(0xFF0E2B4C))
                     )
                 )
-                // Dim/fade if power OFF or auto mode ON
                 .alpha(if (!state.powerOn || state.autoMode) 0.35f else 1f)
                 .padding(18.dp)
         ) {
@@ -144,7 +144,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
 
                 Slider(
                     value = fan,
-                    enabled = state.powerOn && !state.autoMode, // Can't toggle in Auto Mode
+                    enabled = state.powerOn && !state.autoMode, // Disabled in Auto Mode or when OFF
                     onValueChange = { value ->
                         if (state.powerOn && !state.autoMode) {
                             viewModel.setFanSpeed(value.toInt())
@@ -156,6 +156,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
 
                 Spacer(Modifier.height(12.dp))
 
+                // Quick-select chips for fan speed
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -178,7 +179,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
 
         Spacer(Modifier.height(16.dp))
 
-        // Power Toggle
+        // Power toggle card
         FeatureCard(
             icon = R.drawable.ic_refresh,
             title = "Power",
@@ -186,31 +187,27 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
             checked = state.powerOn,
             onCheckedChange = { checked ->
                 viewModel.setPower(checked)
-                if (!checked && state.autoMode) {
-                    viewModel.setAutoMode(false) // Turn off Auto when Power OFF
-                }
+                if (!checked && state.autoMode) viewModel.setAutoMode(false)
             }
         )
 
         Spacer(Modifier.height(16.dp))
 
-        // Auto Mode Toggle
+        // Auto Mode toggle card
         FeatureCard(
             icon = R.drawable.baseline_thermostat_24,
             title = "Auto Mode",
             subtitle = "Adjust fan automatically",
             checked = state.autoMode,
             onCheckedChange = { checked ->
-                if (state.powerOn) {
-                    viewModel.setAutoMode(checked)
-                }
+                if (state.powerOn) viewModel.setAutoMode(checked)
             },
             disabled = !state.powerOn
         )
 
         Spacer(Modifier.height(16.dp))
 
-        // Energy Card
+        // Energy efficiency card
         EnergyCard(
             powerOn = state.powerOn,
             fanSpeed = state.fanSpeed,
@@ -219,7 +216,7 @@ fun ClimateControlScreen(viewModel: ClimateViewModel) {
     }
 }
 
-// ------------------- FEATURE CARD -------------------
+// Feature card with icon, title, subtitle, and switch
 @Composable
 fun FeatureCard(
     icon: Int,
@@ -248,32 +245,17 @@ fun FeatureCard(
             )
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    title,
-                    color = Color.White.copy(alpha = if (disabled) 0.4f else 1f)
-                )
-                Text(
-                    subtitle,
-                    color = Color(0xFF9AB3C8).copy(alpha = if (disabled) 0.4f else 1f),
-                    fontSize = 13.sp
-                )
+                Text(title, color = Color.White.copy(alpha = if (disabled) 0.4f else 1f))
+                Text(subtitle, color = Color(0xFF9AB3C8).copy(alpha = if (disabled) 0.4f else 1f), fontSize = 13.sp)
             }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                enabled = !disabled
-            )
+            Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = !disabled)
         }
     }
 }
 
-// ------------------- ENERGY CARD -------------------
+// Energy efficiency card displaying savings message
 @Composable
-fun EnergyCard(
-    powerOn: Boolean,
-    fanSpeed: Int,
-    autoMode: Boolean
-) {
+fun EnergyCard(powerOn: Boolean, fanSpeed: Int, autoMode: Boolean) {
     val message = when {
         !powerOn -> "You're saving 100% energy."
         autoMode -> "You're saving 50% compared to average usage."
@@ -289,45 +271,26 @@ fun EnergyCard(
     ) {
         Row(
             modifier = Modifier
-                .background(
-                    Brush.linearGradient(listOf(Color(0xFF0F3D2E), Color(0xFF0A2A22)))
-                )
+                .background(Brush.linearGradient(listOf(Color(0xFF0F3D2E), Color(0xFF0A2A22))))
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Energy Efficiency",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Energy Efficiency", color = Color.White, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.weight(1f))
-                    Text(
-                        if (!powerOn) "Max Saving" else "Active",
-                        color = Color(0xFF2EFFA3),
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text(if (!powerOn) "Max Saving" else "Active", color = Color(0xFF2EFFA3), fontWeight = FontWeight.SemiBold)
                 }
                 Spacer(Modifier.height(6.dp))
-                Text(
-                    message,
-                    color = Color(0xFFB7E8D8),
-                    fontSize = 13.sp
-                )
+                Text(message, color = Color(0xFFB7E8D8), fontSize = 13.sp)
             }
         }
     }
 }
 
-// ------------------- STYLED CHIP -------------------
+// Chip style for selecting fan speed
 @Composable
-fun StyledChip(
-    text: String,
-    active: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit
-) {
+fun StyledChip(text: String, active: Boolean, enabled: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -335,9 +298,6 @@ fun StyledChip(
             .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
-        Text(
-            text,
-            color = Color.White.copy(alpha = if (enabled) 1f else 0.4f)
-        )
+        Text(text, color = Color.White.copy(alpha = if (enabled) 1f else 0.4f))
     }
 }
