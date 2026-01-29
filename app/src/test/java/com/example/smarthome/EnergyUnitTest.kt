@@ -1,115 +1,100 @@
-package com.example.smarthome.viewmodel
+package com.example.smarthome
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.example.smarthome.model.EnergyModel
 import com.example.smarthome.repo.EnergyRepo
-import org.junit.Before
-import org.junit.Rule
+import com.example.smarthome.viewmodel.EnergyViewModel
+import org.junit.Assert.*
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 
-class EnergyViewModelTest {
+class EnergyUnitTest {
 
-    @get:Rule
-    val instantTaskExecutorRule = InstantTaskExecutorRule()
+    @Test
+    fun energy_load_success_updates_state() {
+        // Mock repo
+        val repo = mock<EnergyRepo>()
 
-    @Mock
-    private lateinit var mockRepo: EnergyRepo
+        val fakeHistory = mapOf(
+            "01-01-2026" to 10f,
+            "02-01-2026" to 20f
+        )
 
-    private lateinit var viewModel: EnergyViewModel
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.openMocks(this)
-
-        // Mock realtime energy observation
+        // Mock callback (index 1)
         doAnswer { invocation ->
-            val callback = invocation.getArgument<(EnergyModel) -> Unit>(0)
-            callback(EnergyModel()) // default initial data
+            val callback =
+                invocation.getArgument<(Boolean, Map<String, Float>?) -> Unit>(1)
+            callback(true, fakeHistory)
             null
-        }.whenever(mockRepo).observeEnergy(any())
+        }.`when`(repo).getEnergyHistoryRealtime(eq("user123"), any())
 
-        viewModel = EnergyViewModel(mockRepo)
+        // Create ViewModel
+        val viewModel = EnergyViewModel(repo = repo, userId = "user123")
+
+        // Assertions
+        val state = viewModel.state.value
+
+        assertEquals(2, state.graphData.size)
+        assertEquals(30f, state.totalKwh)
+        assertEquals(fakeHistory, state.energyHistory)
+
+        // Verify repo call
+        verify(repo).getEnergyHistoryRealtime(eq("user123"), any())
     }
 
     @Test
-    fun `init should observe energy data`() {
-        verify(mockRepo).observeEnergy(any())
-    }
+    fun select_month_filters_data_correctly() {
+        val repo = mock<EnergyRepo>()
 
-    @Test
-    fun `updateTotalUsage should update state and call repository`() {
-        viewModel.updateTotalUsage(120.5)
+        val history = mapOf(
+            "01-01-2026" to 10f,
+            "02-01-2026" to 20f,
+            "01-02-2026" to 30f
+        )
 
-        assert(viewModel.state.value.totalUsage == 120.5)
-        verify(mockRepo).updateEnergy(argThat { totalUsage == 120.5 })
-    }
+        doAnswer { invocation ->
+            val callback =
+                invocation.getArgument<(Boolean, Map<String, Float>?) -> Unit>(1)
+            callback(true, history)
+            null
+        }.`when`(repo).getEnergyHistoryRealtime(eq("user123"), any())
 
-    @Test
-    fun `updateTodayUsage should update state and call repository`() {
-        viewModel.updateTodayUsage(15.0)
+        val viewModel = EnergyViewModel(repo = repo, userId = "user123")
 
-        assert(viewModel.state.value.todayUsage == 15.0)
-        verify(mockRepo).updateEnergy(argThat { todayUsage == 15.0 })
-    }
-
-    @Test
-    fun `updateWeekUsage should update state and call repository`() {
-        viewModel.updateWeekUsage(80.0)
-
-        assert(viewModel.state.value.weekUsage == 80.0)
-        verify(mockRepo).updateEnergy(argThat { weekUsage == 80.0 })
-    }
-
-    @Test
-    fun `updateMonthUsage should update state and call repository`() {
-        viewModel.updateMonthUsage(300.0)
-
-        assert(viewModel.state.value.monthUsage == 300.0)
-        verify(mockRepo).updateEnergy(argThat { monthUsage == 300.0 })
-    }
-
-    @Test
-    fun `updateLightsUsage should update state and call repository`() {
-        viewModel.updateLightsUsage(5)
-
-        assert(viewModel.state.value.lightsUsage == 5)
-        verify(mockRepo).updateEnergy(argThat { lightsUsage == 5 })
-    }
-
-    @Test
-    fun `updateAcUsage should update state and call repository`() {
-        viewModel.updateAcUsage(2)
-
-        assert(viewModel.state.value.acUsage == 2)
-        verify(mockRepo).updateEnergy(argThat { acUsage == 2 })
-    }
-
-    @Test
-    fun `updateWaterPumpUsage should update state and call repository`() {
-        viewModel.updateWaterPumpUsage(1)
-
-        assert(viewModel.state.value.waterPumpUsage == 1)
-        verify(mockRepo).updateEnergy(argThat { waterPumpUsage == 1 })
-    }
-
-    @Test
-    fun `updateOthersUsage should update state and call repository`() {
-        viewModel.updateOthersUsage(4)
-
-        assert(viewModel.state.value.othersUsage == 4)
-        verify(mockRepo).updateEnergy(argThat { othersUsage == 4 })
-    }
-
-    @Test
-    fun `multiple updates should preserve previous values`() {
-        viewModel.updateTotalUsage(100.0)
-        viewModel.updateLightsUsage(3)
+        // Select January
+        viewModel.selectMonth(1)
 
         val state = viewModel.state.value
-        assert(state.totalUsage == 100.0)
-        assert(state.lightsUsage == 3)
+
+        assertEquals(2, state.graphData.size)
+        assertEquals(30f, state.totalKwh)
+    }
+
+    @Test
+    fun select_year_filters_data_correctly() {
+        val repo = mock<EnergyRepo>()
+
+        val history = mapOf(
+            "01-01-2025" to 10f,
+            "01-01-2026" to 20f
+        )
+
+        doAnswer { invocation ->
+            val callback =
+                invocation.getArgument<(Boolean, Map<String, Float>?) -> Unit>(1)
+            callback(true, history)
+            null
+        }.`when`(repo).getEnergyHistoryRealtime(eq("user123"), any())
+
+        val viewModel = EnergyViewModel(repo = repo, userId = "user123")
+
+        viewModel.selectYear(2026)
+
+        val state = viewModel.state.value
+
+        assertEquals(1, state.graphData.size)
+        assertEquals(20f, state.totalKwh)
     }
 }

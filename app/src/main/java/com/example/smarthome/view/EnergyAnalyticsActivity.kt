@@ -30,6 +30,7 @@ import com.example.smarthome.model.EnergyModel
 import com.example.smarthome.model.EnergyPoint
 import com.example.smarthome.viewmodel.EnergyViewModel
 import com.example.smarthome.viewmodel.EnergyViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
 
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,8 +52,7 @@ class EnergyAnalyticsActivity : ComponentActivity() {
 
 
 @Composable
-fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
-    val state by viewModel.state
+
 fun EnergyAnalyticsScreen(
     viewModel: EnergyViewModel,
     securityViewModel: SecurityViewModel? = null,
