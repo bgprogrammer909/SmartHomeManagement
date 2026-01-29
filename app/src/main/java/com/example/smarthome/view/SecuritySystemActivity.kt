@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.statusBarsPadding
 import com.example.smarthome.model.SecurityMode
-import com.example.smarthome.model.ActivityLog
 import com.example.smarthome.viewmodel.SecurityViewModel
 import com.example.smarthome.viewmodel.SecurityViewModelFactory
 import com.example.smarthome.view.ui.theme.SmartHomeTheme
@@ -153,16 +152,6 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
                 Spacer(Modifier.width(16.dp))
                 Spacer(Modifier.weight(1f))
             }
-
-            Spacer(Modifier.height(28.dp))
-            Text(
-                "Recent Activity",
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(Modifier.height(12.dp))
-            RecentActivityCard(state.recentActivities)
         }
     }
 }
@@ -245,39 +234,6 @@ fun SecurityModeCard(
                 color = Color(0xFF9AB3C8),
                 fontSize = 13.sp
             )
-        }
-    }
-}
-
-// Card showing recent activities
-@Composable
-fun RecentActivityCard(activities: List<ActivityLog>) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFF0F1E33))
-            .padding(16.dp)
-    ) {
-        Column {
-            activities.take(3).forEach { activity ->
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        activity.description,
-                        color = Color(0xFF9AB3C8),
-                        fontSize = 13.sp
-                    )
-                    Text(
-                        activity.timestamp,
-                        color = Color(0xFF6B7C93),
-                        fontSize = 12.sp
-                    )
-                }
-                Spacer(Modifier.height(6.dp))
-            }
         }
     }
 }
