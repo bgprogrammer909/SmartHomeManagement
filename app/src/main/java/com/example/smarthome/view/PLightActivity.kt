@@ -29,6 +29,9 @@ import com.example.smarthome.R
 import com.example.smarthome.repo.PLightRepoImpl
 import com.example.smarthome.viewmodel.PLightsViewModel
 import com.example.smarthome.viewmodel.PLightsViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.viewmodel.SecurityViewModelFactory
+
 
 class PLightActivity : ComponentActivity() {
 
@@ -57,6 +60,12 @@ class PLightActivity : ComponentActivity() {
             val bgGradient = Brush.verticalGradient(
                 colors = listOf(Color(0xFF0D1B2A), Color(0xFF0A1320))
             )
+            val securityViewModel: SecurityViewModel = viewModel(
+                factory = SecurityViewModelFactory(userId)
+            )
+            val showMotionAlert by securityViewModel.showMotionAlert
+
+
 
             Scaffold(
                 containerColor = Color.Transparent
@@ -132,6 +141,32 @@ class PLightActivity : ComponentActivity() {
                         onSwitchToggle = { vm.toggleLight(2, it) },
                         onBrightnessChange = { vm.changeBrightness(2, it) }
                     )
+                    // 🔔 Security Motion Alert Dialog (same as Door / Energy)
+                    if (showMotionAlert) {
+                        AlertDialog(
+                            onDismissRequest = { },
+                            confirmButton = {
+                                TextButton(onClick = { securityViewModel.dismissMotionAlert() }) {
+                                    Text("OK", color = Color(0xFF1FB7FF))
+                                }
+                            },
+                            title = {
+                                Text(
+                                    "⚠️ Motion Detected!",
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
+                            text = {
+                                Text(
+                                    "Motion has been detected in your home. Please check your security cameras."
+                                )
+                            },
+                            containerColor = Color(0xFF1C1C2E),
+                            titleContentColor = Color.White,
+                            textContentColor = Color(0xFF9AB3C8)
+                        )
+                    }
+
                 }
             }
         }

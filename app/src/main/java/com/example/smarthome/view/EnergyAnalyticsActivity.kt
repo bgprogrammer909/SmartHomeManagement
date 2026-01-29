@@ -25,6 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.smarthome.R
+import com.example.smarthome.model.EnergyModel
+import com.example.smarthome.model.EnergyPoint
 import com.example.smarthome.viewmodel.EnergyViewModel
 import com.example.smarthome.viewmodel.EnergyViewModelFactory
 
@@ -41,12 +44,36 @@ class EnergyAnalyticsActivity : ComponentActivity() {
             )
             EnergyAnalyticsScreen(viewModel = viewModel, onBack = { finish() })
         }
+
     }
 }
+
+
 
 @Composable
 fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
     val state by viewModel.state
+fun EnergyAnalyticsScreen(
+    viewModel: EnergyViewModel,
+    securityViewModel: SecurityViewModel? = null,
+    onBack: () -> Unit
+)
+ {
+     val state by viewModel.state
+     val showMotionAlert by remember {
+         derivedStateOf { securityViewModel?.showMotionAlert?.value == true }
+     }
+
+     var showDialog by remember { mutableStateOf(false) }
+
+     LaunchedEffect(showMotionAlert) {
+         if (showMotionAlert) {
+             showDialog = true
+         }
+     }
+
+     var selectedTab by remember { mutableStateOf("Week") }
+
 
     LazyColumn(
         modifier = Modifier
