@@ -64,7 +64,7 @@ class PLightActivity : ComponentActivity() {
                         .padding(padding)
                         .padding(16.dp)
                 ) {
-                    // Top Bar
+                    // Back button and top bar
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.clickable { finish() }
@@ -80,6 +80,7 @@ class PLightActivity : ComponentActivity() {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
+                    // Header text
                     Text(
                         "My Lights",
                         color = Color.White,
@@ -94,6 +95,7 @@ class PLightActivity : ComponentActivity() {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
+                    // Summary card with total active lights and master switch
                     TopStatusCard(
                         activeCount = state.lightsOnCount,
                         masterSwitch = state.light1On && state.light2On,
@@ -110,6 +112,7 @@ class PLightActivity : ComponentActivity() {
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Individual light controls
                     LightControlCard(
                         label = "Light 1",
                         lightStatus = state.light1On,
@@ -130,7 +133,7 @@ class PLightActivity : ComponentActivity() {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Energy Efficiency Card
+                    // Energy usage and efficiency
                     LightEnergyCard(
                         light1On = state.light1On,
                         light1Brightness = state.light1Brightness,
@@ -143,7 +146,7 @@ class PLightActivity : ComponentActivity() {
     }
 }
 
-// ------------------- TOP STATUS CARD -------------------
+// Card showing total lights on and master toggle
 @Composable
 fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Unit) {
     Card(
@@ -207,7 +210,7 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
     }
 }
 
-// ------------------- LIGHT CONTROL CARD -------------------
+// Card to control individual light and brightness
 @Composable
 fun LightControlCard(
     label: String,
@@ -300,7 +303,7 @@ fun LightControlCard(
     }
 }
 
-// ------------------- ENERGY EFFICIENCY CARD -------------------
+// Card to display energy usage and efficiency
 @Composable
 fun LightEnergyCard(
     light1On: Boolean,
@@ -310,7 +313,7 @@ fun LightEnergyCard(
 ) {
     val light1Usage = if (light1On) light1Brightness / 100f else 0f
     val light2Usage = if (light2On) light2Brightness / 100f else 0f
-    val totalUsage = (light1Usage + light2Usage) / 2f // Average usage
+    val totalUsage = (light1Usage + light2Usage) / 2f
     val savingPercent = ((1f - totalUsage) * 100f).coerceIn(0f, 100f)
 
     val message = when {

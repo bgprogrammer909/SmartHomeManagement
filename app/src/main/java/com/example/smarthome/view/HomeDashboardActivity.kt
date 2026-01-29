@@ -33,7 +33,6 @@ import com.example.smarthome.viewmodel.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
-/* ---------------- HOME DASHBOARD ACTIVITY ---------------- */
 class HomeDashboardActivity : ComponentActivity() {
 
     private var isActiveListener: ValueEventListener? = null
@@ -92,7 +91,6 @@ class HomeDashboardActivity : ComponentActivity() {
     }
 }
 
-/* ---------------- DASHBOARD BODY ---------------- */
 @Composable
 fun HomeDashboardBody() {
     var selectedIndex by remember { mutableStateOf(0) }
@@ -107,15 +105,13 @@ fun HomeDashboardBody() {
                 .padding(padding)
         ) {
             when (selectedIndex) {
-                0 -> DashboardScreen() // Home page with all cards
-                1 -> ProfileActivityScreen(onBackClick = {}) // Profile page
+                0 -> DashboardScreen() // show dashboard
+                1 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 }) // show profile
             }
         }
     }
-
 }
 
-/* ---------------- BOTTOM NAV ---------------- */
 @Composable
 fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val navItems = listOf(
@@ -126,7 +122,7 @@ fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     NavigationBar(containerColor = Color(0xFF0D152F)) {
         navItems.forEachIndexed { index, item ->
             NavigationBarItem(
-                icon = { Icon(painterResource(item.icon), null) },
+                icon = { Icon(painterResource(item.icon), contentDescription = null) },
                 label = { Text(item.label, fontSize = 12.sp) },
                 selected = selectedIndex == index,
                 onClick = { onItemSelected(index) }
@@ -137,7 +133,6 @@ fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
 
 data class NavItem(val icon: Int, val label: String)
 
-/* ---------------- DASHBOARD SCREEN ---------------- */
 @Composable
 fun DashboardScreen() {
     val context = LocalContext.current
@@ -149,7 +144,7 @@ fun DashboardScreen() {
             .padding(16.dp)
             .background(Color(0xFF0B1225))
     ) {
-        HeaderSection(onProfileClick = {})
+        HeaderSection(onProfileClick = {}) // header with profile button
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -176,7 +171,6 @@ fun DashboardScreen() {
     }
 }
 
-/* ---------------- CARD / ROW ---------------- */
 data class CardData(
     val title: String,
     val icon: Int,
@@ -219,7 +213,6 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
     }
 }
 
-/* ---------------- HEADER ---------------- */
 @Composable
 fun HeaderSection(onProfileClick: () -> Unit) {
     Row(
@@ -247,7 +240,6 @@ fun HeaderSection(onProfileClick: () -> Unit) {
     }
 }
 
-/* ---------------- PROFILE SCREEN ---------------- */
 @Composable
 fun ProfileActivityScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
@@ -265,7 +257,6 @@ fun ProfileActivityScreen(onBackClick: () -> Unit) {
     )
 }
 
-/* ---------------- PREVIEW ---------------- */
 @Preview(showBackground = true)
 @Composable
 fun PreviewDashboard() {
