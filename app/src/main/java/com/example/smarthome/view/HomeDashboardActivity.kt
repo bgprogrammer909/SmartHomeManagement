@@ -107,8 +107,7 @@ fun HomeDashboardBody() {
                 .padding(padding)
         ) {
             when (selectedIndex) {
-                0 -> DashboardScreen(onProfileClick = { selectedIndex = 1 })
-                1 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 })
+                0 -> DashboardScreen()
             }
         }
     }
@@ -118,8 +117,7 @@ fun HomeDashboardBody() {
 @Composable
 fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val navItems = listOf(
-        NavItem(R.drawable.baseline_home_24, "Dashboard"),
-        NavItem(R.drawable.baseline_person_24, "Profile")
+        NavItem(R.drawable.baseline_home_24, "Dashboard")
     )
 
     NavigationBar(containerColor = Color(0xFF0D152F)) {
@@ -138,7 +136,7 @@ data class NavItem(val icon: Int, val label: String)
 
 /* ---------------- DASHBOARD SCREEN ---------------- */
 @Composable
-fun DashboardScreen(onProfileClick: () -> Unit) {
+fun DashboardScreen() {
     val context = LocalContext.current
     val userId = CurrentUser.userId ?: return
 
@@ -148,23 +146,26 @@ fun DashboardScreen(onProfileClick: () -> Unit) {
             .padding(16.dp)
             .background(Color(0xFF0B1225))
     ) {
-        HeaderSection(onProfileClick)
+        HeaderSection()
         Spacer(modifier = Modifier.height(24.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
 
+            // Row 1: Light + Water
             DeviceRow(
                 context,
                 CardData("Light", R.drawable.outline_lightbulb_24, Color.Yellow, PLightActivity::class.java, userId),
                 CardData("Water", R.drawable.baseline_water_drop_24, Color.Cyan, WaterActivity::class.java, userId)
             )
 
+            // Row 2: Fan + Door
             DeviceRow(
                 context,
                 CardData("Fan", R.drawable.ic_refresh, Color(0xFF1FB7FF), ClimateControlActivity::class.java, userId),
                 CardData("Door", R.drawable.baseline_sensor_door_24, Color(0xFF4CAF50), DoorLockActivity::class.java, userId)
             )
 
+            // Row 3: Security + Analytics
             DeviceRow(
                 context,
                 CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java, userId),
@@ -219,53 +220,19 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
 
 /* ---------------- HEADER ---------------- */
 @Composable
-fun HeaderSection(onProfileClick: () -> Unit) {
+fun HeaderSection() {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text("Welcome Home", color = Color.White, fontSize = 20.sp)
-
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(Color.Gray)
-                .clickable { onProfileClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(R.drawable.baseline_person_24),
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                colorFilter = ColorFilter.tint(Color.White)
-            )
-        }
     }
-}
-
-/* ---------------- PROFILE SCREEN ---------------- */
-@Composable
-fun ProfileActivityScreen(onBackClick: () -> Unit) {
-    val context = LocalContext.current
-    ProfileBody(
-        onBackClick,
-        onEditClick = { context.startActivity(Intent(context, UserEditProfileActivity::class.java)) },
-        onSettingsClick = {},
-        onLogoutClick = {
-            FirebaseAuth.getInstance().signOut()
-            context.startActivity(
-                Intent(context, LoginActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            )
-        }
-    )
 }
 
 /* ---------------- PREVIEW ---------------- */
 @Preview(showBackground = true)
 @Composable
 fun PreviewDashboard() {
-    DashboardScreen {}
+    DashboardScreen()
 }
