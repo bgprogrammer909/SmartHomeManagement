@@ -43,8 +43,7 @@ class SecurityActivity : ComponentActivity() {
     }
 }
 
-// -------------------- UI --------------------
-
+// Main security screen
 @Composable
 fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
     val state by viewModel.state
@@ -56,10 +55,10 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
         else -> SecurityMode.HOME
     }
 
-    // Motion Detection Alert Dialog
+    // Show motion alert dialog
     if (showMotionAlert) {
         AlertDialog(
-            onDismissRequest = { /* Don't allow dismiss by clicking outside */ },
+            onDismissRequest = { },
             confirmButton = {
                 TextButton(onClick = { viewModel.dismissMotionAlert() }) {
                     Text("OK", color = Color(0xFF1FB7FF))
@@ -67,7 +66,7 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
             },
             title = {
                 Text(
-                    "⚠️ Motion Detected!",
+                    "Motion Detected",
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -92,6 +91,7 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
         contentPadding = PaddingValues(20.dp)
     ) {
         item {
+            // Back button and header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { onBack() }
@@ -124,6 +124,7 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
             )
 
             Spacer(Modifier.height(16.dp))
+            // Top row of modes
             Row {
                 SecurityModeCard(
                     mode = SecurityMode.HOME,
@@ -141,6 +142,7 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
             }
 
             Spacer(Modifier.height(16.dp))
+            // Bottom row of modes
             Row {
                 SecurityModeCard(
                     mode = SecurityMode.NIGHT,
@@ -165,6 +167,7 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
     }
 }
 
+// Card showing the active mode
 @Composable
 fun ActiveModeCard(mode: SecurityMode) {
     Box(
@@ -204,6 +207,7 @@ fun ActiveModeCard(mode: SecurityMode) {
     }
 }
 
+// Individual security mode card
 @Composable
 fun SecurityModeCard(
     mode: SecurityMode,
@@ -245,6 +249,7 @@ fun SecurityModeCard(
     }
 }
 
+// Card showing recent activities
 @Composable
 fun RecentActivityCard(activities: List<ActivityLog>) {
     Box(
@@ -277,8 +282,7 @@ fun RecentActivityCard(activities: List<ActivityLog>) {
     }
 }
 
-// -------------------- Helper --------------------
-
+// Returns gradient for given security mode
 fun modeGradient(mode: SecurityMode): List<Color> =
     when (mode) {
         SecurityMode.HOME -> listOf(Color(0xFF2E7D32), Color(0xFF1B5E20))
