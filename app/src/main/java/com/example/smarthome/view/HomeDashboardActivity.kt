@@ -107,10 +107,8 @@ fun HomeDashboardBody() {
                 .padding(padding)
         ) {
             when (selectedIndex) {
-                0 -> DashboardScreen()
-                1 -> EnergyAnalyticsActivityScreen()
-                2 -> SecurityScreen()
-                3 -> ProfileActivityScreen {}
+                0 -> DashboardScreen() // Home page with all cards
+                1 -> ProfileActivityScreen(onBackClick = {}) // Profile page
             }
         }
     }
@@ -120,9 +118,7 @@ fun HomeDashboardBody() {
 @Composable
 fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val navItems = listOf(
-        NavItem(R.drawable.baseline_home_24, "Dashboard"),
-        NavItem(R.drawable.baseline_query_stats_24, "Analytics"),
-        NavItem(R.drawable.baseline_security_24, "Security"),
+        NavItem(R.drawable.baseline_home_24, "Home"),
         NavItem(R.drawable.baseline_person_24, "Profile")
     )
 
@@ -152,26 +148,24 @@ fun DashboardScreen() {
             .padding(16.dp)
             .background(Color(0xFF0B1225))
     ) {
-        HeaderSection()
+        HeaderSection(onProfileClick = {})
+
         Spacer(modifier = Modifier.height(24.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
 
-            // Row 1: Light + Water
             DeviceRow(
                 context,
                 CardData("Light", R.drawable.outline_lightbulb_24, Color.Yellow, PLightActivity::class.java, userId),
                 CardData("Water", R.drawable.baseline_water_drop_24, Color.Cyan, WaterActivity::class.java, userId)
             )
 
-            // Row 2: Fan + Door
             DeviceRow(
                 context,
                 CardData("Fan", R.drawable.ic_refresh, Color(0xFF1FB7FF), ClimateControlActivity::class.java, userId),
                 CardData("Door", R.drawable.baseline_sensor_door_24, Color(0xFF4CAF50), DoorLockActivity::class.java, userId)
             )
 
-            // Row 3: Security + Analytics
             DeviceRow(
                 context,
                 CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java, userId),
@@ -226,31 +220,33 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
 
 /* ---------------- HEADER ---------------- */
 @Composable
-fun HeaderSection() {
+fun HeaderSection(onProfileClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text("Welcome Home", color = Color.White, fontSize = 20.sp)
+
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+                .background(Color.Gray)
+                .clickable { onProfileClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.baseline_person_24),
+                contentDescription = null,
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(Color.White)
+            )
+        }
     }
 }
 
-/* ---------------- OTHER SCREENS ---------------- */
-@Composable
-fun EnergyAnalyticsActivityScreen() {
-    val vm: EnergyViewModel = viewModel()
-    EnergyAnalyticsScreen(vm, onBack = {})
-}
-
-@Composable
-fun SecurityScreen() {
-    val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        context.startActivity(Intent(context, SecurityActivity::class.java))
-    }
-}
-
+/* ---------------- PROFILE SCREEN ---------------- */
 @Composable
 fun ProfileActivityScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
