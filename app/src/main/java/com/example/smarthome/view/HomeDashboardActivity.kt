@@ -167,8 +167,8 @@ fun DashboardScreen(onProfileClick: () -> Unit) {
 
             DeviceRow(
                 context,
-                CardData("Profile", R.drawable.baseline_person_24, Color(0xFF7A4FFF), ProfileActivity::class.java, userId),
-                CardData("", 0, Color.Transparent, Activity::class.java, userId) // Empty to center Profile card
+                CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java, userId),
+                CardData("Analytics", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java, userId)
             )
         }
     }
@@ -193,10 +193,6 @@ fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
 
 @Composable
 fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
-    if (card.icon == 0) { // empty card placeholder
-        Box(modifier = modifier.height(150.dp))
-        return
-    }
     Column(
         modifier = modifier
             .height(150.dp)
@@ -249,7 +245,7 @@ fun HeaderSection(onProfileClick: () -> Unit) {
     }
 }
 
-/* ---------------- OTHER SCREENS ---------------- */
+/* ---------------- PROFILE SCREEN ---------------- */
 @Composable
 fun ProfileActivityScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
