@@ -107,10 +107,9 @@ fun HomeDashboardBody() {
                 .padding(padding)
         ) {
             when (selectedIndex) {
-                0 -> DashboardScreen(onProfileClick = { selectedIndex = 3 })
-                1 -> EnergyAnalyticsActivityScreen()
-                2 -> SecurityScreen()
-                3 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 })
+                0 -> DashboardScreen(onProfileClick = { selectedIndex = 2 })
+                1 -> SecurityScreen()
+                2 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 })
             }
         }
     }
@@ -121,7 +120,6 @@ fun HomeDashboardBody() {
 fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val navItems = listOf(
         NavItem(R.drawable.baseline_home_24, "Dashboard"),
-        NavItem(R.drawable.baseline_query_stats_24, "Analytics"),
         NavItem(R.drawable.baseline_security_24, "Security"),
         NavItem(R.drawable.baseline_person_24, "Profile")
     )
@@ -172,7 +170,7 @@ fun DashboardScreen(onProfileClick: () -> Unit) {
             DeviceRow(
                 context,
                 CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java, userId),
-                CardData("Analytics", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java, userId)
+                CardData("Profile", R.drawable.baseline_person_24, Color(0xFF7A4FFF), ProfileActivity::class.java, userId)
             )
         }
     }
@@ -250,12 +248,6 @@ fun HeaderSection(onProfileClick: () -> Unit) {
 }
 
 /* ---------------- OTHER SCREENS ---------------- */
-@Composable
-fun EnergyAnalyticsActivityScreen() {
-    val vm: EnergyViewModel = viewModel()
-    EnergyAnalyticsScreen(vm, onBack = {})
-}
-
 @Composable
 fun SecurityScreen() {
     val context = LocalContext.current
