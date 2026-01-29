@@ -108,6 +108,9 @@ fun HomeDashboardBody() {
         ) {
             when (selectedIndex) {
                 0 -> DashboardScreen()
+                1 -> EnergyAnalyticsActivityScreen()
+                2 -> SecurityScreen()
+                3 -> ProfileActivityScreen {}
             }
         }
     }
@@ -117,7 +120,10 @@ fun HomeDashboardBody() {
 @Composable
 fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val navItems = listOf(
-        NavItem(R.drawable.baseline_home_24, "Dashboard")
+        NavItem(R.drawable.baseline_home_24, "Dashboard"),
+        NavItem(R.drawable.baseline_query_stats_24, "Analytics"),
+        NavItem(R.drawable.baseline_security_24, "Security"),
+        NavItem(R.drawable.baseline_person_24, "Profile")
     )
 
     NavigationBar(containerColor = Color(0xFF0D152F)) {
@@ -228,6 +234,38 @@ fun HeaderSection() {
     ) {
         Text("Welcome Home", color = Color.White, fontSize = 20.sp)
     }
+}
+
+/* ---------------- OTHER SCREENS ---------------- */
+@Composable
+fun EnergyAnalyticsActivityScreen() {
+    val vm: EnergyViewModel = viewModel()
+    EnergyAnalyticsScreen(vm, onBack = {})
+}
+
+@Composable
+fun SecurityScreen() {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        context.startActivity(Intent(context, SecurityActivity::class.java))
+    }
+}
+
+@Composable
+fun ProfileActivityScreen(onBackClick: () -> Unit) {
+    val context = LocalContext.current
+    ProfileBody(
+        onBackClick,
+        onEditClick = { context.startActivity(Intent(context, UserEditProfileActivity::class.java)) },
+        onSettingsClick = {},
+        onLogoutClick = {
+            FirebaseAuth.getInstance().signOut()
+            context.startActivity(
+                Intent(context, LoginActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            )
+        }
+    )
 }
 
 /* ---------------- PREVIEW ---------------- */
