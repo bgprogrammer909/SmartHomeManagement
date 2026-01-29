@@ -76,7 +76,7 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                 .statusBarsPadding()
         ) {
 
-            // FIXED: Top Back Row - removed setPumpOn(false) which was causing issues
+            // Top Back Row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { activity?.finish() }
@@ -172,15 +172,14 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
 
                     Spacer(Modifier.height(20.dp))
 
-                    // FIXED: Button now properly toggles pump state
                     Button(
                         onClick = {
-                            if (!state.autoMode){
-                            viewModel.togglePump()
-                            }else{
+                            if (!state.autoMode) {
+                                viewModel.togglePump()
+                            } else {
                                 Toast.makeText(context,"Automatic mode is on", Toast.LENGTH_SHORT).show()
                             }
-                                  },
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp)
@@ -199,7 +198,7 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
             // Auto Mode Card
             Card(
@@ -244,7 +243,7 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
             // Info Text
             Row(
@@ -269,10 +268,10 @@ fun WaterControlScreen(viewModel: WaterViewModel) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-            // Energy Efficiency Card
-            EnergyEfficiencyCard(energySavings = state.energySavings)
+            // Updated Energy Efficiency Card
+            EnergyEfficiencyCard(autoMode = state.autoMode)
         }
     }
 }
@@ -314,10 +313,11 @@ fun PumpInfoBox(title: String, value: String, icon: Int) {
 }
 
 @Composable
-fun EnergyEfficiencyCard(energySavings: Int) {
+fun EnergyEfficiencyCard(autoMode: Boolean) {
     Card(
-        modifier = Modifier.fillMaxWidth()
-                            .testTag("energyEfficiencyCard"),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("energyEfficiencyCard"),
         shape = RoundedCornerShape(18.dp)
     ) {
         Box(
@@ -343,16 +343,18 @@ fun EnergyEfficiencyCard(energySavings: Int) {
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        "$energySavings% Saved",
-                        color = Color(0xFF2EFFA3),
-                        fontWeight = FontWeight.SemiBold
-                    )
                 }
+
                 Spacer(Modifier.height(8.dp))
+
+                val message = if (autoMode) {
+                    "Great! Auto Mode is ON, saving more energy. Always ensure there are no water leaks."
+                } else {
+                    "Using manual mode. Auto Mode can help save more energy. Always ensure there are no water leaks."
+                }
+
                 Text(
-                    "Smart scheduling reduces energy consumption. You're saving $energySavings% compared to average usage.",
+                    message,
                     color = Color(0xFFB7E8D8),
                     fontSize = 13.sp
                 )
