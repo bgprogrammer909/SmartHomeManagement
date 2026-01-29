@@ -107,9 +107,8 @@ fun HomeDashboardBody() {
                 .padding(padding)
         ) {
             when (selectedIndex) {
-                0 -> DashboardScreen(onProfileClick = { selectedIndex = 2 })
-                1 -> SecurityScreen()
-                2 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 })
+                0 -> DashboardScreen(onProfileClick = { selectedIndex = 1 })
+                1 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 })
             }
         }
     }
@@ -120,7 +119,6 @@ fun HomeDashboardBody() {
 fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val navItems = listOf(
         NavItem(R.drawable.baseline_home_24, "Dashboard"),
-        NavItem(R.drawable.baseline_security_24, "Security"),
         NavItem(R.drawable.baseline_person_24, "Profile")
     )
 
@@ -169,8 +167,8 @@ fun DashboardScreen(onProfileClick: () -> Unit) {
 
             DeviceRow(
                 context,
-                CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java, userId),
-                CardData("Profile", R.drawable.baseline_person_24, Color(0xFF7A4FFF), ProfileActivity::class.java, userId)
+                CardData("Profile", R.drawable.baseline_person_24, Color(0xFF7A4FFF), ProfileActivity::class.java, userId),
+                CardData("", 0, Color.Transparent, Activity::class.java, userId) // Empty to center Profile card
             )
         }
     }
@@ -195,6 +193,10 @@ fun DeviceRow(context: Context, card1: CardData, card2: CardData) {
 
 @Composable
 fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
+    if (card.icon == 0) { // empty card placeholder
+        Box(modifier = modifier.height(150.dp))
+        return
+    }
     Column(
         modifier = modifier
             .height(150.dp)
@@ -248,14 +250,6 @@ fun HeaderSection(onProfileClick: () -> Unit) {
 }
 
 /* ---------------- OTHER SCREENS ---------------- */
-@Composable
-fun SecurityScreen() {
-    val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        context.startActivity(Intent(context, SecurityActivity::class.java))
-    }
-}
-
 @Composable
 fun ProfileActivityScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
