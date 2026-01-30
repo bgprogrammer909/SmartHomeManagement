@@ -9,8 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -67,24 +65,21 @@ class PLightActivity : ComponentActivity() {
 
 
 
-            Scaffold(
-                containerColor = Color.Transparent
-            ) { padding ->
+            Scaffold(containerColor = Color.Transparent) { padding ->
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(bgGradient)
                         .padding(padding)
                         .padding(16.dp)
-
                 ) {
-                    // Top Bar
+                    // Back button and top bar
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.clickable { finish() }
                     ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            painter = painterResource(id = R.drawable.outline_arrow_back_24),
                             contentDescription = "Back",
                             tint = Color(0xFF9DB9D0)
                         )
@@ -94,6 +89,7 @@ class PLightActivity : ComponentActivity() {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
+                    // Header text
                     Text(
                         "My Lights",
                         color = Color.White,
@@ -108,6 +104,7 @@ class PLightActivity : ComponentActivity() {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
+                    // Summary card with total active lights and master switch
                     TopStatusCard(
                         activeCount = state.lightsOnCount,
                         masterSwitch = state.light1On && state.light2On,
@@ -124,6 +121,7 @@ class PLightActivity : ComponentActivity() {
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Individual light controls
                     LightControlCard(
                         label = "Light 1",
                         lightStatus = state.light1On,
@@ -141,6 +139,24 @@ class PLightActivity : ComponentActivity() {
                         onSwitchToggle = { vm.toggleLight(2, it) },
                         onBrightnessChange = { vm.changeBrightness(2, it) }
                     )
+
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Energy usage and efficiency
+
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Energy Efficiency Card
+
+                    LightEnergyCard(
+                        light1On = state.light1On,
+                        light1Brightness = state.light1Brightness,
+                        light2On = state.light2On,
+                        light2Brightness = state.light2Brightness
+                    )
+
                     // 🔔 Security Motion Alert Dialog (same as Door / Energy)
                     if (showMotionAlert) {
                         AlertDialog(
@@ -167,12 +183,14 @@ class PLightActivity : ComponentActivity() {
                         )
                     }
 
+
                 }
             }
         }
     }
 }
 
+// Card showing total lights on and master toggle
 @Composable
 fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Unit) {
     Card(
@@ -236,6 +254,7 @@ fun TopStatusCard(activeCount: Int, masterSwitch: Boolean, onToggleAll: () -> Un
     }
 }
 
+// Card to control individual light and brightness
 @Composable
 fun LightControlCard(
     label: String,
@@ -285,10 +304,11 @@ fun LightControlCard(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                Switch(checked = lightStatus,
+                Switch(
+                    checked = lightStatus,
                     onCheckedChange = onSwitchToggle,
-                    modifier = Modifier.testTag("$label - switch"))
-
+                    modifier = Modifier.testTag("$label - switch")
+                )
             }
 
             if (lightStatus) {
@@ -308,7 +328,9 @@ fun LightControlCard(
                         onValueChange = onBrightnessChange,
                         valueRange = 0f..100f,
                         steps = 98,
-                        modifier = Modifier.weight(1f) .testTag("$label-brightness")
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("$label-brightness")
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -320,6 +342,67 @@ fun LightControlCard(
                         modifier = Modifier.width(40.dp)
                     )
                 }
+            }
+        }
+    }
+}
+
+// Card to display energy usage and efficiency
+@Composable
+fun LightEnergyCard(
+    light1On: Boolean,
+    light1Brightness: Float,
+    light2On: Boolean,
+    light2Brightness: Float
+) {
+    val light1Usage = if (light1On) light1Brightness / 100f else 0f
+    val light2Usage = if (light2On) light2Brightness / 100f else 0f
+    val totalUsage = (light1Usage + light2Usage) / 2f
+    val savingPercent = ((1f - totalUsage) * 100f).coerceIn(0f, 100f)
+
+    val message = when {
+        totalUsage == 0f -> "You're saving 100% energy."
+        totalUsage < 0.5f -> "You're saving ${savingPercent.toInt()}% energy."
+        totalUsage >= 1f -> "You're consuming 100% energy."
+        else -> "You're consuming ${(totalUsage * 100).toInt()}% energy."
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .background(
+                    Brush.linearGradient(listOf(Color(0xFF0F3D2E), Color(0xFF0A2A22)))
+                )
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Light Energy",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        when {
+                            totalUsage == 0f -> "Max Saving"
+                            totalUsage >= 1f -> "Full Usage"
+                            else -> "Active"
+                        },
+                        color = Color(0xFF2EFFA3),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    message,
+                    color = Color(0xFFB7E8D8),
+                    fontSize = 13.sp
+                )
             }
         }
     }

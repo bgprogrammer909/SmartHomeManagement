@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.statusBarsPadding
 import com.example.smarthome.model.SecurityMode
-import com.example.smarthome.model.ActivityLog
 import com.example.smarthome.viewmodel.SecurityViewModel
 import com.example.smarthome.viewmodel.SecurityViewModelFactory
 import com.example.smarthome.view.ui.theme.SmartHomeTheme
@@ -43,8 +42,7 @@ class SecurityActivity : ComponentActivity() {
     }
 }
 
-// -------------------- UI --------------------
-
+// Main security screen
 @Composable
 fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
     val state by viewModel.state
@@ -56,10 +54,10 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
         else -> SecurityMode.HOME
     }
 
-    // Motion Detection Alert Dialog
+    // Show motion alert dialog
     if (showMotionAlert) {
         AlertDialog(
-            onDismissRequest = { /* Don't allow dismiss by clicking outside */ },
+            onDismissRequest = { },
             confirmButton = {
                 TextButton(onClick = { viewModel.dismissMotionAlert() }) {
                     Text("OK", color = Color(0xFF1FB7FF))
@@ -67,7 +65,7 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
             },
             title = {
                 Text(
-                    "⚠️ Motion Detected!",
+                    "Motion Detected",
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -92,6 +90,7 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
         contentPadding = PaddingValues(20.dp)
     ) {
         item {
+            // Back button and header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { onBack() }
@@ -124,6 +123,7 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
             )
 
             Spacer(Modifier.height(16.dp))
+            // Top row of modes
             Row {
                 SecurityModeCard(
                     mode = SecurityMode.HOME,
@@ -141,6 +141,7 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
             }
 
             Spacer(Modifier.height(16.dp))
+            // Bottom row of modes
             Row {
                 SecurityModeCard(
                     mode = SecurityMode.NIGHT,
@@ -151,20 +152,11 @@ fun SecurityScreen(viewModel: SecurityViewModel, onBack: () -> Unit) {
                 Spacer(Modifier.width(16.dp))
                 Spacer(Modifier.weight(1f))
             }
-
-            Spacer(Modifier.height(28.dp))
-            Text(
-                "Recent Activity",
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(Modifier.height(12.dp))
-            RecentActivityCard(state.recentActivities)
         }
     }
 }
 
+// Card showing the active mode
 @Composable
 fun ActiveModeCard(mode: SecurityMode) {
     Box(
@@ -204,6 +196,7 @@ fun ActiveModeCard(mode: SecurityMode) {
     }
 }
 
+// Individual security mode card
 @Composable
 fun SecurityModeCard(
     mode: SecurityMode,
@@ -245,40 +238,7 @@ fun SecurityModeCard(
     }
 }
 
-@Composable
-fun RecentActivityCard(activities: List<ActivityLog>) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFF0F1E33))
-            .padding(16.dp)
-    ) {
-        Column {
-            activities.take(3).forEach { activity ->
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        activity.description,
-                        color = Color(0xFF9AB3C8),
-                        fontSize = 13.sp
-                    )
-                    Text(
-                        activity.timestamp,
-                        color = Color(0xFF6B7C93),
-                        fontSize = 12.sp
-                    )
-                }
-                Spacer(Modifier.height(6.dp))
-            }
-        }
-    }
-}
-
-// -------------------- Helper --------------------
-
+// Returns gradient for given security mode
 fun modeGradient(mode: SecurityMode): List<Color> =
     when (mode) {
         SecurityMode.HOME -> listOf(Color(0xFF2E7D32), Color(0xFF1B5E20))

@@ -31,6 +31,11 @@ import com.example.smarthome.model.EnergyPoint
 import com.example.smarthome.viewmodel.EnergyViewModel
 import com.example.smarthome.viewmodel.EnergyViewModelFactory
 
+
+import com.example.smarthome.viewmodel.SecurityViewModel
+import com.example.smarthome.viewmodel.SecurityViewModelFactory
+
+
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,37 +56,34 @@ class EnergyAnalyticsActivity : ComponentActivity() {
 
 
 @Composable
-fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
-    val state by viewModel.state
 fun EnergyAnalyticsScreen(
     viewModel: EnergyViewModel,
-    securityViewModel: SecurityViewModel? = null,
     onBack: () -> Unit
 )
- {
-     val state by viewModel.state
-     val showMotionAlert by remember {
-         derivedStateOf { securityViewModel?.showMotionAlert?.value == true }
-     }
+{
+    val state by viewModel.state
+    val securityViewModel: SecurityViewModel = viewModel(
+        factory = SecurityViewModelFactory(viewModel.userId)
+    )
+    val showMotionAlert by securityViewModel.showMotionAlert
 
-     var showDialog by remember { mutableStateOf(false) }
 
-     LaunchedEffect(showMotionAlert) {
-         if (showMotionAlert) {
-             showDialog = true
-         }
-     }
+    var showDialog by remember { mutableStateOf(false) }
 
-     var selectedTab by remember { mutableStateOf("Week") }
+    LaunchedEffect(showMotionAlert) {
+        if (showMotionAlert) {
+            showDialog = true
+        }
+    }
+
+    var selectedTab by remember { mutableStateOf("Week") }
 
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF0A1A2F), Color(0xFF05101F))
-                )
+                Brush.verticalGradient(listOf(Color(0xFF0A1A2F), Color(0xFF05101F)))
             )
             .statusBarsPadding()
             .padding(20.dp),
@@ -113,6 +115,32 @@ fun EnergyAnalyticsScreen(
         }
 
         item { Spacer(modifier = Modifier.height(40.dp)) }
+        if (showMotionAlert) {
+            item {
+                AlertDialog(
+                    onDismissRequest = { },
+                    confirmButton = {
+                        TextButton(onClick = { securityViewModel.dismissMotionAlert() }) {
+                            Text("OK", color = Color(0xFF1FB7FF))
+                        }
+                    },
+                    title = {
+                        Text(
+                            "⚠️ Motion Detected!",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Text(
+                            "Motion has been detected in your home. Please check your security cameras."
+                        )
+                    },
+                    containerColor = Color(0xFF1C1C2E),
+                    titleContentColor = Color.White,
+                    textContentColor = Color(0xFF9AB3C8)
+                )
+            }
+        }
     }
 }
 

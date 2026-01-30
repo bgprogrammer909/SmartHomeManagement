@@ -51,6 +51,16 @@ class WaterActivity : ComponentActivity() {
     }
 }
 
+fun getWaterLevelLabel(level: Double): String {
+    return when {
+        level < 200.0 -> "LOW"
+        level in 200.0..349.9 -> "MEDIUM"
+        level in 350.0..419.9 -> "HIGH"
+        level >= 420.0 -> "FULL"
+        else -> "UNKNOWN"
+    }
+}
+
 @Composable
 fun WaterControlScreen(
     viewModel: WaterViewModel,
@@ -63,6 +73,7 @@ fun WaterControlScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     var showAutoModeAlert by remember { mutableStateOf(false) }
+    var showExitBlockDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(showAutoModeAlert) {
         if (showAutoModeAlert) {
@@ -88,10 +99,18 @@ fun WaterControlScreen(
                 .statusBarsPadding()
         ) {
 
-            // FIXED: Top Back Row - removed setPumpOn(false) which was causing issues
+            // Top Back Row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { activity?.finish() }
+                modifier = Modifier
+                    .clickable {
+                        // Check if water is on and auto mode is off
+                        if (state.isPumpOn && !state.autoMode) {
+                            showExitBlockDialog = true
+                        } else {
+                            activity?.finish()
+                        }
+                    }
                     .testTag("backButton")
             ) {
                 Icon(
@@ -171,28 +190,22 @@ fun WaterControlScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         PumpInfoBox(
-                            title = "Today's Usage",
-                            value = String.format("%.1f L", state.todayUsage),
+                            title = "Water Level",
+                            value = getWaterLevelLabel(state.todayUsage),
                             icon = R.drawable.baseline_water_drop_24
-                        )
-                        PumpInfoBox(
-                            title = "Flow Rate",
-                            value = String.format("%.1f L/min", state.flowRate),
-                            icon = R.drawable.baseline_bolt_24
                         )
                     }
 
                     Spacer(Modifier.height(20.dp))
 
-                    // FIXED: Button now properly toggles pump state
                     Button(
                         onClick = {
-                            if (!state.autoMode){
-                            viewModel.togglePump()
-                            }else{
+                            if (!state.autoMode) {
+                                viewModel.togglePump()
+                            } else {
                                 Toast.makeText(context,"Automatic mode is on", Toast.LENGTH_SHORT).show()
                             }
-                                  },
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp)
@@ -211,7 +224,7 @@ fun WaterControlScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
             // Auto Mode Card
             Card(
@@ -256,7 +269,7 @@ fun WaterControlScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
             // Info Text
             Row(
@@ -281,11 +294,12 @@ fun WaterControlScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-            // Energy Efficiency Card
-            EnergyEfficiencyCard(energySavings = state.energySavings)
+            // Updated Energy Efficiency Card
+            EnergyEfficiencyCard(autoMode = state.autoMode)
         }
+
         if (showMotionAlert) {
             AlertDialog(
                 onDismissRequest = { },
@@ -311,6 +325,31 @@ fun WaterControlScreen(
             )
         }
 
+        if (showExitBlockDialog) {
+            AlertDialog(
+                onDismissRequest = { showExitBlockDialog = false },
+                confirmButton = {
+                    TextButton(onClick = { showExitBlockDialog = false }) {
+                        Text("OK", color = Color(0xFF1FB7FF))
+                    }
+                },
+                title = {
+                    Text(
+                        "⚠️ Pump Running",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        "The water pump is currently running. Please turn it off before exiting, or enable Auto Mode to allow the system to manage itself."
+                    )
+                },
+                containerColor = Color(0xFF1C1C2E),
+                titleContentColor = Color.White,
+                textContentColor = Color(0xFF9AB3C8)
+            )
+        }
+
     }
 }
 
@@ -318,7 +357,6 @@ fun WaterControlScreen(
 fun PumpInfoBox(title: String, value: String, icon: Int) {
     Box(
         modifier = Modifier
-            .width(155.dp)
             .testTag("${title}_info")
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFF0D1B2A))
@@ -351,10 +389,11 @@ fun PumpInfoBox(title: String, value: String, icon: Int) {
 }
 
 @Composable
-fun EnergyEfficiencyCard(energySavings: Int) {
+fun EnergyEfficiencyCard(autoMode: Boolean) {
     Card(
-        modifier = Modifier.fillMaxWidth()
-                            .testTag("energyEfficiencyCard"),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("energyEfficiencyCard"),
         shape = RoundedCornerShape(18.dp)
     ) {
         Box(
@@ -380,16 +419,18 @@ fun EnergyEfficiencyCard(energySavings: Int) {
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        "$energySavings% Saved",
-                        color = Color(0xFF2EFFA3),
-                        fontWeight = FontWeight.SemiBold
-                    )
                 }
+
                 Spacer(Modifier.height(8.dp))
+
+                val message = if (autoMode) {
+                    "Great! Auto Mode is ON, saving more energy. Always ensure there are no water leaks."
+                } else {
+                    "Using manual mode. Auto Mode can help save more energy. Always ensure there are no water leaks."
+                }
+
                 Text(
-                    "Smart scheduling reduces energy consumption. You're saving $energySavings% compared to average usage.",
+                    message,
                     color = Color(0xFFB7E8D8),
                     fontSize = 13.sp
                 )
