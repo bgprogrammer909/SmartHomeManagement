@@ -30,6 +30,7 @@ import com.example.smarthome.model.EnergyModel
 import com.example.smarthome.model.EnergyPoint
 import com.example.smarthome.viewmodel.EnergyViewModel
 import com.example.smarthome.viewmodel.EnergyViewModelFactory
+import com.example.smarthome.viewmodel.SecurityViewModel
 
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,28 +52,27 @@ class EnergyAnalyticsActivity : ComponentActivity() {
 
 
 @Composable
-fun EnergyAnalyticsScreen(viewModel: EnergyViewModel, onBack: () -> Unit) {
-    val state by viewModel.state
+
 fun EnergyAnalyticsScreen(
     viewModel: EnergyViewModel,
     securityViewModel: SecurityViewModel? = null,
     onBack: () -> Unit
 )
- {
-     val state by viewModel.state
-     val showMotionAlert by remember {
-         derivedStateOf { securityViewModel?.showMotionAlert?.value == true }
-     }
+{
+    val state by viewModel.state
+    val showMotionAlert by remember {
+        derivedStateOf { securityViewModel?.showMotionAlert?.value == true }
+    }
 
-     var showDialog by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
-     LaunchedEffect(showMotionAlert) {
-         if (showMotionAlert) {
-             showDialog = true
-         }
-     }
+    LaunchedEffect(showMotionAlert) {
+        if (showMotionAlert) {
+            showDialog = true
+        }
+    }
 
-     var selectedTab by remember { mutableStateOf("Week") }
+    var selectedTab by remember { mutableStateOf("Week") }
 
 
     LazyColumn(
