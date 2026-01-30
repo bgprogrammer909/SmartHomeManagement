@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,7 +46,7 @@ class DoorLockActivity : ComponentActivity() {
             val viewModel2: SecurityViewModel = viewModel(
                 factory = SecurityViewModelFactory(userId)
             )
-            DoorScreen(viewModel,viewModel2)
+            DoorScreen(viewModel, viewModel2)
         }
     }
 }
@@ -55,9 +54,8 @@ class DoorLockActivity : ComponentActivity() {
 @Composable
 fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
 
-    // ✅ CORRECT: collect DoorModel
+    // Collect current state of doors
     val doors by viewModel.doors.collectAsState()
-
     val showMotionAlert by viewModel2.showMotionAlert
 
     val context = LocalContext.current
@@ -81,7 +79,7 @@ fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
                 )
         ) {
 
-            // Back
+            // Back button row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -105,6 +103,7 @@ fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
                 )
             }
 
+            // Screen title
             Column(modifier = Modifier.padding(horizontal = 15.dp)) {
                 Text(
                     "Door Lock",
@@ -121,6 +120,7 @@ fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Individual door cards
             DoorCard(
                 title = "Main Door",
                 locked = doors.mainDoorLocked,
@@ -135,6 +135,7 @@ fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Lock/Unlock all buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -143,7 +144,7 @@ fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
             ) {
                 Button(
                     onClick = { viewModel.lockAll() },
-                    modifier = Modifier.weight(1f) .testTag("LoclAllButton"),
+                    modifier = Modifier.weight(1f).testTag("lockAllButton"),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF29354E))
                 ) {
                     Text("Lock All", color = Orange)
@@ -151,16 +152,17 @@ fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
 
                 Button(
                     onClick = { viewModel.unlockAll() },
-                    modifier = Modifier.weight(1f) .testTag("unlockAllButton"),
+                    modifier = Modifier.weight(1f).testTag("unlockAllButton"),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF29354E))
                 ) {
                     Text("Unlock All", color = Orange)
                 }
             }
-            // Security Motion Alert Dialog
+
+            // Motion alert dialog
             if (showMotionAlert) {
                 AlertDialog(
-                    onDismissRequest = { /* Don't allow dismiss by clicking outside */ },
+                    onDismissRequest = { /* Disable outside click */ },
                     confirmButton = {
                         TextButton(onClick = { viewModel2.dismissMotionAlert() }) {
                             Text("OK", color = Color(0xFF1FB7FF))
@@ -168,7 +170,7 @@ fun DoorScreen(viewModel: DoorViewModel, viewModel2: SecurityViewModel) {
                     },
                     title = {
                         Text(
-                            "⚠️ Motion Detected!",
+                            "Motion Detected!",
                             fontWeight = FontWeight.Bold
                         )
                     },
@@ -192,7 +194,7 @@ fun DoorCard(
 ) {
     val cardGradient = Brush.horizontalGradient(
         listOf(
-            Color(0xFF1B5E20), // darker green
+            Color(0xFF1B5E20),
             Color(0xFF2E7D32)
         )
     )
@@ -219,7 +221,7 @@ fun DoorCard(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
 
-                // 🔹 Top row
+                // Door title and status
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -235,7 +237,7 @@ fun DoorCard(
                         )
                     }
 
-                    // 🔒 / 🔓 icon (only one shows)
+                    // Lock/Unlock icon
                     Box(
                         modifier = Modifier
                             .size(56.dp)
@@ -259,7 +261,7 @@ fun DoorCard(
                     }
                 }
 
-                // 🔘 Button
+                // Toggle button for the door
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -279,9 +281,6 @@ fun DoorCard(
         }
     }
 }
-
-
-
 
 @Preview(showBackground = true)
 @Composable
