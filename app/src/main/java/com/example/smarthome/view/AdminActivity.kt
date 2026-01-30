@@ -55,12 +55,14 @@ fun AdminScreen(viewModel: AdminViewModel) {
     var newEmail by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
 
+    // Filter users based on search query
     val filteredUsers = if (searchQuery.isBlank()) users else users.filter {
         it.id.contains(searchQuery, true) || it.email.contains(searchQuery, true)
     }
 
     Scaffold(
         topBar = {
+            // Top app bar with title and refresh button
             TopAppBar(
                 title = { Text("Admin Panel", color = Color.White) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0D152F)),
@@ -73,6 +75,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
+            // Button to open dialog for adding a new user
             FloatingActionButton(
                 onClick = {
                     showAddDialog = true
@@ -99,6 +102,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
                     interactionSource = remember { MutableInteractionSource() }
                 ) { focusManager.clearFocus() }
         ) {
+            // Screen header
             Text(
                 text = "Admin",
                 color = Color.White,
@@ -110,6 +114,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
                 textAlign = TextAlign.Center
             )
 
+            // Search field
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -130,9 +135,9 @@ fun AdminScreen(viewModel: AdminViewModel) {
                     .fillMaxWidth()
             )
 
-
             Spacer(modifier = Modifier.height(20.dp))
 
+            // List of users
             LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
                 items(filteredUsers) { user ->
                     UserRow(
@@ -153,7 +158,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
         }
     }
 
-    // Add User Dialog
+    // Dialog for adding a new user
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
@@ -165,7 +170,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
                         onValueChange = { newEmail = it },
                         label = { Text("Email") },
                         singleLine = true,
-                        shape = RoundedCornerShape(16.dp), // 👈 rounded
+                        shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -176,7 +181,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
                         onValueChange = { newPassword = it },
                         label = { Text("Password") },
                         singleLine = true,
-                        shape = RoundedCornerShape(16.dp), // 👈 rounded
+                        shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -190,9 +195,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
                         }
                     },
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF32A7EE) // 👈 login color
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32A7EE))
                 ) {
                     Text("Add", color = Color.White)
                 }
@@ -201,9 +204,7 @@ fun AdminScreen(viewModel: AdminViewModel) {
                 Button(
                     onClick = { showAddDialog = false },
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF32A7EE) // 👈 login color
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32A7EE))
                 ) {
                     Text("Cancel", color = Color.White)
                 }
@@ -228,6 +229,7 @@ fun UserRow(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // User icon
         Icon(
             painter = androidx.compose.ui.res.painterResource(id = com.example.smarthome.R.drawable.baseline_person_24),
             contentDescription = null,
@@ -237,11 +239,13 @@ fun UserRow(
 
         Spacer(modifier = Modifier.width(12.dp))
 
+        // User details
         Column(modifier = Modifier.weight(1f)) {
             Text("ID: ${user.id}", color = Color.White, fontWeight = FontWeight.Medium)
             Text("Email: ${user.email}", color = Color.Gray, fontSize = 12.sp)
         }
 
+        // Switch to toggle user status
         Switch(
             checked = isActive,
             onCheckedChange = {
@@ -258,6 +262,7 @@ fun UserRow(
 
         Spacer(modifier = Modifier.width(8.dp))
 
+        // Button to send password reset link
         Button(
             onClick = { onSendResetLink(user.email) },
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),

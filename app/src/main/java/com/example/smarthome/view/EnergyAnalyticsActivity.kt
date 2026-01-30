@@ -32,6 +32,9 @@ import com.example.smarthome.viewmodel.EnergyViewModel
 import com.example.smarthome.viewmodel.EnergyViewModelFactory
 import com.example.smarthome.viewmodel.SecurityViewModel
 
+import com.example.smarthome.viewmodel.SecurityViewModel
+
+
 class EnergyAnalyticsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,9 +82,7 @@ fun EnergyAnalyticsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF0A1A2F), Color(0xFF05101F))
-                )
+                Brush.verticalGradient(listOf(Color(0xFF0A1A2F), Color(0xFF05101F)))
             )
             .statusBarsPadding()
             .padding(20.dp),

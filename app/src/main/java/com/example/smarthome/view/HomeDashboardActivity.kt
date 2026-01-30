@@ -33,7 +33,6 @@ import com.example.smarthome.viewmodel.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
-/* ---------------- HOME DASHBOARD ACTIVITY ---------------- */
 class HomeDashboardActivity : ComponentActivity() {
 
     private var isActiveListener: ValueEventListener? = null
@@ -92,7 +91,6 @@ class HomeDashboardActivity : ComponentActivity() {
     }
 }
 
-/* ---------------- DASHBOARD BODY ---------------- */
 @Composable
 fun HomeDashboardBody() {
     var selectedIndex by remember { mutableStateOf(0) }
@@ -107,29 +105,24 @@ fun HomeDashboardBody() {
                 .padding(padding)
         ) {
             when (selectedIndex) {
-                0 -> DashboardScreen(onProfileClick = { selectedIndex = 3 })
-                1 -> EnergyAnalyticsActivityScreen()
-                2 -> SecurityScreen()
-                3 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 })
+                0 -> DashboardScreen() // show dashboard
+                1 -> ProfileActivityScreen(onBackClick = { selectedIndex = 0 }) // show profile
             }
         }
     }
 }
 
-/* ---------------- BOTTOM NAV ---------------- */
 @Composable
 fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val navItems = listOf(
-        NavItem(R.drawable.baseline_home_24, "Dashboard"),
-        NavItem(R.drawable.baseline_query_stats_24, "Analytics"),
-        NavItem(R.drawable.baseline_security_24, "Security"),
+        NavItem(R.drawable.baseline_home_24, "Home"),
         NavItem(R.drawable.baseline_person_24, "Profile")
     )
 
     NavigationBar(containerColor = Color(0xFF0D152F)) {
         navItems.forEachIndexed { index, item ->
             NavigationBarItem(
-                icon = { Icon(painterResource(item.icon), null) },
+                icon = { Icon(painterResource(item.icon), contentDescription = null) },
                 label = { Text(item.label, fontSize = 12.sp) },
                 selected = selectedIndex == index,
                 onClick = { onItemSelected(index) }
@@ -140,9 +133,8 @@ fun BottomNavigationBar(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
 
 data class NavItem(val icon: Int, val label: String)
 
-/* ---------------- DASHBOARD SCREEN ---------------- */
 @Composable
-fun DashboardScreen(onProfileClick: () -> Unit) {
+fun DashboardScreen() {
     val context = LocalContext.current
     val userId = CurrentUser.userId ?: return
 
@@ -152,7 +144,8 @@ fun DashboardScreen(onProfileClick: () -> Unit) {
             .padding(16.dp)
             .background(Color(0xFF0B1225))
     ) {
-        HeaderSection(onProfileClick)
+        HeaderSection(onProfileClick = {}) // header with profile button
+
         Spacer(modifier = Modifier.height(24.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -178,7 +171,6 @@ fun DashboardScreen(onProfileClick: () -> Unit) {
     }
 }
 
-/* ---------------- CARD / ROW ---------------- */
 data class CardData(
     val title: String,
     val icon: Int,
@@ -221,7 +213,6 @@ fun DeviceCard(modifier: Modifier, card: CardData, context: Context) {
     }
 }
 
-/* ---------------- HEADER ---------------- */
 @Composable
 fun HeaderSection(onProfileClick: () -> Unit) {
     Row(
@@ -249,21 +240,6 @@ fun HeaderSection(onProfileClick: () -> Unit) {
     }
 }
 
-/* ---------------- OTHER SCREENS ---------------- */
-@Composable
-fun EnergyAnalyticsActivityScreen() {
-    val vm: EnergyViewModel = viewModel()
-    EnergyAnalyticsScreen(vm, onBack = {})
-}
-
-@Composable
-fun SecurityScreen() {
-    val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        context.startActivity(Intent(context, SecurityActivity::class.java))
-    }
-}
-
 @Composable
 fun ProfileActivityScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
@@ -281,9 +257,8 @@ fun ProfileActivityScreen(onBackClick: () -> Unit) {
     )
 }
 
-/* ---------------- PREVIEW ---------------- */
 @Preview(showBackground = true)
 @Composable
 fun PreviewDashboard() {
-    DashboardScreen {}
+    DashboardScreen()
 }
