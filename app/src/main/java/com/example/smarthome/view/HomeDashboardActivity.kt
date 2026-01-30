@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -138,6 +139,11 @@ fun DashboardScreen() {
     val context = LocalContext.current
     val userId = CurrentUser.userId ?: return
 
+    val securityViewModel: SecurityViewModel = viewModel(
+        factory = SecurityViewModelFactory(userId)
+    )
+    val showMotionAlert by securityViewModel.showMotionAlert
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -167,6 +173,30 @@ fun DashboardScreen() {
                 CardData("Security", R.drawable.baseline_security_24, Color(0xFFFF9800), SecurityActivity::class.java, userId),
                 CardData("Analytics", R.drawable.baseline_query_stats_24, Color(0xFF7A4FFF), EnergyAnalyticsActivity::class.java, userId)
             )
+            if (showMotionAlert) {
+                AlertDialog(
+                    onDismissRequest = { },
+                    confirmButton = {
+                        TextButton(onClick = { securityViewModel.dismissMotionAlert() }) {
+                            Text("OK", color = Color(0xFF1FB7FF))
+                        }
+                    },
+                    title = {
+                        Text(
+                            "⚠️ Motion Detected!",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Text(
+                            "Motion has been detected in your home. Please check your security cameras."
+                        )
+                    },
+                    containerColor = Color(0xFF1C1C2E),
+                    titleContentColor = Color.White,
+                    textContentColor = Color(0xFF9AB3C8)
+                )
+            }
         }
     }
 }

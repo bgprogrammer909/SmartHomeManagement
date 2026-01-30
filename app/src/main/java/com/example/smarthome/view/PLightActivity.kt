@@ -139,26 +139,24 @@ class PLightActivity : ComponentActivity() {
                         onSwitchToggle = { vm.toggleLight(2, it) },
                         onBrightnessChange = { vm.changeBrightness(2, it) }
                     )
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     // Energy usage and efficiency
-=======
+
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     // Energy Efficiency Card
->>>>>>> 0afe780c7e7af83e8639c2a897e233b03c83e5f6
+
                     LightEnergyCard(
                         light1On = state.light1On,
                         light1Brightness = state.light1Brightness,
                         light2On = state.light2On,
                         light2Brightness = state.light2Brightness
                     )
-<<<<<<< HEAD
-=======
+
                     // 🔔 Security Motion Alert Dialog (same as Door / Energy)
                     if (showMotionAlert) {
                         AlertDialog(
@@ -185,9 +183,7 @@ class PLightActivity : ComponentActivity() {
                         )
                     }
 
->>>>>>> 4f142e41ad2d6fff792263bd81e40c96a5180fd7
-=======
->>>>>>> 0afe780c7e7af83e8639c2a897e233b03c83e5f6
+
                 }
             }
         }
